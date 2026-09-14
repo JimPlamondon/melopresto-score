@@ -14,6 +14,7 @@ MeloInitialPitchModel::MeloInitialPitchModel(QObject* parent)
 void MeloInitialPitchModel::load(int staff, int numerator, int denominator, int periodIndex,
                                  const QString& expectedState, const QString& expectedTimeline)
 {
+    async_disconnectAll();
     m_active = false;
     m_error.clear();
     m_pitch.clear();

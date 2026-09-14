@@ -297,6 +297,8 @@ TEST_F(MeloUiModelTests, InitialPitchModelPreservesInvalidTextAndCancelsOnScoreC
     EXPECT_FALSE(model.active());
     EXPECT_FALSE(model.commit("E4"));
     EXPECT_EQ(score->undoStack()->size(), undo + 1);
+    model.load(-1, 0, 1, 0, {}, {});
+    EXPECT_FALSE(model.async_isConnected());
 }
 
 TEST_F(MeloUiModelTests, InitialPitchDialogLoadsTheEffectivePitchAndRetainsInvalidInput)
@@ -390,6 +392,8 @@ TEST_F(MeloUiModelTests, RelativeKeyModelPreviewsWithoutMutatingThenCreatesEdits
     ASSERT_TRUE(model.commit("P1")) << model.error().toStdString();
     EXPECT_EQ(score->metaTag(melo::REFERENCE_TIMELINE_TAG), initial);
     EXPECT_EQ(score->undoStack()->size(), undo + 3);
+    model.load(-1, 0, 1, {}, {});
+    EXPECT_FALSE(model.async_isConnected());
 }
 
 TEST_F(MeloUiModelTests, RelativeKeyPreviewKeepsLargeAuthoredIntervalsInAllThreeTunings)
@@ -1540,7 +1544,7 @@ TEST_F(MeloUiModelTests, AccidentalToolbarButtonsRenderSquaresInBothThemesAndSca
                 }
                 EXPECT_TRUE(region.adjusted(1, 1, -1,
                                             -1).contains(bounds)) << "region " << region.x() << "," << region.y() << " ink " <<
-                bounds.x() << "," << bounds.y() << "," << bounds.width() << "," << bounds.height();
+                    bounds.x() << "," << bounds.y() << "," << bounds.width() << "," << bounds.height();
                 EXPECT_NEAR(bounds.center().x(), region.center().x(), 1);
                 EXPECT_NEAR(bounds.center().y(), region.center().y(), 1);
                 return bounds;

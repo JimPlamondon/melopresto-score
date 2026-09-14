@@ -35,6 +35,7 @@ bool MeloKeyChangeModel::current(Score*& score)
 
 void MeloKeyChangeModel::load(int staff, int numerator, int denominator, const QString& expectedState, const QString& expectedTimeline)
 {
+    async_disconnectAll();
     m_active = false;
     m_preview.reset();
     m_editor = {};
