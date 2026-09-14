@@ -519,6 +519,24 @@ AccessibleItemPtr Chord::createAccessible()
 
 double Chord::noteHeadWidth() const
 {
+    // MeloPresto Staff: the heads are the Kernel's shape glyphs, every one
+    // narrower than the score's nominal black-head advance that stock
+    // MuseScore right-aligns an up-stem chord to. Aligning to the widest
+    // head actually drawn puts a shared up-stem head exactly on its
+    // down-stem twin and the stem on the head's edge (Milestone 9 finding,
+    // 2026-08-22; fixed 2026-09-14 by owner decision).
+    if (const Staff* st = staff(); st && !m_notes.empty()) {
+        const StaffType* type = st->staffTypeForElement(this);
+        if (type && type->isMelo()) {
+            double widest = 0.0;
+            for (const Note* note : m_notes) {
+                widest = std::max(widest, note->headBodyWidth());
+            }
+            if (widest > 0.0) {
+                return widest;
+            }
+        }
+    }
     return score()->noteHeadWidth() * mag();
 }
 

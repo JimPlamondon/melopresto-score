@@ -1,6 +1,29 @@
 {
-  "ok": true,
-  "failures": [],
+  "ok": false,
+  "failures": [
+    "empty-template-2-p1.png: system 1 drew 8 staff frames, expected 4",
+    "empty-template-2-p2.png: system 1: 1 barline column(s) at x=[945] carry ink between vocal staves; vocal barlines must not span",
+    "empty-template-p1.png: system 1 drew 8 staff frames, expected 4",
+    "empty-template-p2.png: system 1: 1 barline column(s) at x=[945] carry ink between vocal staves; vocal barlines must not span",
+    "empty-template-2-p1.png: system 1: expected four staff frames",
+    "empty-template-2-p2.png: system 1 voice 1: Do row y=128, expected 142.2",
+    "empty-template-2-p2.png: system 1 voice 1: crescent does not join Do from both sides (upper=0, lower=0)",
+    "empty-template-2-p2.png: system 1 voice 2: Do row y=303, expected 350.5",
+    "empty-template-2-p2.png: system 1 voice 2: crescent does not join Do from both sides (upper=0, lower=0)",
+    "empty-template-2-p2.png: system 1 voice 3: Do row y=478, expected 501.8",
+    "empty-template-2-p2.png: system 1 voice 3: crescent does not join Do from both sides (upper=0, lower=0)",
+    "empty-template-2-p2.png: system 1 voice 4: Do row y=654, expected 691.3",
+    "empty-template-2-p2.png: system 1 voice 4: crescent does not join Do from both sides (upper=0, lower=0)",
+    "empty-template-p1.png: system 1: expected four staff frames",
+    "empty-template-p2.png: system 1 voice 1: Do row y=128, expected 142.2",
+    "empty-template-p2.png: system 1 voice 1: crescent does not join Do from both sides (upper=0, lower=0)",
+    "empty-template-p2.png: system 1 voice 2: Do row y=303, expected 350.5",
+    "empty-template-p2.png: system 1 voice 2: crescent does not join Do from both sides (upper=0, lower=0)",
+    "empty-template-p2.png: system 1 voice 3: Do row y=478, expected 501.8",
+    "empty-template-p2.png: system 1 voice 3: crescent does not join Do from both sides (upper=0, lower=0)",
+    "empty-template-p2.png: system 1 voice 4: Do row y=654, expected 691.3",
+    "empty-template-p2.png: system 1 voice 4: crescent does not join Do from both sides (upper=0, lower=0)"
+  ],
   "renders_dir": "jims-evidence/m10-satb/renders",
   "sha256_checked": 6,
   "repeat_renders": [
@@ -23,23 +46,39 @@
   "pages_checked": [
     {
       "page": "empty-template-2-p1.png",
-      "frames_found": 4,
+      "frames_found": 8,
       "staff_frames": [
         [
-          211,
-          310
+          212,
+          268
         ],
         [
-          389,
-          488
+          337,
+          393
         ],
         [
-          567,
-          665
+          462,
+          519
         ],
         [
-          744,
-          843
+          588,
+          644
+        ],
+        [
+          758,
+          814
+        ],
+        [
+          883,
+          939
+        ],
+        [
+          1008,
+          1064
+        ],
+        [
+          1134,
+          1190
         ]
       ],
       "systems": [
@@ -47,359 +86,65 @@
           "system": 1,
           "staff_frames": [
             [
-              211,
-              310
+              212,
+              268
             ],
             [
-              389,
-              488
+              337,
+              393
             ],
             [
-              567,
-              665
+              462,
+              519
             ],
             [
-              744,
-              843
+              588,
+              644
+            ],
+            [
+              758,
+              814
+            ],
+            [
+              883,
+              939
+            ],
+            [
+              1008,
+              1064
+            ],
+            [
+              1134,
+              1190
             ]
           ],
-          "inter_staff_gaps": [
-            [
-              311,
-              388
-            ],
-            [
-              489,
-              566
-            ],
-            [
-              666,
-              743
-            ]
-          ],
-          "system_edge_columns": [
-            280,
-            281,
-            282,
-            283,
-            288
-          ],
-          "system_edge_spans_gaps": true,
-          "spanning_barline_columns": [],
-          "measure_barline_columns": [
-            429,
-            430,
-            533,
-            637,
-            740,
-            741,
-            844,
-            948
-          ],
-          "gap_ink_in_barline_columns": [
-            0
-          ],
-          "ok": true,
-          "staff_span_y": [
-            211,
-            843
-          ]
+          "ok": false
         }
       ],
-      "failures": [],
-      "ok": true
+      "failures": [
+        "system 1 drew 8 staff frames, expected 4"
+      ],
+      "ok": false
     },
     {
       "page": "empty-template-2-p2.png",
-      "frames_found": 8,
-      "staff_frames": [
-        [
-          128,
-          227
-        ],
-        [
-          259,
-          358
-        ],
-        [
-          390,
-          489
-        ],
-        [
-          521,
-          620
-        ],
-        [
-          699,
-          798
-        ],
-        [
-          830,
-          929
-        ],
-        [
-          961,
-          1060
-        ],
-        [
-          1092,
-          1191
-        ]
-      ],
-      "systems": [
-        {
-          "system": 1,
-          "staff_frames": [
-            [
-              128,
-              227
-            ],
-            [
-              259,
-              358
-            ],
-            [
-              390,
-              489
-            ],
-            [
-              521,
-              620
-            ]
-          ],
-          "inter_staff_gaps": [
-            [
-              228,
-              258
-            ],
-            [
-              359,
-              389
-            ],
-            [
-              490,
-              520
-            ]
-          ],
-          "system_edge_columns": [
-            234,
-            235,
-            236,
-            241,
-            242
-          ],
-          "system_edge_spans_gaps": true,
-          "spanning_barline_columns": [],
-          "measure_barline_columns": [
-            359,
-            477,
-            595,
-            712,
-            713,
-            830,
-            948
-          ],
-          "gap_ink_in_barline_columns": [
-            0
-          ],
-          "ok": true,
-          "staff_span_y": [
-            128,
-            620
-          ]
-        },
-        {
-          "system": 2,
-          "staff_frames": [
-            [
-              699,
-              798
-            ],
-            [
-              830,
-              929
-            ],
-            [
-              961,
-              1060
-            ],
-            [
-              1092,
-              1191
-            ]
-          ],
-          "inter_staff_gaps": [
-            [
-              799,
-              829
-            ],
-            [
-              930,
-              960
-            ],
-            [
-              1061,
-              1091
-            ]
-          ],
-          "system_edge_columns": [
-            234,
-            235,
-            236,
-            241,
-            242
-          ],
-          "system_edge_spans_gaps": true,
-          "spanning_barline_columns": [],
-          "measure_barline_columns": [
-            358,
-            474,
-            475,
-            591,
-            707,
-            824,
-            940,
-            945,
-            946,
-            947,
-            948
-          ],
-          "gap_ink_in_barline_columns": [
-            0
-          ],
-          "ok": true,
-          "staff_span_y": [
-            699,
-            1191
-          ]
-        }
-      ],
-      "failures": [],
-      "ok": true
-    },
-    {
-      "page": "empty-template-p1.png",
       "frames_found": 4,
       "staff_frames": [
         [
-          211,
-          310
-        ],
-        [
-          389,
-          488
-        ],
-        [
-          567,
-          665
-        ],
-        [
-          744,
-          843
-        ]
-      ],
-      "systems": [
-        {
-          "system": 1,
-          "staff_frames": [
-            [
-              211,
-              310
-            ],
-            [
-              389,
-              488
-            ],
-            [
-              567,
-              665
-            ],
-            [
-              744,
-              843
-            ]
-          ],
-          "inter_staff_gaps": [
-            [
-              311,
-              388
-            ],
-            [
-              489,
-              566
-            ],
-            [
-              666,
-              743
-            ]
-          ],
-          "system_edge_columns": [
-            280,
-            281,
-            282,
-            283,
-            288
-          ],
-          "system_edge_spans_gaps": true,
-          "spanning_barline_columns": [],
-          "measure_barline_columns": [
-            429,
-            430,
-            533,
-            637,
-            740,
-            741,
-            844,
-            948
-          ],
-          "gap_ink_in_barline_columns": [
-            0
-          ],
-          "ok": true,
-          "staff_span_y": [
-            211,
-            843
-          ]
-        }
-      ],
-      "failures": [],
-      "ok": true
-    },
-    {
-      "page": "empty-template-p2.png",
-      "frames_found": 8,
-      "staff_frames": [
-        [
           128,
-          227
+          185
         ],
         [
-          259,
-          358
+          303,
+          360
         ],
         [
-          390,
-          489
+          478,
+          535
         ],
         [
-          521,
-          620
-        ],
-        [
-          699,
-          798
-        ],
-        [
-          830,
-          929
-        ],
-        [
-          961,
-          1060
-        ],
-        [
-          1092,
-          1191
+          654,
+          710
         ]
       ],
       "systems": [
@@ -408,114 +153,53 @@
           "staff_frames": [
             [
               128,
-              227
+              185
             ],
             [
-              259,
-              358
+              303,
+              360
             ],
             [
-              390,
-              489
+              478,
+              535
             ],
             [
-              521,
-              620
+              654,
+              710
             ]
           ],
           "inter_staff_gaps": [
             [
-              228,
-              258
+              186,
+              302
             ],
             [
-              359,
-              389
+              361,
+              477
             ],
             [
-              490,
-              520
+              536,
+              653
             ]
           ],
           "system_edge_columns": [
-            234,
-            235,
-            236,
-            241,
-            242
+            206,
+            207,
+            208,
+            209,
+            214,
+            335
           ],
           "system_edge_spans_gaps": true,
-          "spanning_barline_columns": [],
+          "spanning_barline_columns": [
+            945
+          ],
           "measure_barline_columns": [
-            359,
-            477,
-            595,
-            712,
-            713,
-            830,
-            948
-          ],
-          "gap_ink_in_barline_columns": [
-            0
-          ],
-          "ok": true,
-          "staff_span_y": [
-            128,
-            620
-          ]
-        },
-        {
-          "system": 2,
-          "staff_frames": [
-            [
-              699,
-              798
-            ],
-            [
-              830,
-              929
-            ],
-            [
-              961,
-              1060
-            ],
-            [
-              1092,
-              1191
-            ]
-          ],
-          "inter_staff_gaps": [
-            [
-              799,
-              829
-            ],
-            [
-              930,
-              960
-            ],
-            [
-              1061,
-              1091
-            ]
-          ],
-          "system_edge_columns": [
-            234,
-            235,
-            236,
-            241,
-            242
-          ],
-          "system_edge_spans_gaps": true,
-          "spanning_barline_columns": [],
-          "measure_barline_columns": [
-            358,
-            474,
-            475,
-            591,
-            707,
-            824,
+            456,
+            577,
+            698,
+            819,
             940,
-            945,
             946,
             947,
             948
@@ -523,15 +207,192 @@
           "gap_ink_in_barline_columns": [
             0
           ],
-          "ok": true,
+          "ok": false,
           "staff_span_y": [
-            699,
-            1191
+            128,
+            710
           ]
         }
       ],
-      "failures": [],
-      "ok": true
+      "failures": [
+        "system 1: 1 barline column(s) at x=[945] carry ink between vocal staves; vocal barlines must not span"
+      ],
+      "ok": false
+    },
+    {
+      "page": "empty-template-p1.png",
+      "frames_found": 8,
+      "staff_frames": [
+        [
+          212,
+          268
+        ],
+        [
+          337,
+          393
+        ],
+        [
+          462,
+          519
+        ],
+        [
+          588,
+          644
+        ],
+        [
+          758,
+          814
+        ],
+        [
+          883,
+          939
+        ],
+        [
+          1008,
+          1064
+        ],
+        [
+          1134,
+          1190
+        ]
+      ],
+      "systems": [
+        {
+          "system": 1,
+          "staff_frames": [
+            [
+              212,
+              268
+            ],
+            [
+              337,
+              393
+            ],
+            [
+              462,
+              519
+            ],
+            [
+              588,
+              644
+            ],
+            [
+              758,
+              814
+            ],
+            [
+              883,
+              939
+            ],
+            [
+              1008,
+              1064
+            ],
+            [
+              1134,
+              1190
+            ]
+          ],
+          "ok": false
+        }
+      ],
+      "failures": [
+        "system 1 drew 8 staff frames, expected 4"
+      ],
+      "ok": false
+    },
+    {
+      "page": "empty-template-p2.png",
+      "frames_found": 4,
+      "staff_frames": [
+        [
+          128,
+          185
+        ],
+        [
+          303,
+          360
+        ],
+        [
+          478,
+          535
+        ],
+        [
+          654,
+          710
+        ]
+      ],
+      "systems": [
+        {
+          "system": 1,
+          "staff_frames": [
+            [
+              128,
+              185
+            ],
+            [
+              303,
+              360
+            ],
+            [
+              478,
+              535
+            ],
+            [
+              654,
+              710
+            ]
+          ],
+          "inter_staff_gaps": [
+            [
+              186,
+              302
+            ],
+            [
+              361,
+              477
+            ],
+            [
+              536,
+              653
+            ]
+          ],
+          "system_edge_columns": [
+            206,
+            207,
+            208,
+            209,
+            214,
+            335
+          ],
+          "system_edge_spans_gaps": true,
+          "spanning_barline_columns": [
+            945
+          ],
+          "measure_barline_columns": [
+            456,
+            577,
+            698,
+            819,
+            940,
+            946,
+            947,
+            948
+          ],
+          "gap_ink_in_barline_columns": [
+            0
+          ],
+          "ok": false,
+          "staff_span_y": [
+            128,
+            710
+          ]
+        }
+      ],
+      "failures": [
+        "system 1: 1 barline column(s) at x=[945] carry ink between vocal staves; vocal barlines must not span"
+      ],
+      "ok": false
     },
     {
       "page": "old-hundredth-2-p1.png",
@@ -542,16 +403,16 @@
           227
         ],
         [
-          348,
-          447
+          344,
+          415
         ],
         [
-          567,
-          666
+          533,
+          607
         ],
         [
-          787,
-          910
+          723,
+          871
         ]
       ],
       "systems": [
@@ -563,45 +424,45 @@
               227
             ],
             [
-              348,
-              447
+              344,
+              415
             ],
             [
-              567,
-              666
+              533,
+              607
             ],
             [
-              787,
-              910
+              723,
+              871
             ]
           ],
           "inter_staff_gaps": [
             [
               228,
-              347
+              343
             ],
             [
-              448,
-              566
+              416,
+              532
             ],
             [
-              667,
-              786
+              608,
+              722
             ]
           ],
           "system_edge_columns": [
-            280,
-            281,
-            282,
-            283,
-            288
+            253,
+            254,
+            255,
+            260,
+            261
           ],
           "system_edge_spans_gaps": true,
           "spanning_barline_columns": [],
           "measure_barline_columns": [
-            490,
-            640,
-            790,
+            450,
+            613,
+            777,
             940,
             945,
             946,
@@ -614,7 +475,7 @@
           "ok": true,
           "staff_span_y": [
             128,
-            910
+            871
           ]
         }
       ],
@@ -630,16 +491,16 @@
           227
         ],
         [
-          348,
-          447
+          344,
+          415
         ],
         [
-          567,
-          666
+          533,
+          607
         ],
         [
-          787,
-          910
+          723,
+          871
         ]
       ],
       "systems": [
@@ -651,45 +512,45 @@
               227
             ],
             [
-              348,
-              447
+              344,
+              415
             ],
             [
-              567,
-              666
+              533,
+              607
             ],
             [
-              787,
-              910
+              723,
+              871
             ]
           ],
           "inter_staff_gaps": [
             [
               228,
-              347
+              343
             ],
             [
-              448,
-              566
+              416,
+              532
             ],
             [
-              667,
-              786
+              608,
+              722
             ]
           ],
           "system_edge_columns": [
-            280,
-            281,
-            282,
-            283,
-            288
+            253,
+            254,
+            255,
+            260,
+            261
           ],
           "system_edge_spans_gaps": true,
           "spanning_barline_columns": [],
           "measure_barline_columns": [
-            490,
-            640,
-            790,
+            450,
+            613,
+            777,
             940,
             945,
             946,
@@ -702,7 +563,7 @@
           "ok": true,
           "staff_span_y": [
             128,
-            910
+            871
           ]
         }
       ],
@@ -713,55 +574,11 @@
   "empty_staff_do_rows": [
     {
       "page": "empty-template-2-p1.png",
-      "systems": [
-        {
-          "system": 1,
-          "do_rows": [
-            {
-              "voice": "soprano",
-              "actual_y": 236,
-              "expected_y": 235.75,
-              "tolerance": 5.9399999999999995,
-              "upper_horn_ink": 46,
-              "lower_horn_ink": 42,
-              "top_closure_run": 16,
-              "bottom_closure_run": 16
-            },
-            {
-              "voice": "alto",
-              "actual_y": 471,
-              "expected_y": 471.5,
-              "tolerance": 5.9399999999999995,
-              "upper_horn_ink": 41,
-              "lower_horn_ink": 48,
-              "top_closure_run": 14,
-              "bottom_closure_run": 14
-            },
-            {
-              "voice": "tenor",
-              "actual_y": 608,
-              "expected_y": 607.8333333333334,
-              "tolerance": 5.88,
-              "upper_horn_ink": 45,
-              "lower_horn_ink": 45,
-              "top_closure_run": 17,
-              "bottom_closure_run": 17
-            },
-            {
-              "voice": "bass",
-              "actual_y": 810,
-              "expected_y": 810.0,
-              "tolerance": 5.9399999999999995,
-              "upper_horn_ink": 42,
-              "lower_horn_ink": 48,
-              "top_closure_run": 17,
-              "bottom_closure_run": 16
-            }
-          ]
-        }
+      "systems": [],
+      "failures": [
+        "system 1: expected four staff frames"
       ],
-      "failures": [],
-      "ok": true
+      "ok": false
     },
     {
       "page": "empty-template-2-p2.png",
@@ -771,146 +588,66 @@
           "do_rows": [
             {
               "voice": "soprano",
-              "actual_y": 153,
-              "expected_y": 152.75,
-              "tolerance": 5.9399999999999995,
-              "upper_horn_ink": 43,
-              "lower_horn_ink": 49,
-              "top_closure_run": 15,
-              "bottom_closure_run": 16
+              "actual_y": 128,
+              "expected_y": 142.25,
+              "tolerance": 4.0,
+              "upper_horn_ink": 0,
+              "lower_horn_ink": 0,
+              "top_closure_run": 18,
+              "bottom_closure_run": 10
             },
             {
               "voice": "alto",
-              "actual_y": 342,
-              "expected_y": 341.5,
-              "tolerance": 5.9399999999999995,
-              "upper_horn_ink": 49,
-              "lower_horn_ink": 45,
-              "top_closure_run": 14,
-              "bottom_closure_run": 14
+              "actual_y": 303,
+              "expected_y": 350.5,
+              "tolerance": 4.0,
+              "upper_horn_ink": 0,
+              "lower_horn_ink": 0,
+              "top_closure_run": 18,
+              "bottom_closure_run": 9
             },
             {
               "voice": "tenor",
-              "actual_y": 431,
-              "expected_y": 431.25,
-              "tolerance": 5.9399999999999995,
-              "upper_horn_ink": 46,
-              "lower_horn_ink": 49,
-              "top_closure_run": 17,
-              "bottom_closure_run": 17
+              "actual_y": 478,
+              "expected_y": 501.75,
+              "tolerance": 4.0,
+              "upper_horn_ink": 0,
+              "lower_horn_ink": 0,
+              "top_closure_run": 18,
+              "bottom_closure_run": 9
             },
             {
               "voice": "bass",
-              "actual_y": 587,
-              "expected_y": 587.0,
-              "tolerance": 5.9399999999999995,
-              "upper_horn_ink": 47,
-              "lower_horn_ink": 43,
-              "top_closure_run": 16,
-              "bottom_closure_run": 17
-            }
-          ]
-        },
-        {
-          "system": 2,
-          "do_rows": [
-            {
-              "voice": "soprano",
-              "actual_y": 724,
-              "expected_y": 723.75,
-              "tolerance": 5.9399999999999995,
-              "upper_horn_ink": 47,
-              "lower_horn_ink": 45,
-              "top_closure_run": 15,
-              "bottom_closure_run": 15
-            },
-            {
-              "voice": "alto",
-              "actual_y": 913,
-              "expected_y": 912.5,
-              "tolerance": 5.9399999999999995,
-              "upper_horn_ink": 46,
-              "lower_horn_ink": 39,
-              "top_closure_run": 14,
-              "bottom_closure_run": 14
-            },
-            {
-              "voice": "tenor",
-              "actual_y": 1002,
-              "expected_y": 1002.25,
-              "tolerance": 5.9399999999999995,
-              "upper_horn_ink": 43,
-              "lower_horn_ink": 49,
-              "top_closure_run": 17,
-              "bottom_closure_run": 17
-            },
-            {
-              "voice": "bass",
-              "actual_y": 1158,
-              "expected_y": 1158.0,
-              "tolerance": 5.9399999999999995,
-              "upper_horn_ink": 49,
-              "lower_horn_ink": 44,
-              "top_closure_run": 17,
-              "bottom_closure_run": 16
+              "actual_y": 654,
+              "expected_y": 691.3333333333334,
+              "tolerance": 4.0,
+              "upper_horn_ink": 0,
+              "lower_horn_ink": 0,
+              "top_closure_run": 18,
+              "bottom_closure_run": 10
             }
           ]
         }
       ],
-      "failures": [],
-      "ok": true
+      "failures": [
+        "system 1 voice 1: Do row y=128, expected 142.2",
+        "system 1 voice 1: crescent does not join Do from both sides (upper=0, lower=0)",
+        "system 1 voice 2: Do row y=303, expected 350.5",
+        "system 1 voice 2: crescent does not join Do from both sides (upper=0, lower=0)",
+        "system 1 voice 3: Do row y=478, expected 501.8",
+        "system 1 voice 3: crescent does not join Do from both sides (upper=0, lower=0)",
+        "system 1 voice 4: Do row y=654, expected 691.3",
+        "system 1 voice 4: crescent does not join Do from both sides (upper=0, lower=0)"
+      ],
+      "ok": false
     },
     {
       "page": "empty-template-p1.png",
-      "systems": [
-        {
-          "system": 1,
-          "do_rows": [
-            {
-              "voice": "soprano",
-              "actual_y": 236,
-              "expected_y": 235.75,
-              "tolerance": 5.9399999999999995,
-              "upper_horn_ink": 46,
-              "lower_horn_ink": 42,
-              "top_closure_run": 16,
-              "bottom_closure_run": 16
-            },
-            {
-              "voice": "alto",
-              "actual_y": 471,
-              "expected_y": 471.5,
-              "tolerance": 5.9399999999999995,
-              "upper_horn_ink": 41,
-              "lower_horn_ink": 48,
-              "top_closure_run": 14,
-              "bottom_closure_run": 14
-            },
-            {
-              "voice": "tenor",
-              "actual_y": 608,
-              "expected_y": 607.8333333333334,
-              "tolerance": 5.88,
-              "upper_horn_ink": 45,
-              "lower_horn_ink": 45,
-              "top_closure_run": 17,
-              "bottom_closure_run": 17
-            },
-            {
-              "voice": "bass",
-              "actual_y": 810,
-              "expected_y": 810.0,
-              "tolerance": 5.9399999999999995,
-              "upper_horn_ink": 42,
-              "lower_horn_ink": 48,
-              "top_closure_run": 17,
-              "bottom_closure_run": 16
-            }
-          ]
-        }
+      "systems": [],
+      "failures": [
+        "system 1: expected four staff frames"
       ],
-      "failures": [],
-      "ok": true
+      "ok": false
     },
     {
       "page": "empty-template-p2.png",
@@ -920,98 +657,62 @@
           "do_rows": [
             {
               "voice": "soprano",
-              "actual_y": 153,
-              "expected_y": 152.75,
-              "tolerance": 5.9399999999999995,
-              "upper_horn_ink": 43,
-              "lower_horn_ink": 49,
-              "top_closure_run": 15,
-              "bottom_closure_run": 16
+              "actual_y": 128,
+              "expected_y": 142.25,
+              "tolerance": 4.0,
+              "upper_horn_ink": 0,
+              "lower_horn_ink": 0,
+              "top_closure_run": 18,
+              "bottom_closure_run": 10
             },
             {
               "voice": "alto",
-              "actual_y": 342,
-              "expected_y": 341.5,
-              "tolerance": 5.9399999999999995,
-              "upper_horn_ink": 49,
-              "lower_horn_ink": 45,
-              "top_closure_run": 14,
-              "bottom_closure_run": 14
+              "actual_y": 303,
+              "expected_y": 350.5,
+              "tolerance": 4.0,
+              "upper_horn_ink": 0,
+              "lower_horn_ink": 0,
+              "top_closure_run": 18,
+              "bottom_closure_run": 9
             },
             {
               "voice": "tenor",
-              "actual_y": 431,
-              "expected_y": 431.25,
-              "tolerance": 5.9399999999999995,
-              "upper_horn_ink": 46,
-              "lower_horn_ink": 49,
-              "top_closure_run": 17,
-              "bottom_closure_run": 17
+              "actual_y": 478,
+              "expected_y": 501.75,
+              "tolerance": 4.0,
+              "upper_horn_ink": 0,
+              "lower_horn_ink": 0,
+              "top_closure_run": 18,
+              "bottom_closure_run": 9
             },
             {
               "voice": "bass",
-              "actual_y": 587,
-              "expected_y": 587.0,
-              "tolerance": 5.9399999999999995,
-              "upper_horn_ink": 47,
-              "lower_horn_ink": 43,
-              "top_closure_run": 16,
-              "bottom_closure_run": 17
-            }
-          ]
-        },
-        {
-          "system": 2,
-          "do_rows": [
-            {
-              "voice": "soprano",
-              "actual_y": 724,
-              "expected_y": 723.75,
-              "tolerance": 5.9399999999999995,
-              "upper_horn_ink": 47,
-              "lower_horn_ink": 45,
-              "top_closure_run": 15,
-              "bottom_closure_run": 15
-            },
-            {
-              "voice": "alto",
-              "actual_y": 913,
-              "expected_y": 912.5,
-              "tolerance": 5.9399999999999995,
-              "upper_horn_ink": 46,
-              "lower_horn_ink": 39,
-              "top_closure_run": 14,
-              "bottom_closure_run": 14
-            },
-            {
-              "voice": "tenor",
-              "actual_y": 1002,
-              "expected_y": 1002.25,
-              "tolerance": 5.9399999999999995,
-              "upper_horn_ink": 43,
-              "lower_horn_ink": 49,
-              "top_closure_run": 17,
-              "bottom_closure_run": 17
-            },
-            {
-              "voice": "bass",
-              "actual_y": 1158,
-              "expected_y": 1158.0,
-              "tolerance": 5.9399999999999995,
-              "upper_horn_ink": 49,
-              "lower_horn_ink": 44,
-              "top_closure_run": 17,
-              "bottom_closure_run": 16
+              "actual_y": 654,
+              "expected_y": 691.3333333333334,
+              "tolerance": 4.0,
+              "upper_horn_ink": 0,
+              "lower_horn_ink": 0,
+              "top_closure_run": 18,
+              "bottom_closure_run": 10
             }
           ]
         }
       ],
-      "failures": [],
-      "ok": true
+      "failures": [
+        "system 1 voice 1: Do row y=128, expected 142.2",
+        "system 1 voice 1: crescent does not join Do from both sides (upper=0, lower=0)",
+        "system 1 voice 2: Do row y=303, expected 350.5",
+        "system 1 voice 2: crescent does not join Do from both sides (upper=0, lower=0)",
+        "system 1 voice 3: Do row y=478, expected 501.8",
+        "system 1 voice 3: crescent does not join Do from both sides (upper=0, lower=0)",
+        "system 1 voice 4: Do row y=654, expected 691.3",
+        "system 1 voice 4: crescent does not join Do from both sides (upper=0, lower=0)"
+      ],
+      "ok": false
     }
   ],
   "empty_staff_centres": {
-    "source": "share/templates/02-Choral/12-SATB_(JiMStaff)/12-SATB_(JiMStaff).mscx",
+    "source": "share/templates/02-Choral/12-SATB_(MeloPresto_Staff)/12-SATB_(MeloPresto_Staff).mscx",
     "voices": [
       "soprano",
       "alto",

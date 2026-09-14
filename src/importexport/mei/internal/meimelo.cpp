@@ -74,8 +74,10 @@ static std::string tstampStr(double tstamp)
 
 static double tstampFrom(const Fraction& rtick, const Fraction& timesig)
 {
-    // 1 + offset expressed in meter units (same as Convert::tstampFromFraction).
-    return 1.0 + (rtick / timesig * Fraction(timesig.denominator(), 1)).toDouble();
+    // 1 + the offset counted in the meter's beat unit (1/denominator of a
+    // whole note): one quarter into a 3/4 bar is tstamp 2. The former form
+    // divided by the whole bar and only agreed with this for 4/4.
+    return 1.0 + (rtick * Fraction(timesig.denominator(), 1)).toDouble();
 }
 
 static const char* accidOf(int alter)
@@ -337,9 +339,13 @@ bool MeloMeiExporter::onStaffDef(pugi::xml_node staffDefNode, const Staff* staff
         std::string loP, hiP;
         int loAlter = 0, hiAlter = 0, loOct = 0, hiOct = 0;
         bool first = true;
-        auto rank = [](const std::string& pname, int oct) {
+        // Order the projected bounds by sounding height, alteration included:
+        // C4 is below C#4, so an extent hull whose states project to both
+        // keeps the natural as its lowest note.
+        auto rank = [](const std::string& pname, int alter, int oct) {
+            static const int semis[] = { 0, 2, 4, 5, 7, 9, 11 };
             static const std::string steps = "cdefgab";
-            return oct * 7 + int(steps.find(pname.at(0)));
+            return oct * 12 + semis[steps.find(pname.at(0))] + alter;
         };
         for (const auto& st : plan.states) {
             int b[4];
@@ -352,7 +358,7 @@ bool MeloMeiExporter::onStaffDef(pugi::xml_node staffDefNode, const Staff* staff
             if (!projectPitch(st.second, b[0], b[1], p, alter, oct)) {
                 return false;
             }
-            if (first || rank(p, oct) < rank(loP, loOct)) {
+            if (first || rank(p, alter, oct) < rank(loP, loAlter, loOct)) {
                 loP = p;
                 loAlter = alter;
                 loOct = oct;
@@ -360,7 +366,7 @@ bool MeloMeiExporter::onStaffDef(pugi::xml_node staffDefNode, const Staff* staff
             if (!projectPitch(st.second, b[2], b[3], p, alter, oct)) {
                 return false;
             }
-            if (first || rank(p, oct) > rank(hiP, hiOct)) {
+            if (first || rank(p, alter, oct) > rank(hiP, hiAlter, hiOct)) {
                 hiP = p;
                 hiAlter = alter;
                 hiOct = oct;
@@ -447,7 +453,10 @@ void MeloMeiExporter::writeScoreAnnots(pugi::xml_node scoreNode)
         annot.append_attribute("class") = ("#melo.melody." + token.toStdString()).c_str();
         for (const StaffPlan& plan : m_staves) {
             const Part* part = plan.staff->part();
-            if (part && part->partName().toLower() == token) {
+            // A MusicXML-imported part carries the role in partName; an
+            // MEI-imported one carries it in the staffDef label, which is
+            // the instrument long name. Either names the melody staff.
+            if (part && (part->partName().toLower() == token || part->longName().toLower() == token)) {
                 annot.append_attribute("plist") = ("#" + plan.staffDefId).c_str();
                 break;
             }
@@ -505,7 +514,9 @@ void MeloMeiExporter::writeMeasureAnnots(pugi::xml_node measureNode, const Measu
             annot.append_attribute("type") = "melo-tonal-state";
             annot.append_attribute("staff") = plan.staffN;
             annot.append_attribute("tstamp") = tstampStr(tstampFrom(tick - measure->tick(), measure->timesig())).c_str();
-            annot.append_attribute("corresp") = ("#" + plan.jmStateIds.at(si)).c_str();
+            // No @corresp: the jm:state record links back with @annot, and
+            // MEI's own linking rule resolves @corresp only against
+            // MEI-namespace targets (mei-melo spec/MAPPING.md fact 8).
         }
     }
 }
@@ -542,6 +553,45 @@ void MeloMeiExporter::onNote(const Note* note, const std::string& xmlId)
     m_notes.push_back({ xmlId, note });
 }
 
+/// The controlled vocabulary every MeloPresto annot @class points into
+/// (encodingDesc/classDecls), with the same category ids the mei-melo
+/// generator declares, so that MEI's own rule "@class must correspond to
+/// the @xml:id of a category" holds on a fork export as on a direct file.
+void MeloMeiExporter::writeClassDecls(pugi::xml_node meiHead, pugi::xml_node fileDesc)
+{
+    pugi::xml_node encodingDesc = meiHead.child("encodingDesc");
+    if (!encodingDesc) {
+        encodingDesc = fileDesc ? meiHead.insert_child_after("encodingDesc", fileDesc)
+                       : meiHead.prepend_child("encodingDesc");
+    }
+    pugi::xml_node classDecls = encodingDesc.child("classDecls");
+    if (classDecls && classDecls.find_child_by_attribute("taxonomy", "xml:id", "melo.taxonomy")) {
+        return;
+    }
+    if (!classDecls) {
+        classDecls = encodingDesc.append_child("classDecls");
+    }
+    pugi::xml_node taxonomy = classDecls.append_child("taxonomy");
+    taxonomy.append_attribute("xml:id") = "melo.taxonomy";
+    taxonomy.append_child("bibl").text().set("MeloPresto analysis controlled vocabulary v1");
+    static const std::vector<std::pair<const char*, std::vector<const char*> > > groups = {
+        { "outcome", { "modulation", "tonicization", "ambiguous", "insufficient-evidence" } },
+        { "ambit", { "tonic-bounded", "tonic-centered" } },
+        { "melody", { "soprano", "alto", "tenor", "bass" } },
+        { "ambiguity", { "short-tonicization-vs-brief-modulation", "pivot-region",
+                         "conflicting-cadence-evidence", "insufficient-context" } },
+    };
+    for (const auto& group : groups) {
+        pugi::xml_node g = taxonomy.append_child("category");
+        g.append_attribute("xml:id") = (std::string("melo.") + group.first).c_str();
+        for (const char* value : group.second) {
+            pugi::xml_node c = g.append_child("category");
+            c.append_attribute("xml:id") = (std::string("melo.") + group.first + "." + value).c_str();
+            c.append_child("label").text().set(value);
+        }
+    }
+}
+
 bool MeloMeiExporter::writeExtMeta(pugi::xml_node meiHead)
 {
     if (!m_present) {
@@ -567,6 +617,7 @@ bool MeloMeiExporter::writeExtMeta(pugi::xml_node meiHead)
                 pn.text().set(composer.toStdString().c_str());
             }
         }
+        writeClassDecls(meiHead, fileDesc);
         if (!meiHead.child("workList") && !workTitle.isEmpty()) {
             pugi::xml_node revisionForOrder = meiHead.child("revisionDesc");
             pugi::xml_node extForOrder = meiHead.child("extMeta");
@@ -597,6 +648,21 @@ bool MeloMeiExporter::writeExtMeta(pugi::xml_node meiHead)
     for (StaffPlan& plan : m_staves) {
         pugi::xml_node pe = mx.append_child("jm:part");
         pe.append_attribute("ref") = ("#" + plan.staffDefId).c_str();
+        // The part's interchange identity and name, as the direct path
+        // records them from MusicXML: readers key per-part facts (attacks,
+        // states) by part-id. MuseScore keeps no MusicXML part id, so the
+        // id is the one its own MusicXML export would write, "P" + the
+        // part's 1-based position.
+        if (const Part* part = plan.staff->part()) {
+            const std::vector<Part*>& parts = m_score->parts();
+            const auto it = std::find(parts.begin(), parts.end(), part);
+            if (it != parts.end()) {
+                pe.append_attribute("part-id") = ("P" + std::to_string(std::distance(parts.begin(), it) + 1)).c_str();
+            }
+            if (!part->partName().isEmpty()) {
+                pe.append_attribute("name") = part->partName().toStdString().c_str();
+            }
+        }
         for (size_t si = 0; si < plan.states.size(); ++si) {
             const Fraction tick = plan.states.at(si).first;
             const Measure* measure = nullptr;
@@ -664,9 +730,9 @@ bool MeloMeiExporter::writeExtMeta(pugi::xml_node meiHead)
             te.append_attribute("measure") = int(midx) + 1;
             te.append_attribute("off") = fracStr(quartersOf(t.tick - measure->tick())).c_str();
             te.append_attribute("staff") = plan.staffN;
-            if (!t.placement.isEmpty()) {
-                te.append_attribute("placement") = t.placement.toStdString().c_str();
-            }
+            // Direction placement is layout: the MEI profile grammar (mei-melo
+            // customization/melo-mei-extension.rng, jm:trajectory) does not
+            // carry it; the native score and MusicXML do.
             pugi::xml_node tt = te.append_child("melo:tuning-trajectory");
             for (const melo::TrajectorySegment& seg : t.segments) {
                 pugi::xml_node sege = tt.append_child("melo:segment");
@@ -720,8 +786,10 @@ bool MeloMeiExporter::writeExtMeta(pugi::xml_node meiHead)
         ev.append_attribute("off") = fracStr(quartersOf(segment->tick() - measure->tick())).c_str();
     }
 
-    // Responsible agents for the evidentiary adjudications.
-    if (!m_reviewers.empty()) {
+    // Responsible agents for the evidentiary adjudications, and the review
+    // agent every audit-history change names (MEI's change rule wants one).
+    const melo::ReviewRecord& reviewForHeader = m_score->meloReview();
+    if (!m_reviewers.empty() || !reviewForHeader.reviewAgent.isEmpty()) {
         pugi::xml_node fileDesc = meiHead.child("fileDesc");
         if (!fileDesc) {
             fileDesc = meiHead.prepend_child("fileDesc");
@@ -749,6 +817,13 @@ bool MeloMeiExporter::writeExtMeta(pugi::xml_node meiHead)
             pn.append_attribute("xml:id") = id.c_str();
             pn.append_attribute("role") = "melo-reviewer";
             pn.text().set(m_reviewers.at(i).toStdString().c_str());
+        }
+        if (!reviewForHeader.reviewAgent.isEmpty()
+            && !respStmt.find_child_by_attribute("name", "xml:id", "resp-agent")) {
+            pugi::xml_node nm = respStmt.append_child("name");
+            nm.append_attribute("xml:id") = "resp-agent";
+            nm.append_attribute("role") = "melo-review-agent";
+            nm.text().set(reviewForHeader.reviewAgent.toStdString().c_str());
         }
     }
 
@@ -851,6 +926,9 @@ bool MeloMeiExporter::writeExtMeta(pugi::xml_node meiHead)
                 if (!a.phase.isEmpty()) {
                     ch.append_attribute("label") = a.phase.toStdString().c_str();
                 }
+                if (!review.reviewAgent.isEmpty()) {
+                    ch.append_attribute("resp") = "#resp-agent";
+                }
                 pugi::xml_node cd = ch.append_child("changeDesc");
                 cd.append_child("p").text().set(a.reason.toStdString().c_str());
             }
@@ -940,6 +1018,7 @@ void MeloMeiImporter::capture(pugi::xml_node root)
     for (pugi::xpath_node pn : root.select_nodes("//respStmt/persName[@role='melo-reviewer' or @role='jims-reviewer']")) {
         m_reviewerById[pn.node().attribute("xml:id").value()] = String(pn.node().text().as_string());
     }
+    m_reviewAgent = String(root.select_node("//respStmt/name[@role='melo-review-agent']").node().text().as_string());
     m_focusedReviewReasons.clear();
     pugi::xml_node fr = root.select_node("//score/annot[@type='melo-focused-review' or @type='jims-focused-review']").node();
     if (fr) {
@@ -1232,7 +1311,6 @@ bool MeloMeiImporter::apply(Score* score,
                 }
                 melo::TuningTrajectory trajectory;
                 trajectory.tick = tick;
-                trajectory.placement = String(se.attribute("placement").value());
                 for (pugi::xml_node sege : tt.children()) {
                     if (localName(sege) != "segment") {
                         continue;
@@ -1272,6 +1350,7 @@ bool MeloMeiImporter::apply(Score* score,
     if (rv) {
         melo::ReviewRecord review;
         review.schema = String(rv.attribute("schema").value());
+        review.reviewAgent = m_reviewAgent;
         review.focusedReviewReasons = m_focusedReviewReasons;
         for (pugi::xml_node child : rv.children()) {
             const std::string tag = localName(child);
