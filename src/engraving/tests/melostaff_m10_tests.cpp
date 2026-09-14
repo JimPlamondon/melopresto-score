@@ -199,12 +199,14 @@ TEST(Engraving_MeloStaffM10SATBTests, systemsShowOnlyTheSectionsTheyContain)
         EXPECT_TRUE(melo::applyChange(score, 0, first, u"bind:reference-pitch:62", error)) << error.toStdString();
         if (withChange) {
             EXPECT_TRUE(melo::applyChange(score, 0, third, u"key:-1:1", error)) << error.toStdString();
-            // Give the new section a written note two periods up so its
-            // coverage, and therefore the union, is visibly taller.
-            StaffType* after = score->staff(0)->staffType(third->tick());
-            String widened;
-            EXPECT_TRUE(melo::widenExtent(after->meloStateJson(), 2, 0, widened));
-            after->setMeloStateJson(widened);
+            // Raise one note of the new section three periods so its coverage,
+            // and therefore the union on its system, is visibly taller.
+            for (Note* note : notesOn(score, 0)) {
+                if (note->tick() >= third->tick()) {
+                    note->setMeloPitch(note->meloNPer() + 3, note->meloNGen());
+                    break;
+                }
+            }
         }
         score->doLayout();
         return score;
@@ -229,9 +231,33 @@ TEST(Engraving_MeloStaffM10SATBTests, systemsShowOnlyTheSectionsTheyContain)
     ASSERT_FALSE(firstView.empty());
     ASSERT_FALSE(secondView.empty());
     ASSERT_FALSE(afterView.empty());
-    EXPECT_NEAR(firstView.topCents(), plainView.topCents(), 1e-6)
-        << "a system without a state change must not pay for a later section's range";
-    EXPECT_NEAR(firstView.bottomCents(), plainView.bottomCents(), 1e-6);
+    // System 1 holds only section 1's first measure: its frame is the Kernel
+    // frame of exactly those notes (owner decision 2026-09-14, S3), compared
+    // relative to Do0 because the fitted extent has its own origin.
+    {
+        String slice = u"{\"notes\":[";
+        bool firstNote = true;
+        for (Note* note : notesOn(changed, 0)) {
+            if (note->tick() < second->tick()) {
+                slice += (firstNote ? u"" : u",") + String(u"{\"nPer\":%1,\"nGen\":%2}").arg(note->meloNPer()).arg(note->meloNGen());
+                firstNote = false;
+            }
+        }
+        slice += u"]}";
+        String fitted;
+        ASSERT_TRUE(melo::fitExtent(base->meloStateJson(), slice, fitted));
+        std::vector<melo::StaveSegment> segments;
+        ASSERT_TRUE(melo::frameForMelody(fitted, slice, base->meloTonicAmbit(), segments, {}, String(), true));
+        ASSERT_FALSE(segments.empty());
+        double realDo0 = 0.0;
+        double fittedDo0 = 0.0;
+        ASSERT_TRUE(melo::noteCentsAboveExtentLower(base->meloStateJson(), 1, -2, realDo0));
+        ASSERT_TRUE(melo::noteCentsAboveExtentLower(fitted, 1, -2, fittedDo0));
+        EXPECT_NEAR(firstView.topCents() - realDo0, segments.back().upperCents - fittedDo0, 1e-6)
+            << "a system without a state change shows the frame of its own notes only";
+        EXPECT_NEAR(firstView.bottomCents() - realDo0, segments.front().lowerCents - fittedDo0, 1e-6);
+    }
+    UNUSED(plainView);
     EXPECT_GT(secondView.heightLd(), firstView.heightLd() + 1e-6)
         << "the system holding both sections shows their union";
     EXPECT_NEAR(afterView.heightLd(), secondView.heightLd(), 1e-6)
@@ -256,6 +282,92 @@ TEST(Engraving_MeloStaffM10SATBTests, systemsShowOnlyTheSectionsTheyContain)
     }
     delete plain;
     delete changed;
+}
+
+TEST(Engraving_MeloStaffM10SATBTests, indicatorPlacementFollowsTheNotesElseTheHighestFit)
+{
+    // Owner decision 2026-09-14 (S3): among the placements where every point
+    // fits, the one nearest the staff's notes on the system (smallest gap
+    // between the indicator's rows and the notes' rows); without notes, the
+    // highest. Two full periods, Do rows at 0, 1200 and 2400.
+    StaffType::MeloFrameView view;
+    StaffType::MeloFrameBand band;
+    band.lowerCents = 0.0;
+    band.upperCents = 2400.0;
+    band.segments.push_back({ 0.0, 2400.0, true });
+    view.bands.push_back(band);
+    melo::ChangeIndicator indicator;
+    indicator.kinds.push_back(u"mode");
+    melo::ChangeArrow arrow;
+    arrow.kind = u"mode";
+    arrow.from.periodOffset = 0;
+    arrow.from.ordinate = 9.0 / 12.0;
+    arrow.to.periodOffset = 1;
+    arrow.to.ordinate = 0.0;
+    arrow.up = true;
+    indicator.arrows.push_back(arrow);
+    // Placement at 0 occupies 900..1200; placement at 1200 occupies 2100..2400.
+    EXPECT_DOUBLE_EQ(melo::changeAnchorPeriodCents(view, indicator, 1200.0, 0.0), 1200.0) << "no notes: the highest fit";
+    EXPECT_DOUBLE_EQ(melo::changeAnchorPeriodCents(view, indicator, 1200.0, 0.0, { 300.0, 500.0 }), 0.0) << "notes low";
+    EXPECT_DOUBLE_EQ(melo::changeAnchorPeriodCents(view, indicator, 1200.0, 0.0, { 1900.0 }), 1200.0) << "notes high";
+    EXPECT_DOUBLE_EQ(melo::changeAnchorPeriodCents(view, indicator, 1200.0, 0.0, { 1100.0 }), 0.0)
+        << "a note among the lower placement's rows beats a gap to the upper";
+}
+
+TEST(Engraving_MeloStaffM10SATBTests, aSystemPaysOnlyForTheNotesItShows)
+{
+    // Owner decision 2026-09-14 (S3): a section contributes to a system's
+    // frame only the rows its notes on that system need, never its whole
+    // written range. Three systems, one measure each; the change starts
+    // system 2; a note raised three periods on system 3 must not change system 2.
+    auto load = [](bool raise) -> MasterScore* {
+        MasterScore* score = ScoreRW::readScore(u"jimstaff_data/collision.mscx");
+        EXPECT_TRUE(score);
+        if (!score) {
+            return nullptr;
+        }
+        score->style().set(Sid::meloElideEmptyOctaves, false);
+        Measure* first = score->firstMeasure();
+        Measure* second = first->nextMeasure();
+        Measure* third = second->nextMeasure();
+        for (Measure* m : { first, second }) {
+            auto lineBreak = Factory::createLayoutBreak(m);
+            lineBreak->setLayoutBreakType(LayoutBreakType::LINE);
+            lineBreak->setTrack(0);
+            m->add(lineBreak);
+        }
+        String error;
+        EXPECT_TRUE(melo::applyChange(score, 0, first, u"bind:reference-pitch:62", error)) << error.toStdString();
+        EXPECT_TRUE(melo::applyChange(score, 0, second, u"key:-1:1", error)) << error.toStdString();
+        if (raise) {
+            for (Note* note : notesOn(score, 0)) {
+                if (note->tick() >= third->tick()) {
+                    note->setMeloPitch(note->meloNPer() + 3, note->meloNGen());
+                    break;
+                }
+            }
+        }
+        score->doLayout();
+        return score;
+    };
+    MasterScore* plain = load(false);
+    MasterScore* raised = load(true);
+    ASSERT_TRUE(plain && raised);
+    auto viewOf = [](MasterScore* score, int measureIndex) -> const StaffType::MeloFrameView& {
+        Measure* m = score->firstMeasure();
+        for (int i = 0; i < measureIndex; ++i) {
+            m = m->nextMeasure();
+        }
+        return score->staff(0)->staffType(m->tick())->meloFrameView(score, 0, m->system());
+    };
+    ASSERT_NE(raised->firstMeasure()->system(), raised->firstMeasure()->nextMeasure()->system());
+    ASSERT_NE(raised->firstMeasure()->nextMeasure()->system(), raised->firstMeasure()->nextMeasure()->nextMeasure()->system());
+    EXPECT_NEAR(viewOf(raised, 1).heightLd(), viewOf(plain, 1).heightLd(), 1e-6)
+        << "system 2 must not pay for a note that lives on system 3";
+    EXPECT_GT(viewOf(raised, 2).heightLd(), viewOf(plain, 2).heightLd() + 1e-6)
+        << "system 3 shows the raised note";
+    delete plain;
+    delete raised;
 }
 
 TEST(Engraving_MeloStaffM10SATBTests, keyIndicatorFitsWhenItsPeriodZeroIsBelowTheStaff)
