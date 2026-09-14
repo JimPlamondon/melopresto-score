@@ -47,6 +47,7 @@
 #include "inspector/qml/MuseScore/Inspector/melotuningmodel.h"
 #include "inspector/qml/MuseScore/Inspector/notation/chordsymbols/chordsymbolsettingsmodel.h"
 #include "notation/tests/mocks/notationinteractionmock.h"
+#include "notation/tests/mocks/notationconfigurationmock.h"
 #include "notation/tests/mocks/notationselectionmock.h"
 #include "notation/internal/notation.h"
 #include "engraving/dom/factory.h"
@@ -1133,6 +1134,7 @@ TEST_F(MeloUiModelTests, PaintedKeyChangePitchMatchingHeaderRejectsDoubleClickAn
         ASSERT_TRUE(alto);
         auto headerProvider = std::make_shared<muse::draw::BufferedPaintProvider>();
         muse::draw::Painter headerPainter(headerProvider, "matching-header");
+        headerPainter.setWindow(muse::RectF(0, 0, 4000, 4000));
         headerPainter.setViewport(muse::RectF(0, 0, 4000, 4000));
         engraving::rendering::PaintOptions options;
         header->renderer()->drawItem(header, &headerPainter, options);
@@ -1160,6 +1162,7 @@ TEST_F(MeloUiModelTests, PaintedKeyChangePitchMatchingHeaderRejectsDoubleClickAn
         const double x = anchor->x() - width - alto->style().styleMM(Sid::barNoteDistance);
         auto provider = std::make_shared<muse::draw::BufferedPaintProvider>();
         muse::draw::Painter painter(provider, "matching-key-change");
+        painter.setWindow(muse::RectF(0, 0, 4000, 4000));
         painter.setViewport(muse::RectF(0, 0, 4000, 4000));
         engraving::rendering::score::TDraw::drawMeloChangeTerrain(alto, &painter, options, indicator, incoming, displayed, x,
                                                                   engraving::rendering::score::TDraw::ChangePlacement::MID_BAR);
@@ -1176,6 +1179,8 @@ TEST_F(MeloUiModelTests, PaintedKeyChangePitchMatchingHeaderRejectsDoubleClickAn
                         continue;
                     }
                     const auto ink = melo::pitchLabelLayout(target.label, state.font, score->engravingFont()).bounds;
+                    ASSERT_TRUE(std::isfinite(state.transform.m11()));
+                    ASSERT_TRUE(std::isfinite(state.transform.m22()));
                     annotationPoints.push_back(state.transform.map(ink.translated(text.rect.topLeft())).center() + alto->canvasPos());
                 }
             }
@@ -1189,6 +1194,7 @@ TEST_F(MeloUiModelTests, PaintedKeyChangePitchMatchingHeaderRejectsDoubleClickAn
         const auto root = score->metaTag(melo::REFERENCE_TIMELINE_TAG);
         const int undo = score->undoStack()->size();
         testing::NiceMock<notation::ControlledViewMock> view;
+        ON_CALL(view, currentScaling()).WillByDefault(testing::Return(1.0));
         QQuickItem viewItem;
         auto interaction = std::make_shared<testing::NiceMock<notation::NotationInteractionMock> >();
         auto selection = std::make_shared<testing::NiceMock<notation::NotationSelectionMock> >();
@@ -1205,6 +1211,11 @@ TEST_F(MeloUiModelTests, PaintedKeyChangePitchMatchingHeaderRejectsDoubleClickAn
         controller.globalContext.set(global);
         controller.dispatcher.set(dispatcher);
         controller.playbackController.set(playback);
+        auto configuration = std::make_shared<testing::NiceMock<notation::NotationConfigurationMock> >();
+        ON_CALL(*configuration, selectionProximity()).WillByDefault(testing::Return(8));
+        controller.configuration.set(configuration);
+        EXPECT_CALL(*interaction, hitElement(testing::_, testing::FloatEq(4.0f)))
+        .Times(annotationPoints.size()).WillRepeatedly(testing::Return(nullptr));
         EXPECT_CALL(*dispatcher, dispatch(muse::actions::ActionCode("melo-edit-initial-pitch"), testing::_)).Times(0);
         for (const auto& point : annotationPoints) {
             ASSERT_FALSE(melo::findHeaderPitch(score.get(), point, hit));
