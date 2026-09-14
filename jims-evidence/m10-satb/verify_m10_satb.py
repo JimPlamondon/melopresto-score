@@ -12,7 +12,7 @@ HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 RENDERS = HERE / "renders"
 SUMMARY = HERE / "verify-summary.json"
-TEMPLATE = ROOT / "share/templates/02-Choral/12-SATB_(JiMStaff)/12-SATB_(JiMStaff).mscx"
+TEMPLATE = ROOT / "share/templates/02-Choral/12-SATB_(MeloPresto_Staff)/12-SATB_(MeloPresto_Staff).mscx"
 M9_VERIFIER = HERE.parent / "m9-satb/verify_satb_layout.py"
 
 EXPECTED_EXTENTS = [

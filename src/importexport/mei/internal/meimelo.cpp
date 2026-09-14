@@ -74,8 +74,10 @@ static std::string tstampStr(double tstamp)
 
 static double tstampFrom(const Fraction& rtick, const Fraction& timesig)
 {
-    // 1 + offset expressed in meter units (same as Convert::tstampFromFraction).
-    return 1.0 + (rtick / timesig * Fraction(timesig.denominator(), 1)).toDouble();
+    // 1 + the offset counted in the meter's beat unit (1/denominator of a
+    // whole note): one quarter into a 3/4 bar is tstamp 2. The former form
+    // divided by the whole bar and only agreed with this for 4/4.
+    return 1.0 + (rtick * Fraction(timesig.denominator(), 1)).toDouble();
 }
 
 static const char* accidOf(int alter)
@@ -337,9 +339,13 @@ bool MeloMeiExporter::onStaffDef(pugi::xml_node staffDefNode, const Staff* staff
         std::string loP, hiP;
         int loAlter = 0, hiAlter = 0, loOct = 0, hiOct = 0;
         bool first = true;
-        auto rank = [](const std::string& pname, int oct) {
+        // Order the projected bounds by sounding height, alteration included:
+        // C4 is below C#4, so an extent hull whose states project to both
+        // keeps the natural as its lowest note.
+        auto rank = [](const std::string& pname, int alter, int oct) {
+            static const int semis[] = { 0, 2, 4, 5, 7, 9, 11 };
             static const std::string steps = "cdefgab";
-            return oct * 7 + int(steps.find(pname.at(0)));
+            return oct * 12 + semis[steps.find(pname.at(0))] + alter;
         };
         for (const auto& st : plan.states) {
             int b[4];
@@ -352,7 +358,7 @@ bool MeloMeiExporter::onStaffDef(pugi::xml_node staffDefNode, const Staff* staff
             if (!projectPitch(st.second, b[0], b[1], p, alter, oct)) {
                 return false;
             }
-            if (first || rank(p, oct) < rank(loP, loOct)) {
+            if (first || rank(p, alter, oct) < rank(loP, loAlter, loOct)) {
                 loP = p;
                 loAlter = alter;
                 loOct = oct;
@@ -360,7 +366,7 @@ bool MeloMeiExporter::onStaffDef(pugi::xml_node staffDefNode, const Staff* staff
             if (!projectPitch(st.second, b[2], b[3], p, alter, oct)) {
                 return false;
             }
-            if (first || rank(p, oct) > rank(hiP, hiOct)) {
+            if (first || rank(p, alter, oct) > rank(hiP, hiAlter, hiOct)) {
                 hiP = p;
                 hiAlter = alter;
                 hiOct = oct;
@@ -642,6 +648,21 @@ bool MeloMeiExporter::writeExtMeta(pugi::xml_node meiHead)
     for (StaffPlan& plan : m_staves) {
         pugi::xml_node pe = mx.append_child("jm:part");
         pe.append_attribute("ref") = ("#" + plan.staffDefId).c_str();
+        // The part's interchange identity and name, as the direct path
+        // records them from MusicXML: readers key per-part facts (attacks,
+        // states) by part-id. MuseScore keeps no MusicXML part id, so the
+        // id is the one its own MusicXML export would write, "P" + the
+        // part's 1-based position.
+        if (const Part* part = plan.staff->part()) {
+            const std::vector<Part*>& parts = m_score->parts();
+            const auto it = std::find(parts.begin(), parts.end(), part);
+            if (it != parts.end()) {
+                pe.append_attribute("part-id") = ("P" + std::to_string(std::distance(parts.begin(), it) + 1)).c_str();
+            }
+            if (!part->partName().isEmpty()) {
+                pe.append_attribute("name") = part->partName().toStdString().c_str();
+            }
+        }
         for (size_t si = 0; si < plan.states.size(); ++si) {
             const Fraction tick = plan.states.at(si).first;
             const Measure* measure = nullptr;
