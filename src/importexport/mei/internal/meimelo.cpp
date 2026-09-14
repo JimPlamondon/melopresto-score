@@ -558,10 +558,13 @@ void MeloMeiExporter::writeClassDecls(pugi::xml_node meiHead, pugi::xml_node fil
         encodingDesc = fileDesc ? meiHead.insert_child_after("encodingDesc", fileDesc)
                        : meiHead.prepend_child("encodingDesc");
     }
-    if (encodingDesc.child("classDecls")) {
+    pugi::xml_node classDecls = encodingDesc.child("classDecls");
+    if (classDecls && classDecls.find_child_by_attribute("taxonomy", "xml:id", "melo.taxonomy")) {
         return;
     }
-    pugi::xml_node classDecls = encodingDesc.append_child("classDecls");
+    if (!classDecls) {
+        classDecls = encodingDesc.append_child("classDecls");
+    }
     pugi::xml_node taxonomy = classDecls.append_child("taxonomy");
     taxonomy.append_attribute("xml:id") = "melo.taxonomy";
     taxonomy.append_child("bibl").text().set("MeloPresto analysis controlled vocabulary v1");
