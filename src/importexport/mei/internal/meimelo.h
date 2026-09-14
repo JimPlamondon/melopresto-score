@@ -149,6 +149,7 @@ private:
     };
 
     std::map<std::string, muse::String> m_reviewerById;
+    muse::String m_reviewAgent;                 // respStmt/name[@role='melo-review-agent']
     std::map<std::string, ChangeEntry> m_changeById;
     std::vector<muse::String> m_focusedReviewReasons;
     std::map<std::string, pugi::xml_node> m_adjAnnots;

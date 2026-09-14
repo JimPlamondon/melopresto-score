@@ -216,6 +216,10 @@ TEST_F(Mei_Tests, mei_melo_roundtrip_01) {
     EXPECT_TRUE(mei.contains(u"<ambitus>"));
     EXPECT_TRUE(mei.contains(u"melo:tuning-trajectory"));
     EXPECT_FALSE(mei.contains(u"jims:"));
+    // The state link is jm:state/@annot only; an annot @corresp into extMeta
+    // trips MEI's own linking rule (mei-melo audit, 2026-09-14).
+    EXPECT_TRUE(mei.contains(u"annot=\"#"));
+    EXPECT_FALSE(mei.contains(u"corresp=\"#jmstate"));
     delete score;
 }
 

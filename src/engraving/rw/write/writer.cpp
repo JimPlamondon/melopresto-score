@@ -70,6 +70,9 @@ static void writeMeloReviewValue(XmlWriter& xml, const melo::ReviewValue& v)
 static void writeMeloReview(XmlWriter& xml, const melo::ReviewRecord& review)
 {
     xml.startElement("jimsReview", { { "schema", review.schema } });
+    if (!review.reviewAgent.isEmpty()) {
+        xml.tag("reviewAgent", review.reviewAgent);
+    }
     if (!review.work.children.empty()) {
         xml.startElement("work");
         writeMeloReviewValue(xml, review.work);

@@ -505,7 +505,9 @@ void MeloMeiExporter::writeMeasureAnnots(pugi::xml_node measureNode, const Measu
             annot.append_attribute("type") = "melo-tonal-state";
             annot.append_attribute("staff") = plan.staffN;
             annot.append_attribute("tstamp") = tstampStr(tstampFrom(tick - measure->tick(), measure->timesig())).c_str();
-            annot.append_attribute("corresp") = ("#" + plan.jmStateIds.at(si)).c_str();
+            // No @corresp: the jm:state record links back with @annot, and
+            // MEI's own linking rule resolves @corresp only against
+            // MEI-namespace targets (mei-melo spec/MAPPING.md fact 8).
         }
     }
 }
@@ -720,8 +722,10 @@ bool MeloMeiExporter::writeExtMeta(pugi::xml_node meiHead)
         ev.append_attribute("off") = fracStr(quartersOf(segment->tick() - measure->tick())).c_str();
     }
 
-    // Responsible agents for the evidentiary adjudications.
-    if (!m_reviewers.empty()) {
+    // Responsible agents for the evidentiary adjudications, and the review
+    // agent every audit-history change names (MEI's change rule wants one).
+    const melo::ReviewRecord& reviewForHeader = m_score->meloReview();
+    if (!m_reviewers.empty() || !reviewForHeader.reviewAgent.isEmpty()) {
         pugi::xml_node fileDesc = meiHead.child("fileDesc");
         if (!fileDesc) {
             fileDesc = meiHead.prepend_child("fileDesc");
@@ -749,6 +753,13 @@ bool MeloMeiExporter::writeExtMeta(pugi::xml_node meiHead)
             pn.append_attribute("xml:id") = id.c_str();
             pn.append_attribute("role") = "melo-reviewer";
             pn.text().set(m_reviewers.at(i).toStdString().c_str());
+        }
+        if (!reviewForHeader.reviewAgent.isEmpty()
+            && !respStmt.find_child_by_attribute("name", "xml:id", "resp-agent")) {
+            pugi::xml_node nm = respStmt.append_child("name");
+            nm.append_attribute("xml:id") = "resp-agent";
+            nm.append_attribute("role") = "melo-review-agent";
+            nm.text().set(reviewForHeader.reviewAgent.toStdString().c_str());
         }
     }
 
@@ -851,6 +862,9 @@ bool MeloMeiExporter::writeExtMeta(pugi::xml_node meiHead)
                 if (!a.phase.isEmpty()) {
                     ch.append_attribute("label") = a.phase.toStdString().c_str();
                 }
+                if (!review.reviewAgent.isEmpty()) {
+                    ch.append_attribute("resp") = "#resp-agent";
+                }
                 pugi::xml_node cd = ch.append_child("changeDesc");
                 cd.append_child("p").text().set(a.reason.toStdString().c_str());
             }
@@ -940,6 +954,7 @@ void MeloMeiImporter::capture(pugi::xml_node root)
     for (pugi::xpath_node pn : root.select_nodes("//respStmt/persName[@role='melo-reviewer' or @role='jims-reviewer']")) {
         m_reviewerById[pn.node().attribute("xml:id").value()] = String(pn.node().text().as_string());
     }
+    m_reviewAgent = String(root.select_node("//respStmt/name[@role='melo-review-agent']").node().text().as_string());
     m_focusedReviewReasons.clear();
     pugi::xml_node fr = root.select_node("//score/annot[@type='melo-focused-review' or @type='jims-focused-review']").node();
     if (fr) {
@@ -1272,6 +1287,7 @@ bool MeloMeiImporter::apply(Score* score,
     if (rv) {
         melo::ReviewRecord review;
         review.schema = String(rv.attribute("schema").value());
+        review.reviewAgent = m_reviewAgent;
         review.focusedReviewReasons = m_focusedReviewReasons;
         for (pugi::xml_node child : rv.children()) {
             const std::string tag = localName(child);
