@@ -59,6 +59,11 @@ endif()
 
 include(SetupGTest)
 
+# These tests capture actual QQuickWindow pixels; the minimal platform cannot grab them.
+set_tests_properties(${MODULE_TEST} PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software;QT_QUICK_CONTROLS_STYLE=Basic"
+)
+
 target_compile_definitions(${MODULE_TEST} PRIVATE MELO_UI_TEST_DATA_ROOT="${PROJECT_SOURCE_DIR}/src/engraving/tests")
 
 target_include_directories(${MODULE_TEST} PRIVATE ${PROJECT_SOURCE_DIR}/src/inspector)
