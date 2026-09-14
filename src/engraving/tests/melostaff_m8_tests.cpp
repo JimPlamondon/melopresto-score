@@ -1932,20 +1932,28 @@ TEST_F(Engraving_MeloStaffM8BandElisionTests, emptyHalfStaffFixtureCoversEveryMo
             EXPECT_EQ(type->meloTonicAmbit(), i % 2 ? String(u"tonic-bounded") : String(u"tonic-centered"));
             const auto& view = viewOn(score, system, i);
             ASSERT_FALSE(view.empty());
-            EXPECT_GE(view.topCents() - view.bottomCents(), 600.0 - 1e-6);
+            // Owner rulings 2026-09-08 and 2026-09-15 (1a): every empty staff
+            // is centred on its declared range (half a period on the centre)
+            // and expanded outward to the nearest ratio lines, an edge within
+            // the Kernel's tempering snap (25 cents) of a line counting as on
+            // it. At a 700-cent generator a tonic-bounded range that sits on
+            // its tonic therefore starts on the tonic's ratio line, the
+            // picture accepted on 2026-09-08; at other generators the range
+            // centre, not the tonic, decides.
+            const double snap = 25.0;
+            EXPECT_GE(view.topCents() - view.bottomCents(), 600.0 - snap - 1e-6);
             melo::PeriodicOrigins origins;
             ASSERT_TRUE(melo::periodicOrigins(type->meloStateJson(), origins));
-            double minimumLower = -300.0;
-            double minimumUpper = 300.0;
-            if (i % 2) {
+            const double minimumLower = -300.0;
+            const double minimumUpper = 300.0;
+            if (i % 2 && generator == 700.0) {
                 const double tonicRatios[] = { 4.0 / 3.0, 1.0, 3.0 / 2.0, 9.0 / 8.0, 5.0 / 3.0, 5.0 / 4.0, 15.0 / 8.0 };
                 const double origin = origins.doCentsAboveExtentLower + 1200.0 * std::log2(tonicRatios[i / 2]);
-                minimumLower = origin + std::round((-300.0 - origin) / 1200.0) * 1200.0;
-                minimumUpper = minimumLower + 600.0;
-                EXPECT_NEAR(view.bottomCents(), minimumLower, 1e-6) << "tonic must bound staff " << i;
+                const double tonicRow = origin + std::round((-300.0 - origin) / 1200.0) * 1200.0;
+                EXPECT_NEAR(view.bottomCents(), tonicRow, 1e-6) << "tonic must bound staff " << i;
             }
-            EXPECT_LE(view.bottomCents(), minimumLower + 1e-6);
-            EXPECT_GE(view.topCents(), minimumUpper - 1e-6);
+            EXPECT_LE(view.bottomCents(), minimumLower + snap + 1e-6);
+            EXPECT_GE(view.topCents(), minimumUpper - snap - 1e-6);
             std::vector<melo::JiLine> ratios;
             ASSERT_TRUE(melo::jiLines(type->meloStateJson(), ratios));
             std::vector<double> candidates;
@@ -1968,8 +1976,8 @@ TEST_F(Engraving_MeloStaffM8BandElisionTests, emptyHalfStaffFixtureCoversEveryMo
                 })) << "staff " << i << " edge " << edge;
             }
             for (double c : candidates) {
-                EXPECT_FALSE(c > view.bottomCents() + 1e-6 && c <= minimumLower + 1e-6);
-                EXPECT_FALSE(c < view.topCents() - 1e-6 && c >= minimumUpper - 1e-6);
+                EXPECT_FALSE(c > view.bottomCents() + 1e-6 && c <= minimumLower + snap + 1e-6);
+                EXPECT_FALSE(c < view.topCents() - 1e-6 && c >= minimumUpper - snap - 1e-6);
             }
             for (const Segment* segment = score->firstSegment(SegmentType::ChordRest); segment;
                  segment = segment->next1(SegmentType::ChordRest)) {
@@ -1987,8 +1995,15 @@ TEST_F(Engraving_MeloStaffM8BandElisionTests, emptyHalfStaffHeadersUseTonicSpeci
                                             + u"/jimstaff_data/empty-half-staves-14.mscx", true);
     ASSERT_TRUE(score);
     System* system = measureSystems(score).front();
-    const String lowerLabels[] = { u"Do", u"Fa", u"La", u"Do", u"Mi", u"So", u"Ti", u"Re", u"Fa", u"La", u"Do", u"Mi", u"So", u"Ti" };
-    const String upperLabels[] = { u"La", u"Do", u"Mi", u"So", u"Ti", u"Re", u"So", u"La", u"Do", u"Mi", u"So", u"Ti", u"Re", u"Fa" };
+    // Owner 2026-09-15 (1a) with the Kernel's 25-cent tempering snap: a
+    // window edge that the tempering puts a few cents past a ratio line now
+    // sits on that line instead of expanding a whole row further. Three
+    // fixture edges move by one row against the 2026-09-08 render: staff 0's
+    // lower edge Do -> Re (tempered Re at 200 against the 204 line), staff
+    // 1's upper edge Do -> Ti (1100 against 1088), staff 6's upper edge
+    // So -> Fa (500 against 498). Every tonic edge is unchanged.
+    const String lowerLabels[] = { u"Re", u"Fa", u"La", u"Do", u"Mi", u"So", u"Ti", u"Re", u"Fa", u"La", u"Do", u"Mi", u"So", u"Ti" };
+    const String upperLabels[] = { u"La", u"Ti", u"Mi", u"So", u"Ti", u"Re", u"Fa", u"La", u"Do", u"Mi", u"So", u"Ti", u"Re", u"Fa" };
     int labelsSeen = 0;
     for (staff_idx_t i = 0; i < score->nstaves(); ++i) {
         const StaffType* type = st(score, i);

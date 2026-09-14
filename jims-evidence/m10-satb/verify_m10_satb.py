@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 """Verify M10 SATB renders, extent centres, and continuous crescent clefs.
 
-The empty-staff contract this checks is the one the owner accepted on
-2026-09-08 (staff-edge fix, Kernel test
-empty_tonic_bounded_frames_start_on_the_tonic_ratio): an empty tonic-bounded
-staff's frame STARTS on its tonic ratio row — for Do-mode, the red Do line is
-the frame's lower edge — and its upper edge expands to the first ratio row at
-or above half a period, So (3/2) for the template's 12-TET Do-mode. The
-2026-08-24 version of this verifier pinned the earlier range-centred design
-(Do 900/200/700/400 cents above the lower edge, crescent horns on both sides
-of an interior Do); that design was retired by the owner decision above.
+The empty-staff contract this checks is the owner's ruling of 2026-09-15
+(option 1a, workstream ws_satb_template_verifiers_20260914): an empty staff is
+centred on its own vocal range, half a period on the Kernel's range-centre
+anchor, and each edge is expanded outward to the nearest visible ratio line,
+an edge within the Kernel's 25-cent tempering snap of a line counting as on
+it. For the template's four voices in C Do-mode at a 700-cent generator the
+Kernel (melo-staff, automatic_frame) derives: Soprano Fa4 to Do5 with Do on
+the upper edge; Alto Do4 to So4 with Do on the lower edge; Tenor So3 to Re4
+with Do4 inside; Bass Ti2 to Fa3 with Do3 inside. The 2026-09-14 revision of
+this verifier briefly pinned the Kernel's then-current tonic-start frames
+(every voice Do4 to So4); the owner rejected those renders on 2026-09-15 as
+not centred on any voice's range.
 """
 
 import hashlib
@@ -32,9 +35,15 @@ EXPECTED_EXTENTS = [
     {"lower": {"nPer": 1, "nGen": -3}, "upper": {"nPer": 2, "nGen": -3}},
     {"lower": {"nPer": 2, "nGen": -6}, "upper": {"nPer": 3, "nGen": -6}},
 ]
-# Do-mode, generator 700 cents: the frame runs from Do (1/1, the lower edge)
-# to So (3/2), the first ratio row at or above half a period above Do.
-EXPECTED_EMPTY_FRAME_CENTS = 700.0
+# Per voice, from the Kernel at a 700-cent generator (see the module
+# docstring): the frame's height in cents and the red Do row's height above
+# the frame's lower edge. Do on an edge is 0 (lower) or the height (upper).
+EXPECTED_EMPTY_FRAMES = [
+    {"voice": "soprano", "height_cents": 701.955, "do_above_lower_cents": 701.955},
+    {"voice": "alto", "height_cents": 701.955, "do_above_lower_cents": 0.0},
+    {"voice": "tenor", "height_cents": 701.955, "do_above_lower_cents": 498.045},
+    {"voice": "bass", "height_cents": 609.777, "do_above_lower_cents": 111.731},
+]
 # Pixels per line distance in the renders: render_evidence.sh renders at 120
 # dpi and the template leaves MuseScore's default spatium (1.74978 mm); one
 # line distance is 100 cents (StaffType::MELO_CENTS_PER_LINE_DISTANCE).
@@ -43,9 +52,9 @@ SPATIUM_MM = 1.74978
 CENTS_PER_LINE_DISTANCE = 100.0
 PX_PER_CENT = SPATIUM_MM / 25.4 * RENDER_DPI / CENTS_PER_LINE_DISTANCE
 FRAME_HEIGHT_TOL_PX = 3.0
-# The red Do row may sit this far from the consensus frame edge (the stroke's
+# The red Do row may sit this far from its expected row (the stroke's
 # anti-aliased end and the line's own width).
-DO_EDGE_TOL_PX = 2
+DO_ROW_TOL_PX = 2
 CLOSURE_MIN_RUN = 8
 HORN_SIDE_MIN_INK = 12
 
@@ -81,17 +90,19 @@ def check_empty_staff_do_rows(path, m9):
             continue
         clef_right = min(edge_columns)
         rows = []
-        for voice_index, (top, bottom) in enumerate(system):
-            # The red Do row: searched to the frame edges plus the edge slack,
-            # because on an empty tonic-bounded staff it IS the lower edge.
-            search_top = max(0, top - DO_EDGE_TOL_PX)
-            search_bottom = min(ink.shape[0] - 1, bottom + DO_EDGE_TOL_PX)
+        for voice_index, ((top, bottom), contract) in enumerate(zip(system, EXPECTED_EMPTY_FRAMES)):
+            # The red Do row: searched to the frame edges plus the row
+            # tolerance, because it may BE an edge (alto lower, soprano upper).
+            search_top = max(0, top - DO_ROW_TOL_PX)
+            search_bottom = min(ink.shape[0] - 1, bottom + DO_ROW_TOL_PX)
             counts = red[search_top:search_bottom + 1].sum(axis=1)
             actual = search_top + int(counts.argmax())
-            expected = bottom
-            tolerance = DO_EDGE_TOL_PX
+            expected = bottom - contract["do_above_lower_cents"] * PX_PER_CENT
+            tolerance = DO_ROW_TOL_PX
             height = bottom - top + 1
-            expected_height = EXPECTED_EMPTY_FRAME_CENTS * PX_PER_CENT
+            expected_height = contract["height_cents"] * PX_PER_CENT
+            do_on_lower_edge = contract["do_above_lower_cents"] == 0.0
+            do_on_upper_edge = contract["do_above_lower_cents"] == contract["height_cents"]
             closure_left = max(0, clef_right - 75)
             closure_right = max(closure_left + 1, clef_right - 3)
             top_closure = max(longest_horizontal_run(ink[y, closure_left:closure_right])
@@ -116,26 +127,40 @@ def check_empty_staff_do_rows(path, m9):
             elif abs(actual - expected) > tolerance:
                 result["failures"].append(
                     f"system {system_index + 1} voice {voice_index + 1}: Do row y={actual}, "
-                    f"expected the frame's lower edge y={expected}")
+                    f"expected y={expected:.1f} ({contract['do_above_lower_cents']:.0f} cents above the lower edge)")
             if abs(height - expected_height) > FRAME_HEIGHT_TOL_PX:
                 result["failures"].append(
                     f"system {system_index + 1} voice {voice_index + 1}: frame is {height} px tall, expected "
-                    f"{expected_height:.1f} (Do to So, {EXPECTED_EMPTY_FRAME_CENTS:.0f} cents)")
-            # Do is the frame's lower edge: the crescent's lower horn ENDS on it,
-            # so there is crescent ink immediately above Do and none below.
-            if upper_horn_ink < HORN_SIDE_MIN_INK:
+                    f"{expected_height:.1f} ({contract['height_cents']:.0f} cents)")
+            # The crescent joins Do from every side that lies inside the frame:
+            # both sides for an interior Do, one side for a Do on an edge, with
+            # no crescent ink past that edge.
+            if not do_on_upper_edge and upper_horn_ink < HORN_SIDE_MIN_INK:
                 result["failures"].append(
                     f"system {system_index + 1} voice {voice_index + 1}: crescent horn does not reach Do from "
                     f"above (upper={upper_horn_ink})")
-            if lower_horn_ink >= HORN_SIDE_MIN_INK:
+            if not do_on_lower_edge and lower_horn_ink < HORN_SIDE_MIN_INK:
+                result["failures"].append(
+                    f"system {system_index + 1} voice {voice_index + 1}: crescent horn does not reach Do from "
+                    f"below (lower={lower_horn_ink})")
+            if do_on_lower_edge and lower_horn_ink >= HORN_SIDE_MIN_INK:
                 result["failures"].append(
                     f"system {system_index + 1} voice {voice_index + 1}: crescent ink continues below the Do "
                     f"edge (lower={lower_horn_ink})")
-            # Only the upper edge is clipped mid-period and needs a closure.
-            if top_closure < CLOSURE_MIN_RUN:
+            if do_on_upper_edge and upper_horn_ink >= HORN_SIDE_MIN_INK:
+                result["failures"].append(
+                    f"system {system_index + 1} voice {voice_index + 1}: crescent ink continues above the Do "
+                    f"edge (upper={upper_horn_ink})")
+            # A frame edge that is not a Do row is a clipped crescent edge and
+            # must be closed.
+            if not do_on_upper_edge and top_closure < CLOSURE_MIN_RUN:
                 result["failures"].append(
                     f"system {system_index + 1} voice {voice_index + 1}: clipped crescent top edge is not "
                     f"closed (top={top_closure})")
+            if not do_on_lower_edge and bottom_closure < CLOSURE_MIN_RUN:
+                result["failures"].append(
+                    f"system {system_index + 1} voice {voice_index + 1}: clipped crescent bottom edge is not "
+                    f"closed (bottom={bottom_closure})")
         result["systems"].append({"system": system_index + 1, "do_rows": rows})
     result["ok"] = not result["failures"]
     return result

@@ -87,4 +87,8 @@ Two of the verifier's assumptions were tied to octave-tall frames and are replac
 
 Negative checks run at the change: a barline painted through the three inter-staff gaps at x=455 of `template-p2.png` is rejected as a spanning barline column. Renderer, results and the regenerated renders are recorded in the M9 verify summary and in the final report of workstream `ws_satb_template_verifiers_20260914`.
 
+## Correction, 2026-09-15
+
+The 2026-09-14 update's account of the empty template (every voice a Do-to-So frame starting on Do) described a Kernel defect that Jim rejected on 2026-09-15: empty staves are centred on their own vocal ranges and expanded outward to the nearest ratio lines (see `../m10-satb/PROVENANCE.md`, correction of 2026-09-15). The M9 verifier changes of 2026-09-14 (systems grouped by their leading edge; edge slack on the gap check) stand, because they depend on neither frame height nor Do placement. The frames stay about the same height as on 2026-09-14 (a half period plus a row), so the template still renders two systems on page 1 and one on page 2.
+
 **Manual acceptance: pending Jim.**
