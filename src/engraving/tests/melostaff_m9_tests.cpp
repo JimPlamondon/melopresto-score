@@ -824,14 +824,12 @@ TEST(Engraving_MeloStaffM9SATBTests, m9CollidingHeadsOfDifferentShapesAreOffsetA
 // observable as the two chords being left at ONE x — no unison separation
 // offset is applied to push them apart.
 //
-// A residual remains, and is asserted here rather than hidden: MuseScore
-// right-aligns an UP-stem chord's heads to `Chord::noteHeadWidth()`, the
-// score's nominal noteheadBlack advance, so a head narrower than that nominal
-// keeps a small x offset from its down-stem twin. On a JiMStaff every Kernel
-// head is narrower than the nominal, so two shared heads sit a fraction of a
-// space apart instead of exactly coinciding. That is a note-head metric seam
-// owned by the M1/M3 glyph work, not by this milestone's collision ruling; it
-// is recorded as an observed follow-up in the M9 final report.
+// Stock MuseScore right-aligns an UP-stem chord's heads to
+// `Chord::noteHeadWidth()`, the score's nominal noteheadBlack advance, so a
+// head narrower than that nominal used to keep a small x offset (5 to 13
+// layout units) from its down-stem twin: the Milestone 9 follow-up. On a
+// MeloPresto staff `Chord::noteHeadWidth()` is now the widest head actually
+// drawn (fixed 2026-09-14), so two shared heads coincide exactly.
 TEST(Engraving_MeloStaffM9SATBTests, m9CollidingHeadsOfIdenticalShapeMayShareOneHead)
 {
     MasterScore* score = ScoreRW::readScore(u"jimstaff_data/m9-dense-voices.mscx");
@@ -861,16 +859,16 @@ TEST(Engraving_MeloStaffM9SATBTests, m9CollidingHeadsOfIdenticalShapeMayShareOne
             << "bar " << bar << ": identical shapes must be shared, not pushed apart";
         EXPECT_TRUE(heads[0]->visible() && heads[1]->visible()) << "bar " << bar;
 
-        // The residual, pinned so it cannot drift unnoticed: the whole gap is
-        // the up-stem chord's right-alignment to the nominal head width.
+        // The shared heads coincide: the up-stem chord aligns to the head it
+        // actually draws, not to the nominal black-head advance.
         Note* upNote = heads[0]->chord()->up() ? heads[0] : heads[1];
         Note* downNote = heads[0]->chord()->up() ? heads[1] : heads[0];
         ASSERT_TRUE(upNote->chord()->up() && !downNote->chord()->up()) << "bar " << bar;
         const double gap = upNote->pagePos().x() - downNote->pagePos().x();
-        EXPECT_NEAR(gap, upNote->chord()->noteHeadWidth() - upNote->headBodyWidth(), 1e-6)
-            << "bar " << bar << ": the residual is the nominal-versus-actual head width, nothing else";
-        EXPECT_LT(gap, 0.2 * upNote->spatium())
-            << "bar " << bar << ": the shared heads must still read as one head";
+        EXPECT_NEAR(gap, 0.0, 1e-6)
+            << "bar " << bar << ": two shared heads of one shape must sit on one x";
+        EXPECT_LT(upNote->chord()->noteHeadWidth(), upNote->score()->noteHeadWidth() * upNote->chord()->mag())
+            << "bar " << bar << ": the chord aligns to its drawn head, which is narrower than the nominal";
     }
 
     delete score;

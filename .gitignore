@@ -24,6 +24,7 @@ build.qt610
 build.tooldata
 build.qtc
 build.release
+build.m10
 build.symbols
 build.tooldata
 build.xcode
