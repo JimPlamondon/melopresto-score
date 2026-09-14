@@ -33,6 +33,7 @@
 #include "engraving/melo/melochangecontroller.h"
 #include "engraving/melo/melotuningcontroller.h"
 #include "utils/scorerw.h"
+#include "utils/melocanonical.h"
 #include "utils/testutils.h"
 using namespace mu::engraving;
 using muse::String;
@@ -151,7 +152,7 @@ TEST(MeloLatticeConformanceTests, PublicInsertionAt700Control) {
     addKnownRe0(700);
 }
 
-TEST(MeloLatticeConformanceTests, AmbiguousCoordinateLessInsertionIsNonMutating)
+TEST(MeloLatticeConformanceTests, UnspelledCoordinateLessInsertionIsNonMutating)
 {
     auto* s = ScoreRW::readScore(u"jimstaff_data/m9-dense-voices.mscx");
     ASSERT_TRUE(s);
@@ -168,7 +169,7 @@ TEST(MeloLatticeConformanceTests, AmbiguousCoordinateLessInsertionIsNonMutating)
     s->setPlayNote(false);
     s->setPlayChord(false);
     NoteVal value(62);
-    value.tpc1 = value.tpc2 = step2tpc(1, AccidentalVal::NATURAL);
+    value.tpc1 = value.tpc2 = Tpc::TPC_INVALID;
     s->startCmd(muse::TranslatableString::untranslatable("ambiguous input"));
     Note* inserted = s->addNote(source->chord(), value);
     EXPECT_EQ(inserted, nullptr);
@@ -197,7 +198,7 @@ TEST(MeloLatticeConformanceTests, TransferEqualityDistinguishesCoincidentCoordin
     EXPECT_FALSE(first == second);
 }
 
-TEST(MeloLatticeConformanceTests, AmbiguousPublicEntryPreservesInputAndScore)
+TEST(MeloLatticeConformanceTests, UnspelledPublicEntryPreservesInputAndScore)
 {
     for (bool addToChord : { false, true }) {
         auto* s = ScoreRW::readScore(u"jimstaff_data/m9-dense-voices.mscx");
@@ -215,7 +216,7 @@ TEST(MeloLatticeConformanceTests, AmbiguousPublicEntryPreservesInputAndScore)
         const auto count = notes(s).size();
         const auto undo = s->undoStack()->currentIndex();
         NoteVal value(62);
-        value.tpc1 = value.tpc2 = step2tpc(1, AccidentalVal::NATURAL);
+        value.tpc1 = value.tpc2 = Tpc::TPC_INVALID;
         s->startCmd(muse::TranslatableString::untranslatable("ambiguous public entry"));
         EXPECT_EQ(s->addPitch(value, addToChord, &input), nullptr);
         EXPECT_EQ(input.segment(), position);
@@ -531,18 +532,12 @@ TEST(MeloLatticeConformanceTests, L11ImplodeKeepsDistinctCoincidentPositions)
     delete s;
 }
 
-TEST(MeloLatticeConformanceTests, BindingOneUnboundSingerMustNotCreateDifferentReferences) {
+TEST(MeloLatticeConformanceTests, InitialPitchEditingAnySingerKeepsOneReference) {
     for (staff_idx_t selected=0; selected < 6; ++selected) {
         auto* s = ScoreRW::readScore(ScoreRW::rootPath()
                                      + u"/../../../share/templates/02-Choral/12-SATB_(MeloPresto_Staff)/12-SATB_(MeloPresto_Staff).mscx",
                                      true);
         ASSERT_TRUE(s);
-        for (staff_idx_t i=0; i < s->nstaves(); ++i) {
-            auto* st = s->staff(i)->staffType(Fraction(0, 1));
-            auto obj = QJsonDocument::fromJson(st->meloStateJson().toQString().toUtf8()).object();
-            obj["reference"] = "none";
-            st->setMeloStateJson(String::fromUtf8(QJsonDocument(obj).toJson(QJsonDocument::Compact).constData()));
-        }
         Score* part = selected == 5 ? TestUtils::createPart(s) : nullptr;
         if (selected == 5) {
             ASSERT_TRUE(part);
@@ -553,9 +548,7 @@ TEST(MeloLatticeConformanceTests, BindingOneUnboundSingerMustNotCreateDifferentR
         }
         const auto index=s->undoStack()->currentIndex();
         String err;
-        ASSERT_TRUE(selected == 4 ? melo::applyChangeToAllMeloParts(s, s->firstMeasure(), { u"bind:reference-pitch:64" }, err)
-                    : selected == 5 ? melo::applyChange(part, 0, part->firstMeasure(), u"bind:reference-pitch:64", err)
-                    : melo::applyChange(s, selected, s->firstMeasure(), u"bind:reference-pitch:64", err)) << err.toStdString();
+        ASSERT_TRUE(test::initialPitch(part ? part : s, selected < 4 ? selected : 0, u"D4", err)) << err.toStdString();
         if (part) {
             bool same = false;
             ASSERT_TRUE(melo::sameReference(s->staff(0)->staffType(Fraction(0, 1))->meloStateJson(),
@@ -565,10 +558,10 @@ TEST(MeloLatticeConformanceTests, BindingOneUnboundSingerMustNotCreateDifferentR
         for (size_t i=0; i < before.size(); ++i) {
             auto oldState=QJsonDocument::fromJson(before[i].toQString().toUtf8()).object();
             auto newState=QJsonDocument::fromJson(s->staff(i)->staffType(Fraction(0, 1))->meloStateJson().toQString().toUtf8()).object();
-            EXPECT_EQ(oldState["extent"], newState["extent"]);
+            EXPECT_EQ(oldState["configuration"].toObject()["extent"], newState["configuration"].toObject()["extent"]);
             melo::SoundingPitch bound;
             ASSERT_TRUE(melo::noteSoundingPitch(s->staff(i)->staffType(Fraction(0, 1))->meloStateJson(), 0, 0, bound));
-            EXPECT_EQ(bound.midiKey, 64);
+            EXPECT_DOUBLE_EQ(bound.referenceKeyNumber, test::referenceNumber(s->staff(0)->staffType(Fraction(0, 1))->meloStateJson()));
         }
         s->undoRedo(true, nullptr);
         EXPECT_EQ(s->undoStack()->currentIndex(), index);
@@ -624,16 +617,10 @@ TEST(MeloLatticeConformanceTests, BindingConflictRefusesWithoutChangingAnySinger
     delete s;
 }
 
-TEST(MeloLatticeConformanceTests, LinkedPartBindingPreservesWrittenNotesAndUndoes)
+TEST(MeloLatticeConformanceTests, LinkedPartInitialPitchPreservesWrittenNotesAndUndoes)
 {
     auto* s = ScoreRW::readScore(u"jimstaff_data/m9-satb-hymn.mscx");
     ASSERT_TRUE(s);
-    for (Staff* staff : s->staves()) {
-        auto* type = staff->staffType(Fraction(0, 1));
-        auto object = QJsonDocument::fromJson(type->meloStateJson().toQString().toUtf8()).object();
-        object["reference"] = "none";
-        type->setMeloStateJson(String::fromUtf8(QJsonDocument(object).toJson(QJsonDocument::Compact).constData()));
-    }
     std::vector<Note*> written;
     std::vector<NoteVal> before;
     for (Segment* segment = s->firstSegment(SegmentType::ChordRest); segment; segment = segment->next1(SegmentType::ChordRest)) {
@@ -652,7 +639,7 @@ TEST(MeloLatticeConformanceTests, LinkedPartBindingPreservesWrittenNotesAndUndoe
     Score* part = TestUtils::createPart(s);
     ASSERT_TRUE(part);
     String error;
-    ASSERT_TRUE(melo::applyChange(part, 0, part->firstMeasure(), u"bind:reference-pitch:64", error)) << error.toStdString();
+    ASSERT_TRUE(test::initialPitch(part, 0, u"D4", error)) << error.toStdString();
     for (size_t i = 0; i < written.size(); ++i) {
         EXPECT_EQ(written[i]->meloNPer(), before[i].meloNPer);
         EXPECT_EQ(written[i]->meloNGen(), before[i].meloNGen);
@@ -767,7 +754,7 @@ TEST(MeloLatticeConformanceTests, TransposeInvalidLaterTieIsNonMutating)
     delete s;
 }
 
-TEST(MeloLatticeConformanceTests, PluginRawAmbiguousInsertionRemainsDetached)
+TEST(MeloLatticeConformanceTests, PluginRawUnspelledInsertionRemainsDetached)
 {
     auto* s=ScoreRW::readScore(u"jimstaff_data/m9-dense-voices.mscx");
     ASSERT_TRUE(s);
@@ -780,8 +767,8 @@ TEST(MeloLatticeConformanceTests, PluginRawAmbiguousInsertionRemainsDetached)
     {
         apiv1::Note wrapped(raw, apiv1::Ownership::PLUGIN);
         wrapped.setProperty("pitch", 62);
-        wrapped.setProperty("tpc1", step2tpc(1, AccidentalVal::NATURAL));
-        wrapped.setProperty("tpc2", step2tpc(1, AccidentalVal::NATURAL));
+        wrapped.setProperty("tpc1", Tpc::TPC_INVALID);
+        wrapped.setProperty("tpc2", Tpc::TPC_INVALID);
         const auto count=notes(s).size();
         const auto undo=s->undoStack()->currentIndex();
         s->startCmd(muse::TranslatableString::untranslatable("plugin ambiguous raw input"));
@@ -1261,7 +1248,7 @@ TEST(MeloLatticeConformanceTests, PrefixOverwritePreservesRetainedTailAcrossRefe
     s->endCmd();
     const Fraction split = first->tick() + Fraction(1, 4);
     String error;
-    ASSERT_TRUE(melo::applyChange(s, 0, first->chord()->measure(), split, u"key:1:0", error)) << error.toStdString();
+    ASSERT_TRUE(test::relativeKey(s, 0, split, 1, 0, error)) << error.toStdString();
     const double expectedHz = hz(first);
     melo::SoundingPitch expected;
     ASSERT_TRUE(melo::noteContinuation(first->staff()->staffType(split)->meloStateJson(), expectedHz, expected));
@@ -1296,7 +1283,7 @@ TEST(MeloLatticeConformanceTests, PrefixOverwriteRejectsInvalidRetainedTailWitho
     s->endCmd();
     const Fraction split = first->tick() + Fraction(1, 4);
     String error;
-    ASSERT_TRUE(melo::applyChange(s, 0, first->chord()->measure(), split, u"key:1:0", error));
+    ASSERT_TRUE(test::relativeKey(s, 0, split, 1, 0, error));
     const_cast<StaffType*>(first->staff()->staffType(split))->setMeloStateJson(u"{}");
     const NoteVal before = first->noteVal();
     const auto index = s->undoStack()->currentIndex();
@@ -1354,7 +1341,7 @@ TEST(MeloLatticeConformanceTests, LocalTimeStretchDoesNotValidatePastTheInserted
     delete s;
 }
 
-TEST(MeloLatticeConformanceTests, SingleNotePasteRefusesAmbiguousTransferWithoutMutation)
+TEST(MeloLatticeConformanceTests, SingleNotePasteUsesExplicitSpellingAtCoincidentTuning)
 {
     auto* source = ScoreRW::readScore(u"playback/playbackeventsrenderer_data/single_note_no_articulations/no_articulations.mscx");
     ASSERT_TRUE(source);
@@ -1379,8 +1366,15 @@ TEST(MeloLatticeConformanceTests, SingleNotePasteRefusesAmbiguousTransferWithout
     }
     const auto index = s->undoStack()->currentIndex();
     s->startCmd(muse::TranslatableString::untranslatable("Refuse ambiguous note paste"));
-    EXPECT_FALSE(s->cmdPasteSymbol(data, nullptr, Fraction(1, 1)));
+    ASSERT_TRUE(s->cmdPasteSymbol(data, nullptr, Fraction(1, 1)));
     s->endCmd();
+    const auto pasted = notes(s);
+    ASSERT_FALSE(pasted.empty());
+    EXPECT_TRUE(pasted.front()->hasMeloPitch());
+    EXPECT_EQ(pasted.front()->meloNPer(), 0);
+    EXPECT_EQ(pasted.front()->meloNGen(), 0);
+    EXPECT_EQ(s->undoStack()->currentIndex(), index + 1);
+    s->undoRedo(true, nullptr);
     ASSERT_EQ(notes(s), all);
     for (size_t i = 0; i < all.size(); ++i) {
         EXPECT_TRUE(all[i]->noteVal() == values[i]);
@@ -1403,8 +1397,12 @@ TEST(MeloLatticeConformanceTests, ReferenceTimelineEditsRefusePartialStaffDisagr
             ASSERT_TRUE(melo::applyChange(s, 0, first, Fraction(1, 4), u"mode:1", error));
         }
         if (action == 2) {
-            ASSERT_TRUE(melo::applyChangeToAllMeloParts(s, second, { u"key:1:0" }, error));
+            ASSERT_TRUE(test::relativeKey(s, 0, second->tick(), 1, 0, error));
         }
+        auto* contradictory = s->staff(1)->staffType(Fraction(0, 1));
+        String invalid = contradictory->meloStateJson();
+        invalid.replace(u"\"step\":\"D\"", u"\"step\":\"E\"");
+        contradictory->setMeloStateJson(invalid);
         const std::vector<Fraction> ticks { Fraction(0, 1), Fraction(1, 4), second->tick() };
         std::vector<String> states;
         for (Staff* staff : s->staves()) {

@@ -20,6 +20,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "notationviewinputcontroller.h"
+#include "engraving/dom/masterscore.h"
 
 #include <set>
 
@@ -38,6 +39,7 @@
 #include "engraving/dom/mscore.h"
 #include "engraving/dom/fret.h"
 #include "engraving/dom/shadownote.h"
+#include "engraving/melo/melochangecontroller.h"
 
 using namespace mu;
 using namespace mu::notation;
@@ -68,11 +70,21 @@ NotationViewInputController::NotationViewInputController(IControlledView* view, 
 {
 }
 
+bool NotationViewInputController::canReceiveAction(const muse::actions::ActionCode& action) const
+{
+    if (action == "melo-next-header-pitch" || action == "melo-prev-header-pitch") {
+        return !m_readonly && m_view->asItem()->hasActiveFocus();
+    }
+    return true;
+}
+
 void NotationViewInputController::init()
 {
     m_possibleZoomPercentages = configuration()->possibleZoomPercentageList();
 
     if (dispatcher() && !m_readonly) {
+        dispatcher()->reg(this, "melo-next-header-pitch", [this]() { focusMeloHeaderPitch(true); });
+        dispatcher()->reg(this, "melo-prev-header-pitch", [this]() { focusMeloHeaderPitch(false); });
         dispatcher()->reg(this, "zoomin", this, &NotationViewInputController::zoomIn);
         dispatcher()->reg(this, "zoomout", this, &NotationViewInputController::zoomOut);
         dispatcher()->reg(this, "zoom-page-width", this, &NotationViewInputController::zoomToPageWidth);
@@ -123,8 +135,57 @@ void NotationViewInputController::init()
     }
 }
 
+bool NotationViewInputController::focusMeloHeaderPitch(bool forward)
+{
+    const INotationPtr notation = currentNotation();
+    if (m_readonly || m_view->isNoteEnterMode() || !notation || !notation->elements()) {
+        return false;
+    }
+    const Score* score = notation->elements()->msScore();
+    const auto targets = melo::headerPitchTargets(score);
+    if (targets.empty()) {
+        return false;
+    }
+    size_t index = forward ? 0 : targets.size() - 1;
+    if (m_headerPitchFocus && m_headerPitchNotation == notation) {
+        for (size_t i = 0; i < targets.size(); ++i) {
+            if (targets[i].staffIdx == m_headerPitchFocus->staffIdx && targets[i].tick == m_headerPitchFocus->tick
+                && targets[i].periodIndex == m_headerPitchFocus->periodIndex) {
+                index = forward ? (i + 1) % targets.size() : (i + targets.size() - 1) % targets.size();
+                break;
+            }
+        }
+    }
+    m_headerPitchFocus = targets[index];
+    m_headerPitchNotation = notation;
+    m_headerPitchTimeline = score->masterScore()->metaTag(melo::REFERENCE_TIMELINE_TAG);
+    if (accessibilityController()) {
+        accessibilityController()->announce(muse::qtrc("notation", "Initial tonic pitch %1, staff %2. Middle C = C4. Press Enter to edit.")
+                                            .arg(targets[index].label.toQString()).arg(targets[index].staffIdx + 1));
+    }
+    m_view->asItem()->update();
+    return true;
+}
+
+RectF NotationViewInputController::focusedMeloHeaderPitchInk() const
+{
+    const INotationPtr notation = currentNotation();
+    if (!m_headerPitchFocus || m_headerPitchNotation != notation || m_readonly || !notation || !notation->elements()) {
+        return {};
+    }
+    const Score* score = notation->elements()->msScore();
+    melo::HeaderPitchContext current;
+    if (score->masterScore()->metaTag(melo::REFERENCE_TIMELINE_TAG) != m_headerPitchTimeline
+        || !melo::resolveHeaderPitch(score, *m_headerPitchFocus, current)) {
+        return {};
+    }
+    return current.canvasInk;
+}
+
 void NotationViewInputController::onNotationChanged()
 {
+    m_headerPitchFocus.reset();
+    m_headerPitchNotation.reset();
     INotationPtr currNotation = currentNotation();
     if (!currNotation) {
         return;
@@ -136,6 +197,8 @@ void NotationViewInputController::onNotationChanged()
             return;
         }
 
+        m_headerPitchFocus.reset();
+        m_headerPitchNotation.reset();
         const EngravingItem* selectedItem = notation->interaction()->selection()->element();
         ElementType type = selectedItem ? selectedItem->type() : ElementType::INVALID;
 
@@ -285,6 +348,10 @@ bool NotationViewInputController::readonly() const
 void NotationViewInputController::setReadonly(bool readonly)
 {
     m_readonly = readonly;
+    if (readonly) {
+        m_headerPitchFocus.reset();
+        m_headerPitchNotation.reset();
+    }
 }
 
 INotationPtr NotationViewInputController::currentNotation() const
@@ -661,6 +728,20 @@ void NotationViewInputController::mousePressEvent(QMouseEvent* event)
 
     m_shouldStartEditOnLeftClickRelease = false;
     m_ignoreNextMouseContextMenuEvent = false;
+    m_headerPitchFocus.reset();
+    m_headerPitchNotation.reset();
+    const INotationPtr notation = globalContext() ? currentNotation() : nullptr;
+    melo::HeaderPitchContext header;
+    if (!m_readonly && button == Qt::LeftButton && notation && notation->elements() && !m_view->isNoteEnterMode()
+        && melo::findHeaderPitch(notation->elements()->msScore(), logicPos, header)) {
+        m_headerPitchFocus = header;
+        m_headerPitchTimeline = notation->elements()->msScore()->masterScore()->metaTag(melo::REFERENCE_TIMELINE_TAG);
+        m_headerPitchNotation = notation;
+        m_mouseDownInfo.dragAction = MouseDownInfo::Nothing;
+        viewInteraction()->setHitElementContext({});
+        event->accept();
+        return;
+    }
 
     // When using MiddleButton, just start moving the canvas
     if (button == Qt::MiddleButton) {
@@ -1259,6 +1340,9 @@ void NotationViewInputController::mouseReleaseEvent(QMouseEvent* event)
 
 void NotationViewInputController::handleLeftClickRelease(const QPointF& releasePoint)
 {
+    if (m_headerPitchFocus && m_headerPitchNotation == currentNotation()) {
+        return;
+    }
     if (m_view->isNoteEnterMode() || playbackController()->isPlaying()) {
         return;
     }
@@ -1310,6 +1394,16 @@ void NotationViewInputController::handleLeftClickRelease(const QPointF& releaseP
 void NotationViewInputController::mouseDoubleClickEvent(QMouseEvent* event)
 {
     if (m_view->isNoteEnterMode()) {
+        return;
+    }
+    const INotationPtr notation = globalContext() ? currentNotation() : nullptr;
+    const PointF point = m_view->toLogical(event->pos());
+    melo::HeaderPitchContext header;
+    if (!m_readonly && notation && notation->elements()
+        && melo::findHeaderPitch(notation->elements()->msScore(), point, header)) {
+        dispatcher()->dispatch("melo-edit-initial-pitch", ActionData::make_arg2<melo::HeaderPitchContext, String>(
+                                   header, notation->elements()->msScore()->masterScore()->metaTag(melo::REFERENCE_TIMELINE_TAG)));
+        event->accept();
         return;
     }
 
@@ -1441,6 +1535,9 @@ bool NotationViewInputController::shortcutOverrideEvent(QKeyEvent* event)
 {
     auto key = event->key();
 
+    if (m_headerPitchFocus && !m_readonly && (key == Qt::Key_Return || key == Qt::Key_Enter || key == Qt::Key_Escape)) {
+        return true;
+    }
     const bool editTextKeysFound = key == Qt::Key_Return || key == Qt::Key_Enter;
     if (editTextKeysFound && startTextEditingAllowed()) {
         return true;
@@ -1464,6 +1561,29 @@ bool NotationViewInputController::shortcutOverrideEvent(QKeyEvent* event)
 void NotationViewInputController::keyPressEvent(QKeyEvent* event)
 {
     auto key = event->key();
+    if (m_headerPitchFocus && !m_readonly) {
+        if (key == Qt::Key_Return || key == Qt::Key_Enter) {
+            if (!focusedMeloHeaderPitchInk().isEmpty() && !m_view->isNoteEnterMode()) {
+                dispatcher()->dispatch("melo-edit-initial-pitch", ActionData::make_arg2<melo::HeaderPitchContext, String>(
+                                           *m_headerPitchFocus, m_headerPitchTimeline));
+            } else {
+                m_headerPitchFocus.reset();
+                m_headerPitchNotation.reset();
+                if (accessibilityController()) {
+                    accessibilityController()->announce(muse::qtrc("notation",
+                                                                   "This tonic pitch label is no longer available. Focus it again to edit."));
+                }
+            }
+            event->accept();
+            return;
+        }
+        if (key == Qt::Key_Escape) {
+            m_headerPitchFocus.reset();
+            m_headerPitchNotation.reset();
+            event->accept();
+            return;
+        }
+    }
 
     if (startTextEditingAllowed() && (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter)) {
         dispatcher()->dispatch("edit-text");

@@ -42,6 +42,7 @@
 #include "engraving/dom/sig.h"
 #include "engraving/dom/tempotext.h"
 #include "engraving/editing/undo.h"
+#include "engraving/melo/melochangecontroller.h"
 
 #include "excerptnotation.h"
 #include "masternotationparts.h"
@@ -263,6 +264,12 @@ Ret MasterNotation::setupNewScore(mu::engraving::MasterScore* score, const Score
     score->updateCapo();
 
     applyOptions(score, scoreOptions);
+
+    String referenceError;
+    if (!melo::initializeNewMeloComposition(score, referenceError)) {
+        undoStack()->unlock();
+        return Ret(static_cast<int>(Err::UnknownError), referenceError.toStdString());
+    }
 
     initAfterSettingScore(score);
     addExcerptsToMasterScore(score->excerpts());

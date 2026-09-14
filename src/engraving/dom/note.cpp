@@ -3245,9 +3245,11 @@ bool Note::prepareNval(NoteVal& nval, const Staff* staff, const Fraction& tick)
         int tpc = nval.tpc1;
         if (tpc == Tpc::TPC_INVALID) {
             const Interval transpose = staff->transpose(tick);
-            tpc = nval.tpc2 == Tpc::TPC_INVALID
-                  ? pitch2tpc(nval.pitch, staff->concertKey(tick), Prefer::NEAREST)
-                  : (transpose.isZero() ? nval.tpc2 : Transpose::transposeTpc(nval.tpc2, transpose, true));
+            if (nval.tpc2 == Tpc::TPC_INVALID) {
+                MScore::setError(MsError::CANNOT_RESOLVE_LATTICE_NOTE);
+                return false;
+            }
+            tpc = transpose.isZero() ? nval.tpc2 : Transpose::transposeTpc(nval.tpc2, transpose, true);
         }
         const int alter = int(tpc2alter(tpc));
         valid = melo::entryFromStandardPitch(type->meloStateJson(), "CDEFGAB"[tpc2step(tpc)], alter,

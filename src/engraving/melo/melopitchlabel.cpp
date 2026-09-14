@@ -54,14 +54,18 @@ PitchLabelLayout pitchLabelLayout(const String& text, const Font& textFont,
     }
 
     layout.accidentalMag = textFont.pointSizeF() / StyleDef::DEFAULT_SMUFL_POINT_SIZE();
+    const RectF accidentalInk = engravingFont->bbox(layout.parts.accidental, layout.accidentalMag);
     const double beforeAdvance = fm.horizontalAdvance(layout.parts.beforeAccidental);
-    layout.accidentalX = beforeAdvance;
-    layout.afterX = beforeAdvance + engravingFont->advance(layout.parts.accidental, layout.accidentalMag);
+    layout.accidentalX = std::max(beforeAdvance, fm.boundingRect(layout.parts.beforeAccidental).right()) - accidentalInk.left();
+    // Music glyphs are centered on a staff line; text uses a baseline.
+    // Align the measured accidental ink with the pitch letter's ink.
+    layout.accidentalY = fm.boundingRect(u"B").center().y() - accidentalInk.center().y();
+    layout.afterX = layout.accidentalX + std::max(accidentalInk.right(),
+                                                  engravingFont->advance(layout.parts.accidental, layout.accidentalMag));
     layout.advance = layout.afterX + fm.horizontalAdvance(layout.parts.afterAccidental);
 
     layout.bounds = fm.boundingRect(layout.parts.beforeAccidental);
-    layout.bounds.unite(engravingFont->bbox(layout.parts.accidental, layout.accidentalMag)
-                        .translated(PointF(layout.accidentalX, 0.0)));
+    layout.bounds.unite(accidentalInk.translated(PointF(layout.accidentalX, layout.accidentalY)));
     layout.bounds.unite(fm.boundingRect(layout.parts.afterAccidental).translated(PointF(layout.afterX, 0.0)));
     return layout;
 }
@@ -80,7 +84,7 @@ void drawPitchLabel(Painter* painter, const PointF& baselineOrigin, const Font& 
         painter->drawText(baselineOrigin, layout.parts.beforeAccidental);
     }
     engravingFont->draw(layout.parts.accidental, painter, layout.accidentalMag,
-                        baselineOrigin + PointF(layout.accidentalX, 0.0));
+                        baselineOrigin + PointF(layout.accidentalX, layout.accidentalY));
     if (!layout.parts.afterAccidental.isEmpty()) {
         painter->setFont(textFont);
         painter->drawText(baselineOrigin + PointF(layout.afterX, 0.0), layout.parts.afterAccidental);

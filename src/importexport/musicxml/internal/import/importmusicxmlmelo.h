@@ -64,7 +64,7 @@ class MeloImportContext
 public:
     /// The MeloPresto namespace versions this importer understands.
     static constexpr int MIN_VERSION = 1;
-    static constexpr int MAX_VERSION = 4;
+    static constexpr int MAX_VERSION = 5;
 
     /// Resolve the MeloPresto prefix from the root element's attributes. Returns
     /// NoError when no MeloPresto namespace is declared or exactly one supported
@@ -86,6 +86,7 @@ public:
     /// `staffNumber` is the optional `number` attribute (0 when absent).
     /// Returns false with `error` set on a malformed state.
     bool parseStaffState(muse::XmlStreamReader& e, muse::String& json, int& staffNumber, muse::String& error) const;
+    bool parseReferenceTimeline(muse::XmlStreamReader& e, muse::String& json, muse::String& error) const;
 
     /// A parsed state waiting to be applied after normal part parsing.
     struct BufferedState {

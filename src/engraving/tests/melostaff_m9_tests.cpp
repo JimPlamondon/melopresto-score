@@ -70,6 +70,7 @@
 #include "engraving/melo/melochangecontroller.h"
 
 #include "utils/scorerw.h"
+#include "utils/melocanonical.h"
 
 using namespace mu::engraving;
 
@@ -517,15 +518,15 @@ TEST(Engraving_MeloStaffM9SATBTests, m9KeyChangeReachesEveryMeloPartAtTheSameMea
     // unchanged (owner decision 9), so it is applied per staff, as before.
     muse::String error;
     for (staff_idx_t i = 0; i < 4; ++i) {
-        ASSERT_TRUE(melo::applyChange(score, i, m2, u"bind:reference-pitch:62", error)) << error.toStdString();
+        ASSERT_TRUE(melo::validateState(score->staff(i)->staffType(Fraction(0, 1))->meloStateJson(), error)) << error.toStdString();
     }
     score->doLayout();
     const size_t depth = undoDepth(score);
 
-    ASSERT_TRUE(melo::applyChangeToAllMeloParts(score, m2, { u"key:-1:3" }, error)) << error.toStdString();
+    ASSERT_TRUE(test::relativeKey(score, 0, m2->tick(), -1, 3, error)) << error.toStdString();
     score->doLayout();
     for (staff_idx_t i = 0; i < 4; ++i) {
-        EXPECT_TRUE(stateAt(score, i, m2).contains(u"\"key_number\":53"))
+        EXPECT_TRUE((test::referenceNumber(stateAt(score, i, m2)) == 71))
             << "staff " << i << " did not receive the key change";
     }
     EXPECT_EQ(undoDepth(score), depth + 1);
@@ -595,7 +596,7 @@ TEST(Engraving_MeloStaffM9SATBTests, m9MultiChoiceScaleChangeIsOneAtomicOperatio
     EXPECT_EQ(undoDepth(score), depth + 1)
         << "a multi-choice scale application must contribute exactly one undo step";
     for (staff_idx_t i = 0; i < 4; ++i) {
-        EXPECT_TRUE(withoutAmbit(stateAt(score, i, m2)) == withoutAmbit(expected[i]))
+        EXPECT_TRUE(withoutAmbit(test::configuration(stateAt(score, i, m2))) == withoutAmbit(test::configuration(expected[i])))
             << "staff " << i << " is not the Kernel's answer for the whole step list";
     }
 
@@ -638,7 +639,7 @@ TEST(Engraving_MeloStaffM9SATBTests, m9PropagationStartsFromAnyVoiceAndKeepsEach
         score->doLayout();
 
         for (staff_idx_t i = 0; i < 4; ++i) {
-            EXPECT_TRUE(withoutAmbit(stateAt(score, i, m2)) == withoutAmbit(expected[i]))
+            EXPECT_TRUE(withoutAmbit(test::configuration(stateAt(score, i, m2))) == withoutAmbit(test::configuration(expected[i])))
                 << "origin " << origin << ", staff " << i << " is not the Kernel's own answer for that staff";
             EXPECT_TRUE(melo::changeCarrier(m2, i)) << "origin " << origin << ", staff " << i << " has no carrier";
         }
@@ -720,7 +721,7 @@ TEST(Engraving_MeloStaffM9SATBTests, m9StockPartsAreLeftUntouchedAndASinglePartS
     delete score;
 }
 
-TEST(Engraving_MeloStaffM9SATBTests, m9AlreadyBoundCompositionPreservesTheBindingNoOp)
+TEST(Engraving_MeloStaffM9SATBTests, m9NumericBindingIsRefusedWithoutChangingTheComposition)
 {
     MasterScore* score = openShippedTemplate();
     ASSERT_TRUE(score);
@@ -734,14 +735,14 @@ TEST(Engraving_MeloStaffM9SATBTests, m9AlreadyBoundCompositionPreservesTheBindin
         // The template states its KEY as well as its mode: Re0 pinned to D4,
         // so Do is C, and mode_rotation 0 makes Do the tonic. Nothing about
         // which pitch a MeloPresto note sounds is left to inference.
-        EXPECT_TRUE(othersBefore[i].contains(u"\"key_number\":62")) << "staff " << i << " states no key";
+        EXPECT_TRUE((test::referenceNumber(othersBefore[i]) == 62)) << "staff " << i << " states no key";
         EXPECT_TRUE(othersBefore[i].contains(u"\"mode_rotation\":0")) << "staff " << i << " states no mode";
     }
 
     // A staff that already states its key keeps it: `bind:` binds an UNBOUND
     // state and leaves a coherent bound composition alone.
     muse::String error;
-    ASSERT_TRUE(melo::applyChange(score, 0, m2, u"bind:reference-pitch:64", error)) << error.toStdString();
+    ASSERT_FALSE(melo::applyChange(score, 0, m2, u"bind:reference-pitch:64", error)) << error.toStdString();
     score->doLayout();
     for (staff_idx_t i = 0; i < 4; ++i) {
         EXPECT_EQ(score->staff(i)->staffType(Fraction(0, 1))->meloStateJson(), othersBefore[i])
@@ -749,8 +750,8 @@ TEST(Engraving_MeloStaffM9SATBTests, m9AlreadyBoundCompositionPreservesTheBindin
     }
 
     // The composition-wide entry point preserves the same no-op contract.
-    ASSERT_TRUE(melo::applyChangeToAllMeloParts(score, m2, { u"bind:reference-pitch:65" }, error));
-    EXPECT_TRUE(error.empty());
+    ASSERT_FALSE(melo::applyChangeToAllMeloParts(score, m2, { u"bind:reference-pitch:65" }, error));
+    EXPECT_FALSE(error.empty());
     for (staff_idx_t i = 0; i < 4; ++i) {
         EXPECT_EQ(score->staff(i)->staffType(Fraction(0, 1))->meloStateJson(), othersBefore[i])
             << "an already-bound composition must remain unchanged, part " << i;
@@ -1168,7 +1169,7 @@ TEST(Engraving_MeloStaffM9SATBTests, m9RelativeMinorMovesTheTonicToLaAndLeavesDo
     for (staff_idx_t i = 0; i < 4; ++i) {
         const muse::String s = stateAt(score, i, m2);
         EXPECT_TRUE(s.contains(u"\"mode_rotation\":0")) << "staff " << i;
-        EXPECT_TRUE(s.contains(u"\"key_number\":62")) << "staff " << i << " states no key";
+        EXPECT_TRUE((test::referenceNumber(s) == 62)) << "staff " << i << " states no key";
         collectionBefore[i] = collectionOf(s);
         ASSERT_FALSE(collectionBefore[i].empty()) << "staff " << i;
     }
@@ -1183,7 +1184,7 @@ TEST(Engraving_MeloStaffM9SATBTests, m9RelativeMinorMovesTheTonicToLaAndLeavesDo
         // The tonic is now La...
         EXPECT_TRUE(s.contains(u"\"mode_rotation\":5")) << "staff " << i << " did not move its tonic to La";
         // ...the key did not move: Do is still C.
-        EXPECT_TRUE(s.contains(u"\"key_number\":62")) << "staff " << i << " changed key when only the mode should move";
+        EXPECT_TRUE((test::referenceNumber(s) == 62)) << "staff " << i << " changed key when only the mode should move";
         // ...and it is the same seven notes, not a different collection.
         EXPECT_EQ(collectionOf(s), collectionBefore[i])
             << "staff " << i << " changed collection; the relative minor is the same notes";

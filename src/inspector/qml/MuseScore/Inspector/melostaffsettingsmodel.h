@@ -29,7 +29,7 @@ public:
     void requestElements() override;
     void loadProperties() override;
     Q_INVOKABLE void applyOption(const QString& group, int index);
-    Q_INVOKABLE void bindReference(const QString& pitch);
+    Q_INVOKABLE void editKeyChange();
     Q_INVOKABLE void removeChange();
     Q_INVOKABLE void setStaffOption(const QString& name, int value);
     QColor criticalColor() const;

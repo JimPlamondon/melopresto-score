@@ -228,7 +228,6 @@ bool FluidSynth::handleEvent(const midi::Event& event)
     } break;
     case Event::Opcode::NoteOff: {
         ret = fluid_synth_noteoff(m_fluid->synth, event.channel(), event.note());
-        m_tuning.add(event.note(), event.pitchTuningCents());
     } break;
     case Event::Opcode::ControlChange: {
         if (event.index() == muse::midi::EXPRESSION_CONTROLLER) {
@@ -455,10 +454,17 @@ bool FluidSynth::processSequence(const FluidSequencer::EventSequence& sequence, 
     for (const FluidSequencer::EventType& event : sequence) {
         if (std::holds_alternative<midi::Event>(event)) {
             handleEvent(std::get<midi::Event>(event));
-        } else if (m_noteEvents.size() < m_noteEvents.capacity()) {
+        } else {
             AudioNoteEvent noteEvent = std::get<AudioNoteEvent>(event);
-            noteEvent.sampleOffset = sampleOffset;
-            m_noteEvents.push_back(noteEvent);
+            // The sequencer emits this immediately after its MIDI trigger.
+            // Replace the quantized pitch attribute before rendering sound.
+            if (noteEvent.type == AudioNoteEvent::Type::NoteOn && noteEvent.hasExactTuning) {
+                m_tuning.add(noteEvent.pitch, noteEvent.tuningCents);
+            }
+            if (m_noteEvents.size() < m_noteEvents.capacity()) {
+                noteEvent.sampleOffset = sampleOffset;
+                m_noteEvents.push_back(noteEvent);
+            }
         }
     }
 

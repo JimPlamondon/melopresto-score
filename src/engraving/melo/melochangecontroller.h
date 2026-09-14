@@ -30,6 +30,41 @@ class StaffTypeChange;
 }
 
 namespace mu::engraving::melo {
+inline const muse::String REFERENCE_TIMELINE_TAG = u"meloReferenceTimelineV1";
+
+struct HeaderPitchContext {
+    staff_idx_t staffIdx = 0;
+    Fraction tick;
+    int periodIndex = 0;
+    muse::String state;
+    muse::String label;
+    muse::RectF canvasInk;
+};
+/// Search only actual screen-painted staff-header pitch targets. The Kernel
+/// performs the hit decision; ordinary text and change annotations are absent.
+std::vector<HeaderPitchContext> headerPitchTargets(const Score* score);
+bool resolveHeaderPitch(const Score* score, const HeaderPitchContext& expected, HeaderPitchContext& current);
+bool findHeaderPitch(const Score* score, const muse::PointF& canvasPoint, HeaderPitchContext& target);
+
+/// Prepare and commit one whole-piece reference revision. The expected root
+/// and state are captured when the header editor opens; stale input is refused.
+bool changeInitialTonicPitch(Score* score, staff_idx_t staffIdx, const Fraction& tick, int periodIndex, const muse::String& pitch,
+                             const muse::String& expectedState, const muse::String& expectedTimeline, muse::String& error);
+/// Separate modulation operation: only a signed interval is accepted.
+bool changeRelativeKey(Score* score, staff_idx_t staffIdx, const Fraction& tick, const muse::String& interval,
+                       const muse::String& expectedTimeline, muse::String& error);
+bool prepareRelativeKeyEditor(Score* score, staff_idx_t staffIdx, const Fraction& tick, const muse::String* expression,
+                              RelativeKeyEditor& result, muse::String& error);
+/// Rebuild disposable states after reading canonical native/interchange inputs.
+/// The source document is unchanged on failure.
+bool rebuildCanonicalReferenceContexts(Score* score, muse::String& error);
+/// Explicit new-score authoring boundary, after measures have been created.
+/// Only reference-free configurations are accepted; never call while loading.
+bool initializeNewMeloComposition(Score* score, muse::String& error);
+/// Join the caller's instrument-authoring undo command. New staves inherit
+/// existing shared history; an initial spelled root is authored only if absent.
+bool initializeAuthoredMeloStaves(Score* score, const std::vector<Staff*>& staves, muse::String& error);
+
 /// A prepared occurrence edit. The Kernel has already projected every tied
 /// and linked destination; callers can prepare a complete selection first.
 struct NoteEdit {
@@ -70,9 +105,8 @@ bool canInsertChange(const Score* score, staff_idx_t staffIdx, const Measure* me
 /// StaffTypeChange carrier (a copy of the effective staff type carrying the
 /// new state) or updates the existing carrier's state — one undo step.
 /// A choice yielding a state identical to the effective one is a no-op
-/// (returns true, edits nothing). A `bind:` choice binds every unbound Melo staff and carrier in
-/// the composition, preserving authored shared later references and extents
-/// (never creates a carrier). False with `error` on refusal.
+/// (returns true, edits nothing). Reference revisions and relative key changes
+/// use their separate canonical operations. False with `error` on refusal.
 bool applyChange(Score* score, staff_idx_t staffIdx, Measure* measure, const muse::String& choiceId, muse::String& error);
 bool applyChange(Score* score, staff_idx_t staffIdx, Measure* measure, const Fraction& tick, const muse::String& choiceId,
                  muse::String& error);
@@ -95,7 +129,7 @@ bool applyChange(Score* score, staff_idx_t staffIdx, Measure* measure, const Fra
 /// opens; if any one is refused, nothing is mutated and `error` carries the
 /// reason. Non-JiMS parts are ignored.
 ///
-/// `bind:` uses the composition-wide binding operation in `applyChange`.
+/// Numeric binding and key-target choice ids are refused.
 bool applyChangeToAllMeloParts(Score* score, Measure* measure, const std::vector<muse::String>& choiceIds, muse::String& error);
 bool applyChangeToAllMeloParts(Score* score, Measure* measure, const Fraction& tick, const std::vector<muse::String>& choiceIds,
                                muse::String& error);

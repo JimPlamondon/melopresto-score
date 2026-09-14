@@ -52,6 +52,8 @@
 #include "mpe/tests/utils/articulationutils.h"
 
 #include "utils/scorerw.h"
+#include "utils/melocanonical.h"
+#include "engraving/melo/melotuningcontroller.h"
 
 using namespace mu::engraving;
 using namespace muse;
@@ -194,7 +196,7 @@ TEST_F(Engraving_MeloStaffM7PlaybackTests, m7PitchLevelFromMidiMatchesTheMpeScal
 // file's reference-53 section (bar 2 onward): every MeloPresto note plays the
 // Kernel's answer for ITS section — bar 2's notes no longer sound their
 // bar-1 compatibility pitches.
-TEST_F(Engraving_MeloStaffM7PlaybackTests, m7PlaybackUsesKernelPitchForDefaultAndReference53Sections)
+TEST_F(Engraving_MeloStaffM7PlaybackTests, m7PlaybackUsesKernelPitchAcrossRelativeKeySections)
 {
     Score* score = ScoreRW::readScore(M7_GATE);
     ASSERT_TRUE(score);
@@ -205,8 +207,8 @@ TEST_F(Engraving_MeloStaffM7PlaybackTests, m7PlaybackUsesKernelPitchForDefaultAn
     // bar 2+ carries reference 53 (mode La). Both facts come from the file.
     const StaffType* bar1 = notes[0]->staff()->staffTypeForElement(notes[0]);
     const StaffType* bar2 = notes[4]->staff()->staffTypeForElement(notes[4]);
-    ASSERT_TRUE(bar1->meloStateJson().contains(u"\"key_number\":62"));
-    ASSERT_TRUE(bar2->meloStateJson().contains(u"\"key_number\":53"));
+    ASSERT_TRUE(test::referenceNumber(bar1->meloStateJson()) == 62);
+    ASSERT_TRUE(test::referenceNumber(bar2->meloStateJson()) == 71);
     std::vector<pitch_level_t> levels = nominalPitchLevels(score);
     ASSERT_EQ(levels.size(), notes.size());
     for (size_t i = 0; i < notes.size(); ++i) {
@@ -296,11 +298,9 @@ TEST_F(Engraving_MeloStaffM7PlaybackTests, m7PlaybackUsesNonTwelveTetGenerator)
     score->doLayout();
     StaffType* st = score->staff(0)->staffType(Fraction(0, 1));
     ASSERT_TRUE(st && st->isMelo());
-    String s17 = st->meloStateJson();
-    s17.replace(u"\"generator_cents\":700.0", u"\"generator_cents\":705.8823529411765");
-    ASSERT_NE(s17, st->meloStateJson());
-    st->setMeloStateJson(s17);
-    score->setLayoutAll();
+    melo::TuningController tuning(score, 0);
+    ASSERT_TRUE(tuning.beginPreview());
+    ASSERT_TRUE(tuning.commit(1200.0 * 10.0 / 17.0));
     score->doLayout();
     std::vector<Note*> notes = notesOf(score);
     ASSERT_FALSE(notes.empty());
@@ -473,8 +473,12 @@ TEST_F(Engraving_MeloStaffM7PlaybackTests, fullTieAcrossStateChangeHasOneAttackA
     Note* continuation = notes[4];
     start->setMeloPitch(0, 0);
     start->setPitch(62, 16, 16);
-    continuation->setMeloPitch(0, 0);
-    continuation->setPitch(62, 16, 16);
+    melo::SoundingPitch initialSound, initialContinuation;
+    ASSERT_TRUE(melo::noteSoundingPitch(start->staff()->staffTypeForElement(start)->meloStateJson(), 0, 0, initialSound));
+    ASSERT_TRUE(melo::noteContinuation(continuation->staff()->staffTypeForElement(continuation)->meloStateJson(),
+                                       initialSound.frequencyHz, initialContinuation));
+    continuation->setMeloPitch(initialContinuation.nPer, initialContinuation.nGen);
+    ASSERT_TRUE(continuation->setNval(continuation->noteVal()));
     Tie* tie = Factory::createTie(score->dummy());
     tie->setStartNote(start);
     tie->setEndNote(continuation);
@@ -486,7 +490,7 @@ TEST_F(Engraving_MeloStaffM7PlaybackTests, fullTieAcrossStateChangeHasOneAttackA
     score->endCmd();
     Measure* change = score->firstMeasure()->nextMeasure();
     String error;
-    ASSERT_TRUE(melo::applyChange(score, 0, change, u"mode:1", error)) << error.toStdString();
+    ASSERT_TRUE(test::relativeKey(score, 0, change->tick(), -1, 3, error)) << error.toStdString();
 
     melo::SoundingPitch startProjection = kernelSoundingPitch(start);
     melo::SoundingPitch continuationProjection = kernelSoundingPitch(continuation);

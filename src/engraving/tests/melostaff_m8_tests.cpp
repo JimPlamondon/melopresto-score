@@ -54,6 +54,8 @@
 #include "io/dir.h"
 
 #include "utils/scorerw.h"
+#include "utils/melocanonical.h"
+#include "engraving/melo/melopitchlabel.h"
 
 using namespace mu::engraving;
 using namespace mu::engraving::rendering;
@@ -753,10 +755,10 @@ TEST_F(Engraving_MeloStaffM8BandElisionTests, m8OctaveLabelsNameTheirRowEverywhe
                 for (const DrawText& t : d.texts) {
                     // "<Letter><accidentals><octave>: ..." e.g. "C2: Do", "Eb-1:"
                     const size_t colon = t.text.indexOf(u':');
-                    if (colon != muse::nidx && colon >= 2 && colon <= 5) {
+                    if (colon != muse::nidx && colon >= 1 && colon <= 5) {
                         const Char first = t.text.at(0);
                         const Char last = t.text.at(colon - 1);
-                        if (first >= u'A' && first <= u'G' && last.isDigit()) {
+                        if (((first >= u'A' && first <= u'G') || first.isDigit() || first == u'-') && last.isDigit()) {
                             out.push_back({ t.text.left(colon), t.rect.top() });
                         }
                     }
@@ -786,7 +788,11 @@ TEST_F(Engraving_MeloStaffM8BandElisionTests, m8OctaveLabelsNameTheirRowEverywhe
             const int k = int(std::lround((cents - origins.tonicCentsAboveExtentLower) / periodCents));
             melo::TonicPitchLabel expected;
             ASSERT_TRUE(melo::tonicPitchLabelInPeriod(jst->meloStateJson(), k, expected)) << what;
-            EXPECT_EQ(l.text, expected.label) << what << " row period " << k;
+            // Musical accidental ink is a separate glyph run; the following
+            // text run still carries the octave whose row this test verifies.
+            const auto parts = melo::pitchLabelParts(expected.label);
+            const bool splitAccidental = l.text.front().isDigit() || l.text.front() == u'-';
+            EXPECT_EQ(l.text, splitAccidental ? parts.afterAccidental : expected.label) << what << " row period " << k;
         }
         UNUSED(score);
     };
@@ -1308,14 +1314,13 @@ TEST_F(Engraving_MeloStaffM8BandElisionTests, fixedRatioEdgeKeepsSoDotAndLabelAn
     ASSERT_TRUE(score);
     StaffType* type = mutSt(score);
     ASSERT_TRUE(type && type->isMelo());
-    type->setMeloStateJson(
-        u"{\"scale\":[\"M2\",\"m2\",\"M2\",\"M2\",\"M2\",\"m2\",\"M2\"],"
-        u"\"collection_rotation\":0,\"mode_rotation\":0,\"generator_cents\":700.0,"
-        u"\"period_cents\":1200.0,\"embedding\":{\"large_steps\":5,\"small_steps\":2},"
-        u"\"extent\":{\"lower\":{\"nPer\":-2,\"nGen\":-1},"
-        u"\"upper\":{\"nPer\":-1,\"nGen\":-2}},"
-        u"\"reference\":{\"reference-pitch\":{\"key_number\":62}},"
-        u"\"tonic_ambit\":\"tonic-bounded\"}");
+    type->setMeloStateJson(test::canonicalRequest(
+                               u"{\"schema\":\"jimstaff-v3\",\"scale\":[\"M2\",\"m2\",\"M2\",\"M2\",\"M2\",\"m2\",\"M2\"],"
+                               u"\"collection_rotation\":0,\"mode_rotation\":0,\"generator_cents\":700.0,"
+                               u"\"period_cents\":1200.0,\"embedding\":{\"large_steps\":5,\"small_steps\":2},"
+                               u"\"extent\":{\"lower\":{\"nPer\":-2,\"nGen\":-1},"
+                               u"\"upper\":{\"nPer\":-1,\"nGen\":-2}},"
+                               u"\"tonic_ambit\":\"tonic-bounded\"}"));
     type->setMeloRatioLineExtentJson(
         u"{\"lower\":{\"period\":-1,\"ratio\":\"3/2\"},"
         u"\"upper\":{\"period\":0,\"ratio\":\"1/1\"}}");

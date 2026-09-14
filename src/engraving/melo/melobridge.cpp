@@ -106,6 +106,168 @@ bool validateState(const String& stateJson, String& error)
     return false;
 }
 
+static bool canonicalResult(const String& envelope, String& value, String& error)
+{
+    std::string parseError;
+    const JsonDocument response = JsonDocument::fromJson(
+        callBridge(envelope).toUtf8(), &parseError);
+    const JsonObject root = response.rootObject();
+    if (!parseError.empty() || !root.value("ok").toBool() || !root.value("result").isString()) {
+        error = root.value("error").toString();
+        if (error.isEmpty()) {
+            error = mtrc("engraving", "The Kernel returned no canonical reference result.");
+        }
+        return false;
+    }
+    value = root.value("result").toString();
+    return true;
+}
+
+bool defaultReferenceTimeline(String& timeline, String& error)
+{
+    return canonicalResult(u"{\"abi\":2,\"op\":\"default_reference_timeline\"}", timeline, error);
+}
+
+bool defaultStaffConfiguration(String& configuration, String& error)
+{
+    return canonicalResult(u"{\"abi\":2,\"op\":\"default_staff_configuration\"}", configuration, error);
+}
+
+bool staffRequest(const String& configurations, const String& timeline, const String& at, String& request, String& error)
+{
+    // Preserve Kernel JSON verbatim: the generic host serializer rounds
+    // fractional values, including the exact 7-tet generator, to six places.
+    return canonicalResult(String(u"{\"abi\":2,\"op\":\"staff_request\",\"configurations\":%1,\"reference_timeline\":%2,\"at\":%3}")
+                           .arg(configurations).arg(timeline).arg(at), request, error);
+}
+
+bool staffConfiguration(const String& request, String& configuration, String& error)
+{
+    return canonicalResult(String(u"{\"abi\":2,\"op\":\"staff_configuration\",\"state\":%1}").arg(request), configuration, error);
+}
+
+bool validateStaffContext(const String& request, const String& expected, String& error)
+{
+    const String envelope = String(u"{\"abi\":2,\"op\":\"validate_staff_context\",\"state\":%1,\"expected\":%2}")
+                            .arg(request).arg(expected);
+    const JsonObject response = JsonDocument::fromJson(callBridge(envelope).toUtf8()).rootObject();
+    if (response.value("ok").toBool()) {
+        return true;
+    }
+    error = response.value("error").toString();
+    if (error.isEmpty()) {
+        error = mtrc("engraving", "The Kernel could not validate the derived staff context.");
+    }
+    return false;
+}
+
+bool inheritStaffConfiguration(const String& source, const String& local, String& configuration, String& error)
+{
+    return canonicalResult(String(u"{\"abi\":2,\"op\":\"inherit_staff_configuration\",\"state\":%1,\"local\":%2}")
+                           .arg(source).arg(local), configuration, error);
+}
+
+bool storedStaffConfiguration(const String& stored, String& configuration, String& error)
+{
+    return canonicalResult(String(u"{\"abi\":2,\"op\":\"stored_staff_configuration\",\"state\":%1}").arg(stored), configuration, error);
+}
+
+bool musicxmlReferenceV5Xml(const String& timeline, String& xml, String& error)
+{
+    return canonicalResult(String(u"{\"abi\":2,\"op\":\"musicxml_reference_v5_xml\",\"reference_timeline\":%1}").arg(timeline), xml, error);
+}
+
+bool musicxmlConfigurationV5Xml(const String& request, int staffNumber, bool shared, String& xml, String& error)
+{
+    String configuration;
+    if (!staffConfiguration(request, configuration, error)) {
+        return false;
+    }
+    String fields = shared ? u",\"shared\":true" : String();
+    if (staffNumber > 0) {
+        fields += String(u",\"staff_number\":%1").arg(staffNumber);
+    }
+    return canonicalResult(String(u"{\"abi\":2,\"op\":\"musicxml_configuration_v5_xml\",\"state\":%1%2}")
+                           .arg(configuration).arg(fields), xml, error);
+}
+
+static bool canonicalXmlInput(const char* operation, const String& xml, String& output, String& error)
+{
+    JsonObject envelope;
+    envelope.set("abi", 2);
+    envelope.set("op", String::fromAscii(operation));
+    envelope.set("xml", xml);
+    return canonicalResult(String::fromUtf8(JsonDocument(envelope).toJson(JsonDocument::Format::Compact)), output, error);
+}
+
+bool musicxmlReferenceV5Json(const String& xml, String& timeline, String& error)
+{
+    return canonicalXmlInput("musicxml_reference_v5_json", xml, timeline, error);
+}
+
+bool musicxmlConfigurationV5Json(const String& xml, String& configuration, String& error)
+{
+    return canonicalXmlInput("musicxml_configuration_v5_json", xml, configuration, error);
+}
+
+bool editHeaderPitch(const String& request, const String& role, int periodIndex, const String& pitch, String& timeline, String& error)
+{
+    JsonObject envelope;
+    envelope.set("abi", 2);
+    envelope.set("op", "header_pitch_edit");
+    envelope.set("role", role);
+    envelope.set("period_index", periodIndex);
+    envelope.set("pitch", pitch);
+    const String fields = String::fromUtf8(JsonDocument(envelope).toJson(JsonDocument::Format::Compact));
+    return canonicalResult(fields.left(fields.size() - 1) + u",\"state\":" + request + u"}", timeline, error);
+}
+
+bool editRelativeKey(const String& request, const String& at, const String& interval, String& timeline, String& error)
+{
+    return canonicalResult(String(u"{\"abi\":2,\"op\":\"relative_key_edit\",\"state\":%1,\"at\":%2,\"interval\":%3}")
+                           .arg(request).arg(at).arg(interval), timeline, error);
+}
+
+bool relativeKeyEditor(const String& source, const String& destination, const String& at,
+                       const String* expression, RelativeKeyEditor& result, String& error)
+{
+    JsonObject envelope;
+    envelope.set("abi", 2);
+    envelope.set("op", "relative_key_editor");
+    if (expression) {
+        envelope.set("expression", *expression);
+    }
+    const String fields = String::fromUtf8(JsonDocument(envelope).toJson(JsonDocument::Format::Compact));
+    String response;
+    if (!canonicalResult(fields.left(fields.size() - 1) + u",\"source_state\":" + source
+                         + u",\"state\":" + destination + u",\"at\":" + at + u"}", response, error)) {
+        return false;
+    }
+    const JsonObject root = JsonDocument::fromJson(response.toUtf8()).rootObject();
+    const JsonObject interval = root.value("interval").toObject();
+    result.expression = root.value("expression").toString();
+    result.interval = String(u"{\"nPer\":%1,\"nGen\":%2}").arg(interval.value("nPer").toInt()).arg(interval.value("nGen").toInt());
+    result.sourceState = root.value("source_state").toString();
+    result.destinationState = root.value("destination_state").toString();
+    result.exists = root.value("exists").toBool();
+    result.direction = root.value("indicator").toObject().value("key_change").toObject().value("direction").toString();
+    return true;
+}
+
+bool headerPitchHit(const String& request, int periodIndex, const RectF& ink, const PointF& point)
+{
+    const String geometry = String(u"{\"ink\":[%1,%2,%3,%4],\"point\":[%5,%6]}")
+                            .arg(String::number(ink.x(), 17)).arg(String::number(ink.y(), 17))
+                            .arg(String::number(ink.width(), 17)).arg(String::number(ink.height(), 17))
+                            .arg(String::number(point.x(), 17)).arg(String::number(point.y(), 17));
+    const String envelope
+        = String(
+              u"{\"abi\":2,\"op\":\"header_pitch_hit\",\"role\":\"staff-header-tonic-pitch\",\"state\":%1,\"period_index\":%2,\"geometry\":%3}")
+          .arg(request).arg(periodIndex).arg(geometry);
+    JsonValue result;
+    return okResult(callBridge(envelope), result) && result.isBool() && result.toBool();
+}
+
 bool noteCentsAboveExtentLower(const String& stateJson, int nPer, int nGen, double& cents)
 {
     // The staff-frame projection is Kernel-owned end to end: one op, no
@@ -324,6 +486,7 @@ static ChangePoint readPoint(const JsonObject& o)
     p.label = o.value("label").toString();
     p.ordinate = o.value("ordinate").toDouble();
     p.periodOffset = o.value("period_offset").toInt();
+    p.noteheadToken = o.value("notehead_token").toString();
     return p;
 }
 
@@ -379,15 +542,6 @@ bool songwideTonicAmbit(const String& spansJson, String& token, String* error)
     return token == u"tonic-bounded" || token == u"tonic-centered";
 }
 
-bool musicxmlStaffStateV3Xml(const String& stateJson, int staffNumber, String& out, String* error)
-{
-    String envelope = staffNumber > 0
-                      ? String(u"{\"abi\":2,\"op\":\"musicxml_staff_state_v3_xml\",\"state\":%1,\"staff_number\":%2}")
-                      .arg(stateJson).arg(staffNumber)
-                      : String(u"{\"abi\":2,\"op\":\"musicxml_staff_state_v3_xml\",\"state\":%1}").arg(stateJson);
-    return stringResult(callBridge(envelope), out, error);
-}
-
 bool sameReference(const String& stateJson, const String& otherStateJson, bool& same, String* error)
 {
     const String envelope = String(u"{\"abi\":2,\"op\":\"same_reference\",\"state\":%1,\"other_state\":%2}")
@@ -404,19 +558,6 @@ bool sameReference(const String& stateJson, const String& otherStateJson, bool& 
     }
     same = result.toBool();
     return true;
-}
-
-bool musicxmlSharedStateV3Xml(const String& stateJson, String& out, String* error)
-{
-    String envelope = String(u"{\"abi\":2,\"op\":\"musicxml_shared_state_v3_xml\",\"state\":%1}").arg(stateJson);
-    return stringResult(callBridge(envelope), out, error);
-}
-
-bool musicxmlChangeEventV3Xml(const String& oldStateJson, const String& newStateJson, String& out, String* error)
-{
-    String envelope = String(u"{\"abi\":2,\"op\":\"musicxml_change_event_v3_xml\",\"old_state\":%1,\"new_state\":%2}")
-                      .arg(oldStateJson).arg(newStateJson);
-    return stringResult(callBridge(envelope), out, error);
 }
 
 static bool readSoundingPitch(const String& response, SoundingPitch& out, String* error)
@@ -824,16 +965,8 @@ bool stateChangeOptions(const String& stateJson, StateChangeOptions& options)
         }
     };
     readList("tonics", options.tonics);
-    readList("key_targets", options.keyTargets);
     readList("rotations", options.rotations);
     readList("cycles", options.cycles);
-    options.referenceBound = o.value("reference_bound").toBool();
-    if (o.contains("bind_forms") && o.value("bind_forms").isArray()) {
-        JsonArray forms = o.value("bind_forms").toArray();
-        for (size_t i = 0; i < forms.size(); ++i) {
-            options.bindForms.push_back(forms.at(i).toString());
-        }
-    }
     return true;
 }
 

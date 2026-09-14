@@ -15,8 +15,19 @@
 
 #include "mpe/events.h"
 #include "types/string.h"
+#include "draw/types/geometry.h"
 
 namespace mu::engraving::melo {
+struct RelativeKeyEditor {
+    muse::String expression;
+    muse::String interval;
+    muse::String sourceState;
+    muse::String destinationState;
+    muse::String direction;
+    bool exists = false;
+};
+bool relativeKeyEditor(const muse::String& source, const muse::String& destination, const muse::String& at, const muse::String* expression,
+                       RelativeKeyEditor& result, muse::String& error);
 /// Bridge availability: the linked C ABI answers version 1.
 bool available();
 
@@ -25,6 +36,25 @@ bool available();
 // `validate`); on rejection `error` carries the Kernel's message. The
 // importer computes no musical fact — the Kernel is the only gate.
 bool validateState(const muse::String& stateJson, muse::String& error);
+/// Canonical reference/configuration transport. Requests are disposable; only
+/// the returned root timeline and reference-free configurations are persisted.
+bool defaultReferenceTimeline(muse::String& timeline, muse::String& error);
+bool defaultStaffConfiguration(muse::String& configuration, muse::String& error);
+bool validateStaffContext(const muse::String& request, const muse::String& expected, muse::String& error);
+bool inheritStaffConfiguration(const muse::String& source, const muse::String& local, muse::String& configuration, muse::String& error);
+bool staffRequest(const muse::String& configurations, const muse::String& timeline, const muse::String& at, muse::String& request,
+                  muse::String& error);
+bool staffConfiguration(const muse::String& request, muse::String& configuration, muse::String& error);
+bool storedStaffConfiguration(const muse::String& stored, muse::String& configuration, muse::String& error);
+bool musicxmlReferenceV5Xml(const muse::String& timeline, muse::String& xml, muse::String& error);
+bool musicxmlConfigurationV5Xml(const muse::String& request, int staffNumber, bool shared, muse::String& xml, muse::String& error);
+bool musicxmlReferenceV5Json(const muse::String& xml, muse::String& timeline, muse::String& error);
+bool musicxmlConfigurationV5Json(const muse::String& xml, muse::String& configuration, muse::String& error);
+bool editHeaderPitch(const muse::String& request, const muse::String& role, int periodIndex, const muse::String& pitch,
+                     muse::String& timeline, muse::String& error);
+bool editRelativeKey(const muse::String& request, const muse::String& at, const muse::String& interval, muse::String& timeline,
+                     muse::String& error);
+bool headerPitchHit(const muse::String& request, int periodIndex, const muse::RectF& ink, const muse::PointF& point);
 /// Validate generated evidence; optional live JSON includes exact intervals and Kernel frequencies.
 bool validateChordEvidence(const muse::String& evidence, const muse::String& name, muse::String& error,
                            const muse::String& live = muse::String(), const muse::String& offset = muse::String());
@@ -167,24 +197,8 @@ bool noteSoundingPitch(const muse::String& stateJson, int nPer, int nGen, Soundi
 bool vst3ProfileTransaction(const muse::String& stateJson, uint32_t slot, uint32_t generation, uint32_t sampleOffset,
                             muse::mpe::DynamicTonalityProfileEvent& out, muse::String* error = nullptr);
 
-/// Native MusicXML export (2026-08-17): the Kernel's COMPLETE self-tagged
-/// jims:staff-state element (numbered with the extension's `number`
-/// attribute when staffNumber > 0) and jims:change element (empty string
-/// when nothing changed). The fork inserts them verbatim, never edits them.
-bool musicxmlStaffStateV3Xml(const muse::String& stateJson, int staffNumber, muse::String& out, muse::String* error = nullptr);
-
-/// The Kernel's cross-part comparable projection of one state (owner ruling
-/// 2026-08-22): the staff-state element with the per-staff fields omitted.
-/// Every JiMS part of a document must agree on this; the fields it drops
-/// (frame extent, tonic-ambit) describe one staff and may legitimately differ
-/// between parts, which is what a four-voice SATB score needs. The Kernel owns
-/// which fields those are — currently only frame extent — and the fork
-/// compares what it is handed without deciding field-by-field itself.
-/// Comparison form only: never serialized.
+/// Compare canonical reference semantics without copying musical facts into Score.
 bool sameReference(const muse::String& stateJson, const muse::String& otherStateJson, bool& same, muse::String* error = nullptr);
-bool musicxmlSharedStateV3Xml(const muse::String& stateJson, muse::String& out, muse::String* error = nullptr);
-bool musicxmlChangeEventV3Xml(const muse::String& oldStateJson, const muse::String& newStateJson, muse::String& out,
-                              muse::String* error = nullptr);
 
 /// The Kernel's JI staff-line scaffold (owner rulings 1a/2a, 2026-08-14).
 bool jiLines(const muse::String& stateJson, std::vector<JiLine>& lines);
@@ -208,6 +222,7 @@ struct ChangePoint {
     muse::String label;
     double ordinate = 0.0;      // Do-relative, in periods [0,1)
     int periodOffset = 0;       // 0 = the enclosure's period, +1 = one period up
+    muse::String noteheadToken; // Optional Kernel token for an unrestricted interval endpoint
 };
 struct ChangeStack {
     double ordinate = 0.0;
@@ -311,9 +326,6 @@ struct StateChangeOption {
 /// Milestone 6: everything the change panel may offer for a state.
 struct StateChangeOptions {
     std::vector<StateChangeOption> tonics;      // "mode:<nGen>"
-    std::vector<StateChangeOption> keyTargets;  // "key:<nPer>:<nGen>" (need a bound reference)
-    bool referenceBound = false;
-    std::vector<muse::String> bindForms;        // "bind:<form>:<value>"
     std::vector<StateChangeOption> rotations;   // "scale:rotation:<r>"
     std::vector<StateChangeOption> cycles;      // "scale:cycle:<name>"
 };

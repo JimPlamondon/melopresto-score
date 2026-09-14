@@ -36,6 +36,7 @@
 #include "engraving/melo/melotuningcontroller.h"
 
 #include "utils/scorerw.h"
+#include "utils/melocanonical.h"
 
 #include "engraving/iengravingfontsprovider.h"
 #include "modularity/ioc.h"
@@ -48,15 +49,15 @@ namespace {
 // fixtures byte-for-byte in the fields that matter.
 muse::String meloState(double generatorCents, int modeRotation = 0)
 {
-    return muse::String(
-        u"{\"scale\":[\"M2\",\"m2\",\"M2\",\"M2\",\"M2\",\"m2\",\"M2\"],"
-        u"\"collection_rotation\":0,\"mode_rotation\":%1,"
-        u"\"generator_cents\":%2,\"period_cents\":1200.0,"
-        u"\"embedding\":{\"large_steps\":5,\"small_steps\":2},"
-        u"\"extent\":{\"lower\":{\"nPer\":1,\"nGen\":-2},\"upper\":{\"nPer\":3,\"nGen\":-2}},"
-        u"\"reference\":\"none\"}")
-           .arg(modeRotation)
-           .arg(muse::String::number(generatorCents, 12));
+    return test::canonicalRequest(muse::String(
+                                      u"{\"schema\":\"jimstaff-v3\",\"scale\":[\"M2\",\"m2\",\"M2\",\"M2\",\"M2\",\"m2\",\"M2\"],"
+                                      u"\"collection_rotation\":0,\"mode_rotation\":%1,"
+                                      u"\"generator_cents\":%2,\"period_cents\":1200.0,"
+                                      u"\"embedding\":{\"large_steps\":5,\"small_steps\":2},"
+                                      u"\"extent\":{\"lower\":{\"nPer\":1,\"nGen\":-2},\"upper\":{\"nPer\":3,\"nGen\":-2}},"
+                                      u"\"tonic_ambit\":\"tonic-bounded\"}")
+                                  .arg(modeRotation)
+                                  .arg(muse::String::number(generatorCents, 12)));
 }
 
 constexpr double G12 = 700.0;
@@ -176,11 +177,11 @@ TEST(MeloStaffTests, tonicBoundedLaModeFrameKeepsStoredExtentMinimum)
 TEST(MeloStaffTests, fixedRatioLineExtentCanReturnASubperiodSoToDoFrame)
 {
     const muse::String state
-        =u"{\"scale\":[\"M2\",\"m2\",\"M2\",\"M2\",\"M2\",\"m2\",\"M2\"],"
-         u"\"collection_rotation\":0,\"mode_rotation\":0,\"generator_cents\":700.0,\"period_cents\":1200.0,"
-         u"\"embedding\":{\"large_steps\":5,\"small_steps\":2},"
-         u"\"extent\":{\"lower\":{\"nPer\":-2,\"nGen\":-1},\"upper\":{\"nPer\":-1,\"nGen\":-2}},"
-         u"\"reference\":\"none\"}";
+        = test::canonicalRequest(u"{\"schema\":\"jimstaff-v3\",\"scale\":[\"M2\",\"m2\",\"M2\",\"M2\",\"M2\",\"m2\",\"M2\"],"
+                                 u"\"collection_rotation\":0,\"mode_rotation\":0,\"generator_cents\":700.0,\"period_cents\":1200.0,"
+                                 u"\"embedding\":{\"large_steps\":5,\"small_steps\":2},"
+                                 u"\"extent\":{\"lower\":{\"nPer\":-2,\"nGen\":-1},\"upper\":{\"nPer\":-1,\"nGen\":-2}},"
+                                 u"\"tonic_ambit\":\"tonic-bounded\"}");
     const muse::String melody = u"{\"notes\":[{\"nPer\":-2,\"nGen\":-1}]}";
     std::vector<melo::StaveSegment> segments;
     const muse::String ratioExtent
@@ -1557,9 +1558,12 @@ Measure* m5Measure(Score* score, int measureNo)
 
 TEST(MeloStaffTests, tonicPitchLabelTransportPreservesMusicalAccidentalSymbols)
 {
-    const muse::String state
-        =
-            u"{\"scale\":[\"M2\",\"m2\",\"M2\",\"M2\",\"M2\",\"m2\",\"M2\"],\"collection_rotation\":0,\"mode_rotation\":0,\"generator_cents\":700.0,\"period_cents\":1200.0,\"embedding\":{\"large_steps\":5,\"small_steps\":2},\"extent\":{\"lower\":{\"nPer\":1,\"nGen\":-2},\"upper\":{\"nPer\":2,\"nGen\":-2}},\"reference\":{\"reference-pitch\":{\"key_number\":53}}}";
+    muse::String configuration = test::configuration(meloState(G12));
+    muse::String root, error;
+    ASSERT_TRUE(melo::defaultReferenceTimeline(root, error));
+    root.replace(u"\"step\":\"D\"", u"\"step\":\"F\"");
+    root.replace(u"\"octave\":4", u"\"octave\":3");
+    const muse::String state = test::canonicalRequest(configuration, root);
     melo::TonicPitchLabel label;
     ASSERT_TRUE(melo::tonicPitchLabel(state, label));
     EXPECT_EQ(label.label, u"E♭3");
@@ -1585,12 +1589,11 @@ TEST(MeloStaffTests, pitchLabelRendererSelectsProperMusicSymbolsForEveryAccident
 // with kinds, endpoints, labels, direction, and trumps intact.
 TEST(MeloStaffTests, changeIndicatorTransportCarriesTheKernelTerrainVerbatim)
 {
-    const muse::String oldS
-        =
-            u"{\"scale\":[\"M2\",\"m2\",\"M2\",\"M2\",\"M2\",\"m2\",\"M2\"],\"collection_rotation\":0,\"mode_rotation\":0,\"generator_cents\":700.0,\"period_cents\":1200.0,\"embedding\":{\"large_steps\":5,\"small_steps\":2},\"extent\":{\"lower\":{\"nPer\":1,\"nGen\":-2},\"upper\":{\"nPer\":2,\"nGen\":-2}},\"reference\":{\"reference-pitch\":{\"key_number\":62}}}";
-    muse::String newS = oldS;
-    newS.replace(u"\"mode_rotation\":0", u"\"mode_rotation\":5");
-    newS.replace(u"\"key_number\":62", u"\"key_number\":53");
+    muse::String root, error;
+    const muse::String at = u"{\"numerator\":1,\"denominator\":1}";
+    ASSERT_TRUE(melo::editRelativeKey(meloState(G12), at, u"{\"nPer\":-1,\"nGen\":3}", root, error));
+    const muse::String oldS = test::canonicalRequest(test::configuration(meloState(G12)), root);
+    const muse::String newS = test::canonicalRequest(test::configuration(meloState(G12, 5)), root, at);
     melo::ChangeIndicator model;
     ASSERT_TRUE(melo::changeIndicator(oldS, newS, model));
     ASSERT_EQ(model.kinds.size(), 2u);

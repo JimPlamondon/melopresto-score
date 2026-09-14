@@ -1,0 +1,410 @@
+{
+  "schema": "melo.score-fixture-authoring.v1",
+  "intent": "New canonical fixture authoring, not a legacy-file migration. D4 is explicitly selected for every fixture/template. M5 vectors follow recorded gesture intent under new-reference minus old-reference direction; the common-tone continuation retains the explicitly authored inverse M6 relation. No numeric reference is consulted.",
+  "fixtures": [
+    {
+      "path": "src/engraving/tests/jimstaff_data/acc-chromatic.mscx",
+      "source_sha256": "9ff4c1ab7a26147268dca528dc9331fd8a0ce760fcc7a7934059d86e2491024e",
+      "reference_timeline": {
+        "schema": "jimstaff-reference-v1",
+        "initial": {
+          "step": "D",
+          "alter": 0,
+          "octave": 4
+        },
+        "events": []
+      }
+    },
+    {
+      "path": "src/engraving/tests/jimstaff_data/collision.mscx",
+      "source_sha256": "b2f1b148b77754fe7a3c3ce36d0e4ea2a68810e59357ff5afcdb0a8ff1a9626f",
+      "reference_timeline": {
+        "schema": "jimstaff-reference-v1",
+        "initial": {
+          "step": "D",
+          "alter": 0,
+          "octave": 4
+        },
+        "events": []
+      }
+    },
+    {
+      "path": "src/engraving/tests/jimstaff_data/empty-half-staves-14.mscx",
+      "source_sha256": "2572b51ccb9d9053851817cd690612894b01c536f3146ba70badcf05efef232f",
+      "reference_timeline": {
+        "schema": "jimstaff-reference-v1",
+        "initial": {
+          "step": "D",
+          "alter": 0,
+          "octave": 4
+        },
+        "events": []
+      }
+    },
+    {
+      "path": "src/engraving/tests/jimstaff_data/grym.mscx",
+      "source_sha256": "2eb8f7260cde1c61b026af9c9879b5146091e48df6618cdbf328deb45aab499b",
+      "reference_timeline": {
+        "schema": "jimstaff-reference-v1",
+        "initial": {
+          "step": "D",
+          "alter": 0,
+          "octave": 4
+        },
+        "events": []
+      }
+    },
+    {
+      "path": "src/engraving/tests/jimstaff_data/jims-template.mscx",
+      "source_sha256": "5acf8101d5640cb0a6ba98ab9d43a2acc5cf8f05064db1e9c0f99c137c51104d",
+      "reference_timeline": {
+        "schema": "jimstaff-reference-v1",
+        "initial": {
+          "step": "D",
+          "alter": 0,
+          "octave": 4
+        },
+        "events": []
+      }
+    },
+    {
+      "path": "src/engraving/tests/jimstaff_data/jims-template.mscz",
+      "source_sha256": "322e606a94346cd366188a03e8d7458414c1f4d4d58b73098cfc4b6dd4aea0e5",
+      "reference_timeline": {
+        "schema": "jimstaff-reference-v1",
+        "initial": {
+          "step": "D",
+          "alter": 0,
+          "octave": 4
+        },
+        "events": []
+      }
+    },
+    {
+      "path": "src/engraving/tests/jimstaff_data/m5-key-down.mscx",
+      "source_sha256": "53afed0922bf281333c2c2ce258bbbdfc7779a1da065c2f316599bc43150f029",
+      "reference_timeline": {
+        "schema": "jimstaff-reference-v1",
+        "initial": {
+          "step": "D",
+          "alter": 0,
+          "octave": 4
+        },
+        "events": [
+          {
+            "at": {
+              "numerator": 1,
+              "denominator": 1
+            },
+            "interval": {
+              "nPer": -1,
+              "nGen": 1
+            }
+          }
+        ]
+      }
+    },
+    {
+      "path": "src/engraving/tests/jimstaff_data/m5-key-mode.mscx",
+      "source_sha256": "75698598c087f536cd51f8a3a521fb596e0640b93f09c6aafbc4faea9e347c9d",
+      "reference_timeline": {
+        "schema": "jimstaff-reference-v1",
+        "initial": {
+          "step": "D",
+          "alter": 0,
+          "octave": 4
+        },
+        "events": [
+          {
+            "at": {
+              "numerator": 1,
+              "denominator": 1
+            },
+            "interval": {
+              "nPer": -1,
+              "nGen": 3
+            }
+          }
+        ]
+      }
+    },
+    {
+      "path": "src/engraving/tests/jimstaff_data/m5-key-up.mscx",
+      "source_sha256": "8840a63bbc0842b8ddf9f7535b86f0648f369e21ca39089b8b2047ce2604f541",
+      "reference_timeline": {
+        "schema": "jimstaff-reference-v1",
+        "initial": {
+          "step": "D",
+          "alter": 0,
+          "octave": 4
+        },
+        "events": [
+          {
+            "at": {
+              "numerator": 1,
+              "denominator": 1
+            },
+            "interval": {
+              "nPer": 0,
+              "nGen": 1
+            }
+          }
+        ]
+      }
+    },
+    {
+      "path": "src/engraving/tests/jimstaff_data/m5-mode.mscx",
+      "source_sha256": "b6ed7bfd13bddea07d13ebc7693f31f4cf85936357948ea33855f1a770e6e044",
+      "reference_timeline": {
+        "schema": "jimstaff-reference-v1",
+        "initial": {
+          "step": "D",
+          "alter": 0,
+          "octave": 4
+        },
+        "events": []
+      }
+    },
+    {
+      "path": "src/engraving/tests/jimstaff_data/m5-scale.mscx",
+      "source_sha256": "2228e79d9f6c8e1cd55f435a1268e35b90bba9ff1807a0ba915e56f59c6586be",
+      "reference_timeline": {
+        "schema": "jimstaff-reference-v1",
+        "initial": {
+          "step": "D",
+          "alter": 0,
+          "octave": 4
+        },
+        "events": []
+      }
+    },
+    {
+      "path": "src/engraving/tests/jimstaff_data/m5-syshead.mscx",
+      "source_sha256": "a3700214ca79c0d7b8c91ea32bd5a9fd85d8e2b7b54780697aa4ab17d1cc9690",
+      "reference_timeline": {
+        "schema": "jimstaff-reference-v1",
+        "initial": {
+          "step": "D",
+          "alter": 0,
+          "octave": 4
+        },
+        "events": []
+      }
+    },
+    {
+      "path": "src/engraving/tests/jimstaff_data/m7-gate.mscz",
+      "source_sha256": "0fc2feb61fb6f98e5dcb5f4bf291d53f2fc5a6e40d43b9f122fe37788c584c32",
+      "reference_timeline": {
+        "schema": "jimstaff-reference-v1",
+        "initial": {
+          "step": "D",
+          "alter": 0,
+          "octave": 4
+        },
+        "events": [
+          {
+            "at": {
+              "numerator": 1,
+              "denominator": 1
+            },
+            "interval": {
+              "nPer": -1,
+              "nGen": 3
+            }
+          }
+        ]
+      }
+    },
+    {
+      "path": "src/engraving/tests/jimstaff_data/m8-two-hand.mscx",
+      "source_sha256": "9c8111edc5c59f6062d5702eca3c80cb79fe8e6670ce382c0b7ace20c9c09642",
+      "reference_timeline": {
+        "schema": "jimstaff-reference-v1",
+        "initial": {
+          "step": "D",
+          "alter": 0,
+          "octave": 4
+        },
+        "events": []
+      }
+    },
+    {
+      "path": "src/engraving/tests/jimstaff_data/m8-two-staves.mscx",
+      "source_sha256": "8013a3ce19f53bf285b46971f932923e6b3ea71226c28ff52284a87819b66326",
+      "reference_timeline": {
+        "schema": "jimstaff-reference-v1",
+        "initial": {
+          "step": "D",
+          "alter": 0,
+          "octave": 4
+        },
+        "events": []
+      }
+    },
+    {
+      "path": "src/engraving/tests/jimstaff_data/m9-dense-voices.mscx",
+      "source_sha256": "66de5009c4a3b64d02f09f06d6375433fdd9a2018f7758172b24f6655695c893",
+      "reference_timeline": {
+        "schema": "jimstaff-reference-v1",
+        "initial": {
+          "step": "D",
+          "alter": 0,
+          "octave": 4
+        },
+        "events": []
+      }
+    },
+    {
+      "path": "src/engraving/tests/jimstaff_data/m9-satb-blocked.mscx",
+      "source_sha256": "ede874f70738e137710613aa179f6c2fa98a90d12fe56678de263b20ee3d05ea",
+      "reference_timeline": {
+        "schema": "jimstaff-reference-v1",
+        "initial": {
+          "step": "D",
+          "alter": 0,
+          "octave": 4
+        },
+        "events": []
+      }
+    },
+    {
+      "path": "src/engraving/tests/jimstaff_data/m9-satb-hymn.mscx",
+      "source_sha256": "6bddf57818ec2aaba2d25c8a698b46342779133241a1a188b37f2879409df0e8",
+      "reference_timeline": {
+        "schema": "jimstaff-reference-v1",
+        "initial": {
+          "step": "D",
+          "alter": 0,
+          "octave": 4
+        },
+        "events": []
+      }
+    },
+    {
+      "path": "src/engraving/tests/jimstaff_data/m9-satb-mixed.mscx",
+      "source_sha256": "d5cc2d74d57385ec52b19fcb088ea87b6a35bef1c755b9434652f0a5bef84d5d",
+      "reference_timeline": {
+        "schema": "jimstaff-reference-v1",
+        "initial": {
+          "step": "D",
+          "alter": 0,
+          "octave": 4
+        },
+        "events": []
+      }
+    },
+    {
+      "path": "src/engraving/tests/jimstaff_data/mode-change.mscx",
+      "source_sha256": "f0d598cb2d65bda3c6dedd2bf23ae3b0d9b5d05b4c2a793920fe92dd96bebe4e",
+      "reference_timeline": {
+        "schema": "jimstaff-reference-v1",
+        "initial": {
+          "step": "D",
+          "alter": 0,
+          "octave": 4
+        },
+        "events": []
+      }
+    },
+    {
+      "path": "src/engraving/tests/jimstaff_data/ode-to-joy.mscx",
+      "source_sha256": "506ed30da14d8472ce9526c953201cc1a2e233c13be7547b6594cabeb0ceb310",
+      "reference_timeline": {
+        "schema": "jimstaff-reference-v1",
+        "initial": {
+          "step": "D",
+          "alter": 0,
+          "octave": 4
+        },
+        "events": []
+      }
+    },
+    {
+      "path": "src/engraving/tests/jimstaff_data/ws-jims-common-tone-projection.mscx",
+      "source_sha256": "28a9add066c1e1071c3bda4f823299bb17f24a58161449e6037a72fde8b6a32c",
+      "reference_timeline": {
+        "schema": "jimstaff-reference-v1",
+        "initial": {
+          "step": "D",
+          "alter": 0,
+          "octave": 4
+        },
+        "events": [
+          {
+            "at": {
+              "numerator": 1,
+              "denominator": 1
+            },
+            "interval": {
+              "nPer": 1,
+              "nGen": -3
+            }
+          }
+        ]
+      }
+    },
+    {
+      "path": "share/templates/01-General/04-MeloPresto_Staff/04-MeloPresto_Staff.mscx",
+      "source_sha256": "b4818ed360caaa8147421375291fc4ea4c4b3e9d0a5dbaab6c4083b4d82834a8",
+      "reference_timeline": {
+        "schema": "jimstaff-reference-v1",
+        "initial": {
+          "step": "D",
+          "alter": 0,
+          "octave": 4
+        },
+        "events": []
+      }
+    },
+    {
+      "path": "share/templates/02-Choral/12-SATB_(MeloPresto_Staff)/12-SATB_(MeloPresto_Staff).mscx",
+      "source_sha256": "8b51a7c46dc85ac2a1b51350d75679f5e06690e6c5fca319790b8a2a582d8255",
+      "reference_timeline": {
+        "schema": "jimstaff-reference-v1",
+        "initial": {
+          "step": "D",
+          "alter": 0,
+          "octave": 4
+        },
+        "events": []
+      }
+    },
+    {
+      "path": "src/importexport/musicxml/tests/data/jims/m7-gate.mscz",
+      "source_sha256": "0fc2feb61fb6f98e5dcb5f4bf291d53f2fc5a6e40d43b9f122fe37788c584c32",
+      "reference_timeline": {
+        "schema": "jimstaff-reference-v1",
+        "initial": {
+          "step": "D",
+          "alter": 0,
+          "octave": 4
+        },
+        "events": [
+          {
+            "at": {
+              "numerator": 1,
+              "denominator": 1
+            },
+            "interval": {
+              "nPer": -1,
+              "nGen": 3
+            }
+          }
+        ]
+      }
+    },
+    {
+      "path": "src/importexport/musicxml/tests/data/jims/m8-two-hand.mscx",
+      "source_sha256": "9c8111edc5c59f6062d5702eca3c80cb79fe8e6670ce382c0b7ace20c9c09642",
+      "reference_timeline": {
+        "schema": "jimstaff-reference-v1",
+        "initial": {
+          "step": "D",
+          "alter": 0,
+          "octave": 4
+        },
+        "events": []
+      }
+    }
+  ]
+}

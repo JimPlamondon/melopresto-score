@@ -159,156 +159,57 @@ String MeloImportContext::jsonNumber(const String& text, bool& ok)
 //   parseStaffState
 //---------------------------------------------------------
 
+static String canonicalFragment(XmlStreamReader& e, const String& prefix)
+{
+    const String name = String::fromAscii(e.name().ascii());
+    String fragment = u"<" + name;
+    bool hasLocalNamespace = false;
+    for (const auto& attribute : e.attributes()) {
+        const String attrName = String::fromAscii(attribute.name.ascii());
+        hasLocalNamespace = hasLocalNamespace || attrName == u"xmlns:" + prefix;
+        fragment += u" " + attrName + u"=\"" + attribute.value.toXmlEscaped() + u"\"";
+    }
+    if (!hasLocalNamespace) {
+        fragment += u" xmlns:" + prefix + u"=\"urn:melopresto:musicxml:5\"";
+    }
+    fragment += u">" + e.readBody() + u"</" + name + u">";
+    e.skipCurrentElement();
+    return fragment;
+}
+
+bool MeloImportContext::parseReferenceTimeline(XmlStreamReader& e, String& json, String& error) const
+{
+    if (m_version != 5) {
+        error = u"A canonical reference timeline requires MusicXML-Melo version 5.";
+        e.skipCurrentElement();
+        return false;
+    }
+    if (e.namespaceUri(m_prefix) != u"urn:melopresto:musicxml:5") {
+        error = u"The reference timeline's in-scope namespace is not MusicXML-Melo version 5.";
+        e.skipCurrentElement();
+        return false;
+    }
+    return melo::musicxmlReferenceV5Json(canonicalFragment(e, m_prefix), json, error);
+}
+
 bool MeloImportContext::parseStaffState(XmlStreamReader& e, String& json, int& staffNumber, String& error) const
 {
     // The whole element is always consumed, whatever goes wrong inside it,
     // so the caller's reader stays aligned; the first problem is reported.
     staffNumber = e.hasAttribute("number") ? e.intAttribute("number") : 0;
-    const String p = m_prefix + u":";
-    auto local = [&](const AsciiStringView& qname) -> String {
-        const String name = String::fromAscii(qname.ascii());
-        return name.startsWith(p) ? name.mid(p.size()) : String();
-    };
-    auto fail = [&](const String& text) {
-        if (error.empty()) {
-            error = text;
-        }
-    };
-    auto integer = [&](const String& text, const char* field, int& out) -> bool {
-        bool ok = false;
-        out = text.trimmed().toInt(&ok);
-        if (!ok) {
-            fail(String(u"melo:staff-state %1 is not an integer: '%2'").arg(String::fromAscii(field), text));
-        }
-        return ok;
-    };
-
-    std::vector<String> steps;
-    bool haveScale = false, haveColl = false, haveMode = false, haveGen = false, havePer = false, haveEmb = false, haveExt = false;
-    int collectionRotation = 0, modeRotation = 0, largeSteps = 0, smallSteps = 0;
-    int lowerNPer = 0, lowerNGen = 0, upperNPer = 0, upperNGen = 0;
-    String generatorCents, periodCents, tonicAmbit, reference;
-
-    while (e.readNextStartElement()) {
-        const String tag = local(e.name());
-        if (tag == u"scale") {
-            haveScale = true;
-            while (e.readNextStartElement()) {
-                if (local(e.name()) == u"step") {
-                    steps.push_back(e.readText().trimmed());
-                } else {
-                    e.skipCurrentElement();
-                }
-            }
-        } else if (tag == u"collection-rotation") {
-            haveColl = integer(e.readText(), "collection-rotation", collectionRotation);
-        } else if (tag == u"mode-rotation") {
-            haveMode = integer(e.readText(), "mode-rotation", modeRotation);
-        } else if (tag == u"generator-cents") {
-            generatorCents = jsonNumber(e.readText(), haveGen);
-            if (!haveGen) {
-                fail(u"melo:staff-state generator-cents is not a number");
-            }
-        } else if (tag == u"period-cents") {
-            periodCents = jsonNumber(e.readText(), havePer);
-            if (!havePer) {
-                fail(u"melo:staff-state period-cents is not a number");
-            }
-        } else if (tag == u"embedding") {
-            haveEmb = integer(e.attribute("large-steps"), "embedding/large-steps", largeSteps)
-                      && integer(e.attribute("small-steps"), "embedding/small-steps", smallSteps);
+    if (m_version == 5) {
+        if (e.namespaceUri(m_prefix) != u"urn:melopresto:musicxml:5") {
+            error = u"The staff configuration's in-scope namespace is not MusicXML-Melo version 5.";
             e.skipCurrentElement();
-        } else if (tag == u"extent") {
-            haveExt = integer(e.attribute("lower-n-per"), "extent/lower-n-per", lowerNPer)
-                      && integer(e.attribute("lower-n-gen"), "extent/lower-n-gen", lowerNGen)
-                      && integer(e.attribute("upper-n-per"), "extent/upper-n-per", upperNPer)
-                      && integer(e.attribute("upper-n-gen"), "extent/upper-n-gen", upperNGen);
-            e.skipCurrentElement();
-        } else if (tag == u"tonic-ambit" || tag == u"tonic-extent") {   // owner rename 2026-08-19; the legacy spelling is still read
-            tonicAmbit = e.readText().trimmed();
-        } else if (tag == u"reference") {
-            int forms = 0;
-            while (e.readNextStartElement()) {
-                const String form = local(e.name());
-                ++forms;
-                if (form == u"none") {
-                    reference = u"\"none\"";
-                    e.skipCurrentElement();
-                } else if (form == u"reference-pitch") {
-                    int keyNumber = 0;
-                    if (integer(e.attribute("key-number"), "reference-pitch/key-number", keyNumber)) {
-                        reference = String(u"{\"reference-pitch\":{\"key_number\":%1}}").arg(keyNumber);
-                    }
-                    e.skipCurrentElement();
-                } else if (form == u"pitch-class") {
-                    int pitchClass = 0;
-                    if (integer(e.readText(), "pitch-class", pitchClass)) {
-                        reference = String(u"{\"pitch-class\":{\"pitch_class\":%1}}").arg(pitchClass);
-                    }
-                } else if (form == u"frequency-hz") {
-                    bool ok = false;
-                    const String hertz = jsonNumber(e.readText(), ok);
-                    if (ok) {
-                        reference = String(u"{\"frequency-hz\":{\"hertz\":%1}}").arg(hertz);
-                    } else {
-                        fail(u"melo:reference frequency-hz is not a number");
-                    }
-                } else {
-                    fail(String(u"unknown jims:reference form '%1'").arg(form));
-                    e.skipCurrentElement();
-                }
-            }
-            if (forms != 1) {
-                fail(String(u"melo:reference must carry exactly one form, found %1").arg(forms));
-            }
-        } else {
-            // Unknown MeloPresto-namespaced child: skip, never abort (Binding Requirement 3).
-            e.skipCurrentElement();
+            return false;
         }
+        return melo::musicxmlConfigurationV5Json(canonicalFragment(e, m_prefix), json, error);
     }
-
-    if (!(haveScale && haveColl && haveMode && haveGen && havePer && haveEmb && haveExt)) {
-        fail(
-            u"melo:staff-state is missing a required child (scale, collection-rotation, mode-rotation, generator-cents, period-cents, embedding, extent)");
-    }
-    if (steps.empty()) {
-        fail(u"melo:staff-state scale carries no steps");
-    }
-    if (!error.empty()) {
-        return false;
-    }
-    if (reference.empty()) {
-        reference = u"\"none\"";        // V1/V2 profiles: an absent reference means none
-    }
-
-    String scale = u"[";
-    for (size_t i = 0; i < steps.size(); ++i) {
-        if (i) {
-            scale += u",";
-        }
-        scale += u"\"" + steps[i] + u"\"";
-    }
-    scale += u"]";
-
-    // Converter byte-shape (tools/melo/enriched_to_melo_mscx.py): fixed key
-    // order, no spaces, tonic_ambit last. Built by concatenation — a "%10"
-    // placeholder would be read as "%1" + "0".
-    json = u"{\"scale\":" + scale
-           + u",\"collection_rotation\":" + String::number(collectionRotation)
-           + u",\"mode_rotation\":" + String::number(modeRotation)
-           + u",\"generator_cents\":" + generatorCents
-           + u",\"period_cents\":" + periodCents
-           + u",\"embedding\":{\"large_steps\":" + String::number(largeSteps)
-           + u",\"small_steps\":" + String::number(smallSteps) + u"}"
-           + u",\"extent\":{\"lower\":{\"nPer\":" + String::number(lowerNPer)
-           + u",\"nGen\":" + String::number(lowerNGen) + u"},\"upper\":{\"nPer\":" + String::number(upperNPer)
-           + u",\"nGen\":" + String::number(upperNGen) + u"}}"
-           + u",\"reference\":" + reference;
-    if (!tonicAmbit.empty()) {
-        json += String(u",\"tonic_ambit\":\"%1\"").arg(tonicAmbit);
-    }
-    json += u"}";
-    return true;
+    error
+        =
+            u"This legacy staff state lacks the spelled initial reference and authored relative history required by MusicXML-Melo version 5. Import the original spelled source instead.";
+    e.skipCurrentElement();
+    return false;
 }
 
 //---------------------------------------------------------
@@ -375,7 +276,9 @@ bool MeloImportContext::applyToPart(Score* score, Part* part, const String& part
         Fraction lastTick(-1, 1);
         for (const BufferedState* s : entry.second) {
             String kernelError;
-            if (!melo::validateState(s->json, kernelError)) {
+            String configuration;
+            const bool valid = m_version == 5 && melo::storedStaffConfiguration(s->json, configuration, kernelError);
+            if (!valid) {
                 meloFatal(logger, String(mu::engraving::melo::diagnostic::importStateRejected).arg(kernelError));
                 return false;
             }

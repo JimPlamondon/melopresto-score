@@ -20,6 +20,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "read460.h"
+#include "engraving/melo/melochangecontroller.h"
 
 #include "../editing/mscoreview.h"
 #include "../editing/transpose.h"
@@ -191,6 +192,32 @@ muse::Ret Read460::readScoreFile(Score* score, XmlReader& e, rw::ReadInOutData* 
     }
 
     ctx.clearOrphanedConnectors();
+
+    // The stored reference-free configurations acquire disposable rendering
+    // and playback contexts only after the complete composition is available.
+    if (!score->masterScore()->metaTag(melo::REFERENCE_TIMELINE_TAG).isEmpty()) {
+        String error;
+        const std::list<Score*> relatedScores = score->isMaster() ? score->scoreList() : std::list<Score*> { score };
+        for (const Score* related : relatedScores) {
+            for (const Staff* staff : related->staves()) {
+                std::vector<const StaffType*> states { staff->staffType(Fraction(0, 1)) };
+                for (const Measure* measure = related->firstMeasure(); measure; measure = measure->nextMeasure()) {
+                    for (const StaffTypeChange* carrier : melo::changeCarriers(measure, staff->idx())) {
+                        states.push_back(carrier->staffType());
+                    }
+                }
+                for (const StaffType* state : states) {
+                    String configuration;
+                    if (state && state->isMelo() && !melo::storedStaffConfiguration(state->meloStateJson(), configuration, error)) {
+                        return make_ret(Err::FileBadFormat, muse::mtrc("engraving", melo::diagnostic::unreadableScore).arg(error));
+                    }
+                }
+            }
+        }
+        if (!melo::rebuildCanonicalReferenceContexts(score, error)) {
+            return make_ret(Err::FileBadFormat, muse::mtrc("engraving", melo::diagnostic::unreadableScore).arg(error));
+        }
+    }
 
     // Validate transported state even when a span contains no pitched notes.
     // This precedes extent reconciliation and also covers MeloPresto changes on a

@@ -140,6 +140,12 @@ void FluidSequencer::addNoteEvent(EventSequenceMap& destination, const mpe::Note
     const note_idx_t noteIdx = noteIndex(noteEvent.pitchCtx().nominalPitchLevel);
     const velocity_t velocity = noteVelocity(noteEvent);
     const tuning_t tuning = noteTuning(noteEvent, noteIdx);
+    // Keep the Kernel's exact transport pitch beside the bounded MIDI trigger.
+    // nominalPitchLevel and the MIDI pitch attribute both have coarser grids.
+    const auto& exact = noteEvent.pitchCtx().exactPitch;
+    const float tuningCents = exact
+                              ? static_cast<float>((exact->midiKey - noteIdx) * 100.0 + exact->centsOffset)
+                              : tuning * 100.f;
     const int32_t noteId = static_cast<int32_t>(m_nextNoteId++ & 0x7FFF'FFFFu);
 
     // Assumption: 1:1 mapping between staff and instrument and FluidSynth and FluidSequencer instances.
@@ -159,8 +165,9 @@ void FluidSequencer::addNoteEvent(EventSequenceMap& destination, const mpe::Note
             0,
             noteId,
             static_cast<int16_t>(noteIdx),
-            tuning * 100.f,
+            tuningCents,
             static_cast<float>(velocity) / 65535.f,
+            exact.has_value(),
         });
     }
 
@@ -177,8 +184,9 @@ void FluidSequencer::addNoteEvent(EventSequenceMap& destination, const mpe::Note
             0,
             noteId,
             static_cast<int16_t>(noteIdx),
-            tuning * 100.f,
+            tuningCents,
             0.f,
+            exact.has_value(),
         });
     }
 

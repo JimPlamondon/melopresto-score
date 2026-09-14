@@ -78,6 +78,12 @@ private:
 
         void add(int key, double tuning)
         {
+            for (size_t i = 0; i < keys.size(); ++i) {
+                if (keys[i] == key) {
+                    pitches[i] = (key * 100.0) + tuning;
+                    return;
+                }
+            }
             keys.push_back(key);
             pitches.push_back((key * 100.0) + tuning);
         }

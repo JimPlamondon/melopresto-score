@@ -1,0 +1,305 @@
+{
+  "schema": "melo.interchange-fixture-authoring.v1",
+  "intent": "New authored test pieces: explicit Re0 D4 (Middle C = C4), with signed new-minus-old relative events only where declared. Source numeric references and change summaries are discarded, never interpreted. Original inputs remain refusal-test/source evidence.",
+  "fixtures": [
+    {
+      "source": "src/importexport/musicxml/tests/data/jims/jims-12tet-diatonic.musicxml",
+      "source_sha256": "c942bf0fcc5aaea3a1a16c493bd887e720afa05de230f0f6c8ff7f0c0ac6ea2c",
+      "output": "src/importexport/musicxml/tests/data/jims/v5/jims-12tet-diatonic.musicxml",
+      "initial": {
+        "step": "D",
+        "alter": 0,
+        "octave": 4
+      },
+      "events": []
+    },
+    {
+      "source": "src/importexport/musicxml/tests/data/jims/jims-chord-name-offset-staff-format-v4.musicxml",
+      "source_sha256": "4de8741cc0560bf3c963d63a6618549c0ce660b06d87a52c03a1754a9a275aa4",
+      "output": "src/importexport/musicxml/tests/data/jims/v5/jims-chord-name-offset-staff-format-v4.musicxml",
+      "initial": {
+        "step": "D",
+        "alter": 0,
+        "octave": 4
+      },
+      "events": []
+    },
+    {
+      "source": "src/importexport/musicxml/tests/data/jims/jims-chord-name-tilde-invalid.musicxml",
+      "source_sha256": "deee1ca24785eb6190976502252a30b2949125fab3f183d4cb71e9c64238b64e",
+      "output": "src/importexport/musicxml/tests/data/jims/v5/jims-chord-name-tilde-invalid.musicxml",
+      "initial": null,
+      "events": []
+    },
+    {
+      "source": "src/importexport/musicxml/tests/data/jims/jims-chord-name-unaligned-offset-v4.musicxml",
+      "source_sha256": "a7b5c146258a015b7a7cde16f85e12d62400ded4c8628c2e8c98aa03a5c7011d",
+      "output": "src/importexport/musicxml/tests/data/jims/v5/jims-chord-name-unaligned-offset-v4.musicxml",
+      "initial": null,
+      "events": []
+    },
+    {
+      "source": "src/importexport/musicxml/tests/data/jims/jims-chord-name-v4.musicxml",
+      "source_sha256": "60c76c4d633e01dc3ff9fe043a149ed03e27f19e0a383bbc5acbf6eaa330d153",
+      "output": "src/importexport/musicxml/tests/data/jims/v5/jims-chord-name-v4.musicxml",
+      "initial": {
+        "step": "D",
+        "alter": 0,
+        "octave": 4
+      },
+      "events": []
+    },
+    {
+      "source": "src/importexport/musicxml/tests/data/jims/jims-mid-bar-state-change.musicxml",
+      "source_sha256": "b645a484f9a33b973a12112b7e8b20a639ff3f450702cc62196556b3291433c4",
+      "output": "src/importexport/musicxml/tests/data/jims/v5/jims-mid-bar-state-change.musicxml",
+      "initial": {
+        "step": "D",
+        "alter": 0,
+        "octave": 4
+      },
+      "events": []
+    },
+    {
+      "source": "src/importexport/musicxml/tests/data/jims/jims-mid-score-state-change.musicxml",
+      "source_sha256": "5c28fc60615d5a8f509966339e1441be89a6ce659f539f0cde4a59d39d096bf1",
+      "output": "src/importexport/musicxml/tests/data/jims/v5/jims-mid-score-state-change.musicxml",
+      "initial": {
+        "step": "D",
+        "alter": 0,
+        "octave": 4
+      },
+      "events": []
+    },
+    {
+      "source": "src/importexport/musicxml/tests/data/jims/jims-mode-change-v2.musicxml",
+      "source_sha256": "05ba66bfa7ee586345d3d64172ea22ff690bf4b9f4b1a82a80a589abb2dbbdeb",
+      "output": "src/importexport/musicxml/tests/data/jims/v5/jims-mode-change-v2.musicxml",
+      "initial": {
+        "step": "D",
+        "alter": 0,
+        "octave": 4
+      },
+      "events": []
+    },
+    {
+      "source": "src/importexport/musicxml/tests/data/jims/jims-multi-part-mixed.musicxml",
+      "source_sha256": "cae74415eaa167c2d0983529cbc17399fbd7e3286975783ad308ca1595c6ac05",
+      "output": "src/importexport/musicxml/tests/data/jims/v5/jims-multi-part-mixed.musicxml",
+      "initial": {
+        "step": "D",
+        "alter": 0,
+        "octave": 4
+      },
+      "events": []
+    },
+    {
+      "source": "src/importexport/musicxml/tests/data/jims/jims-multi-part-perstaff-differs.musicxml",
+      "source_sha256": "5e8901eb58e90738a305a37f3b8312eba50bc4feefa8b0484dd5d2e2bf539057",
+      "output": "src/importexport/musicxml/tests/data/jims/v5/jims-multi-part-perstaff-differs.musicxml",
+      "initial": {
+        "step": "D",
+        "alter": 0,
+        "octave": 4
+      },
+      "events": []
+    },
+    {
+      "source": "src/importexport/musicxml/tests/data/jims/jims-multi-part-shared.musicxml",
+      "source_sha256": "9f98e7b6ff3ff838e606a283ccc2b59af4adcf12168852d9f0e3e7663c08db66",
+      "output": "src/importexport/musicxml/tests/data/jims/v5/jims-multi-part-shared.musicxml",
+      "initial": {
+        "step": "D",
+        "alter": 0,
+        "octave": 4
+      },
+      "events": []
+    },
+    {
+      "source": "src/importexport/musicxml/tests/data/jims/jims-multi-staff.musicxml",
+      "source_sha256": "132f81789f11d8ace892cfe7df050a8831d760bbb29377c9b1b8f79337e04c2e",
+      "output": "src/importexport/musicxml/tests/data/jims/v5/jims-multi-staff.musicxml",
+      "initial": {
+        "step": "D",
+        "alter": 0,
+        "octave": 4
+      },
+      "events": []
+    },
+    {
+      "source": "src/importexport/musicxml/tests/data/jims/jims-provenance.musicxml",
+      "source_sha256": "f1d0f5c9f24855562917e46e03d9a5a574331e3ca3f6fd881c6317e347c27bd2",
+      "output": "src/importexport/musicxml/tests/data/jims/v5/jims-provenance.musicxml",
+      "initial": {
+        "step": "D",
+        "alter": 0,
+        "octave": 4
+      },
+      "events": []
+    },
+    {
+      "source": "src/importexport/musicxml/tests/data/jims/jims-trajectory-cubic.musicxml",
+      "source_sha256": "2b9c611972a357d3fa3b8e978407bfbd18094d844942d00e766ea4e91f1dc044",
+      "output": "src/importexport/musicxml/tests/data/jims/v5/jims-trajectory-cubic.musicxml",
+      "initial": {
+        "step": "D",
+        "alter": 0,
+        "octave": 4
+      },
+      "events": []
+    },
+    {
+      "source": "src/importexport/musicxml/tests/data/jims/jims-trajectory-linear.musicxml",
+      "source_sha256": "c9738811ff15602acc6408c3ecd7e0b66dea90ecbbb74c7a82be5f2fe8b9d8b5",
+      "output": "src/importexport/musicxml/tests/data/jims/v5/jims-trajectory-linear.musicxml",
+      "initial": {
+        "step": "D",
+        "alter": 0,
+        "octave": 4
+      },
+      "events": []
+    },
+    {
+      "source": "src/importexport/musicxml/tests/data/jims/jims-v3-m5-key-down.musicxml",
+      "source_sha256": "bb496f4105141644c981098e11f33ef5cf59d2acb49904c60f674332775e40e3",
+      "output": "src/importexport/musicxml/tests/data/jims/v5/jims-v3-m5-key-down.musicxml",
+      "initial": {
+        "step": "D",
+        "alter": 0,
+        "octave": 4
+      },
+      "events": [
+        {
+          "numerator": 1,
+          "denominator": 1,
+          "n-per": -1,
+          "n-gen": 1
+        }
+      ]
+    },
+    {
+      "source": "src/importexport/musicxml/tests/data/jims/jims-v3-m5-key-mode.musicxml",
+      "source_sha256": "cf7a9f12b90aa2d973f14db3d1801609e7ca34d6bbb63cd59745cd2f349e026f",
+      "output": "src/importexport/musicxml/tests/data/jims/v5/jims-v3-m5-key-mode.musicxml",
+      "initial": {
+        "step": "D",
+        "alter": 0,
+        "octave": 4
+      },
+      "events": [
+        {
+          "numerator": 1,
+          "denominator": 1,
+          "n-per": -1,
+          "n-gen": 3
+        }
+      ]
+    },
+    {
+      "source": "src/importexport/musicxml/tests/data/jims/jims-v3-m5-key-up.musicxml",
+      "source_sha256": "fd1287967a7c1572d504fb9f834e55b07d8506dec8389a7578f3168d70c80eb5",
+      "output": "src/importexport/musicxml/tests/data/jims/v5/jims-v3-m5-key-up.musicxml",
+      "initial": {
+        "step": "D",
+        "alter": 0,
+        "octave": 4
+      },
+      "events": [
+        {
+          "numerator": 1,
+          "denominator": 1,
+          "n-per": 0,
+          "n-gen": 1
+        }
+      ]
+    },
+    {
+      "source": "src/importexport/musicxml/tests/data/jims/jims-v3-m5-mode.musicxml",
+      "source_sha256": "cd460345ee4b60ffc64be85afbd5fe05e9ab17a45a92af32ab316c02b33ebe5a",
+      "output": "src/importexport/musicxml/tests/data/jims/v5/jims-v3-m5-mode.musicxml",
+      "initial": {
+        "step": "D",
+        "alter": 0,
+        "octave": 4
+      },
+      "events": []
+    },
+    {
+      "source": "src/importexport/musicxml/tests/data/jims/jims-v3-m5-scale.musicxml",
+      "source_sha256": "3d0fcd6c59d9a456eb60761e396a4aca634199a9335c7bb6316c2b268f92387d",
+      "output": "src/importexport/musicxml/tests/data/jims/v5/jims-v3-m5-scale.musicxml",
+      "initial": {
+        "step": "D",
+        "alter": 0,
+        "octave": 4
+      },
+      "events": []
+    },
+    {
+      "source": "src/importexport/musicxml/tests/data/jims/jims-v3-m5-syshead.musicxml",
+      "source_sha256": "b0d9ef5b0c69a3392f10a3ce2957039f86adf6365ac9f3dbdb5905fefc02d2cb",
+      "output": "src/importexport/musicxml/tests/data/jims/v5/jims-v3-m5-syshead.musicxml",
+      "initial": {
+        "step": "D",
+        "alter": 0,
+        "octave": 4
+      },
+      "events": []
+    },
+    {
+      "source": "src/importexport/musicxml/tests/data/jims/jims-v3-other-prefix.musicxml",
+      "source_sha256": "9143927d7c2d5e8a645c05afdeac47b1e4537de5d1af2272ed43c334277cbba0",
+      "output": "src/importexport/musicxml/tests/data/jims/v5/jims-v3-other-prefix.musicxml",
+      "initial": {
+        "step": "D",
+        "alter": 0,
+        "octave": 4
+      },
+      "events": []
+    },
+    {
+      "source": "src/importexport/musicxml/tests/data/jims/melo-generated-chord-evidence.musicxml",
+      "source_sha256": "aede44992dbc58c21c7065cc803c317df106f35cfeff239fa1d4ae124cc238cf",
+      "output": "src/importexport/musicxml/tests/data/jims/v5/melo-generated-chord-evidence.musicxml",
+      "initial": {
+        "step": "D",
+        "alter": 0,
+        "octave": 4
+      },
+      "events": []
+    },
+    {
+      "source": "src/importexport/musicxml/tests/data/jims/melo-harmonic-span-evidence.musicxml",
+      "source_sha256": "14c480b85463cef9c5ca79c01bdfdee0ac0f564c506dd2c360349b3223d78d7a",
+      "output": "src/importexport/musicxml/tests/data/jims/v5/melo-harmonic-span-evidence.musicxml",
+      "initial": {
+        "step": "D",
+        "alter": 0,
+        "octave": 4
+      },
+      "events": []
+    },
+    {
+      "source": "src/importexport/mei/tests/data/jims/jims-synthetic.mei",
+      "source_sha256": "be7778c96d251fa30bd65b423aaccbfe2e811b49a104b237dc3d5ec5572381d4",
+      "output": "src/importexport/mei/tests/data/jims/v5/jims-synthetic.mei",
+      "initial": {
+        "step": "D",
+        "alter": 0,
+        "octave": 4
+      },
+      "events": []
+    },
+    {
+      "source": "src/importexport/mei/tests/data/jims/generated-chord-evidence.mei",
+      "source_sha256": "adad0489c5f0985660f4189194738797875e597d573f2d556f7688755bf85560",
+      "output": "src/importexport/mei/tests/data/jims/v5/generated-chord-evidence.mei",
+      "initial": {
+        "step": "D",
+        "alter": 0,
+        "octave": 4
+      },
+      "events": []
+    }
+  ]
+}

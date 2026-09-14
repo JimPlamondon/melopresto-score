@@ -10,7 +10,7 @@
 #include "engraving/editing/editstaff.h"
 #include "engraving/melo/melochange.h"
 #include "engraving/melo/melostrings.h"
-#include <QLocale>
+#include "engraving/dom/masterscore.h"
 using namespace mu::inspector;
 using namespace mu::engraving;
 
@@ -77,7 +77,7 @@ void MeloStaffSettingsModel::loadProperties()
                                                                                            + 1).arg((tick
                                                                                                      - measure->tick()).ticks()).arg(staff
                                                                                                                                      + 1);
-        m_settings["referenceBound"] = m_options.referenceBound;
+
         m_settings["hasChange"] = melo::changeCarrierAt(measure, staff, tick) != nullptr;
         if (m_settings["hasChange"].toBool()) {
             QString description = muse::qtrc("inspector", "This position carries a change.");
@@ -108,16 +108,13 @@ void MeloStaffSettingsModel::loadProperties()
                     current = int(list.size());
                 }
                 QString label = option.label.toQString();
-                if (QString::fromLatin1(key) == "keys") {
-                    label = muse::qtrc("inspector", "%1 (period shift: %2)").arg(label).arg(option.nPer);
-                }
                 list << QVariantMap { { "text", label }, { "value", int(list.size()) } };
             }
             m_settings[key] = list;
             m_settings[QString::fromLatin1(key) + "Index"] = current;
         };
         choices("tonics", m_options.tonics);
-        choices("keys", m_options.keyTargets);
+
         const melo::StateChangeOption* diatonic = nullptr;
         const melo::StateChangeOption* harmonic = nullptr;
         const melo::StateChangeOption* zero = nullptr;
@@ -163,6 +160,8 @@ void MeloStaffSettingsModel::loadProperties()
         muse::String why;
         m_settings["canChange"] = melo::canInsertChange(score, staff, measure, tick, why);
         m_settings["reason"] = why.toQString();
+        m_settings["canKeyChange"] = m_settings["canChange"].toBool() && tick > Fraction(0, 1)
+                                     && !score->masterScore()->metaTag(melo::REFERENCE_TIMELINE_TAG).isEmpty();
     }
     emit settingsChanged();
 }
@@ -199,10 +198,10 @@ void MeloStaffSettingsModel::applyOption(const QString& group, int index)
         return;
     }
     std::vector<muse::String> steps;
-    const auto& options = group == "tonics" ? m_options.tonics : m_options.keyTargets;
+    const auto& options = m_options.tonics;
     if (group == "scales" && index >= 0 && size_t(index) < m_scaleSteps.size()) {
         steps = m_scaleSteps[index];
-    } else if ((group == "tonics" || group == "keys") && index >= 0 && size_t(index) < options.size()) {
+    } else if (group == "tonics" && index >= 0 && size_t(index) < options.size()) {
         steps = { options[index].id };
     }
     if (steps.empty()) {
@@ -227,24 +226,17 @@ void MeloStaffSettingsModel::applyOption(const QString& group, int index)
                                                                                                              "Applied to all compatible parts at this position."));
 }
 
-void MeloStaffSettingsModel::bindReference(const QString& pitch)
+void MeloStaffSettingsModel::editKeyChange()
 {
-    bool numeric = false;
-    int value = QLocale().toInt(pitch, &numeric);
-    muse::String error;
-    if (!numeric) {
-        finish(false, muse::mtrc("inspector", "Enter a whole reference-pitch number."), {});
-        return;
-    }
     Score* score = nullptr;
     Measure* measure = nullptr;
     Fraction tick;
     staff_idx_t staff = 0;
-    if (!target(score, measure, tick, staff)) {
+    if (!target(score, measure, tick, staff) || tick <= Fraction(0, 1)) {
         return;
     }
-    bool ok = melo::applyChange(score, staff, measure, tick, muse::String(u"bind:reference-pitch:%1").arg(value), error);
-    finish(ok, error, muse::qtrc("inspector", "Reference pitch bound for this staff."));
+    dispatcher()->dispatch("melo-edit-key-change",
+                           muse::actions::ActionData::make_arg3<int, int, int>(int(staff), tick.numerator(), tick.denominator()));
 }
 
 void MeloStaffSettingsModel::removeChange()

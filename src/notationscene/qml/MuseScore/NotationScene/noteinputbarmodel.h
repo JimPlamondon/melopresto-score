@@ -45,7 +45,6 @@ class NoteInputBarModel : public muse::uicomponents::AbstractMenuModel, public Q
     Q_PROPERTY(QVariantMap accidentalPresentation READ accidentalPresentation NOTIFY accidentalPresentationChanged)
 
     muse::GlobalInject<muse::ui::IUiConfiguration> uiConfiguration;
-    muse::GlobalInject<engraving::IEngravingFontsProvider> engravingFonts;
     muse::ContextInject<context::IGlobalContext> context = { this };
     muse::ContextInject<playback::IPlaybackController> playbackController = { this };
 
@@ -58,7 +57,7 @@ public:
     bool isInputAllowed() const;
     bool showMeloTuning() const { return m_showMeloTuning; }
     QVariantMap accidentalPresentation() const;
-    static QVariantMap accidentalPresentationForScore(const engraving::Score* score, const engraving::IEngravingFontPtr& font);
+    static QVariantMap accidentalPresentationForScore(const engraving::Score* score);
 
 signals:
     void showMeloTuningChanged();

@@ -40,6 +40,10 @@ qt_add_qml_module(notationscene_qml
         continuouspanel.h
         editgridsizedialogmodel.cpp
         editgridsizedialogmodel.h
+        meloinitialpitchmodel.cpp
+        meloinitialpitchmodel.h
+        melokeychangemodel.cpp
+        melokeychangemodel.h
         editpercussionshortcutmodel.cpp
         editpercussionshortcutmodel.h
         elementpopups/caposettingsmodel.cpp
@@ -162,6 +166,8 @@ qt_add_qml_module(notationscene_qml
         AbstractElementPopup.qml
         ConcertPitchControl.qml
         EditGridSizeDialog.qml
+        MeloInitialPitchDialog.qml
+        MeloKeyChangeDialog.qml
         EditPercussionShortcutDialog.qml
         elementpopups/CapoPopup.qml
         elementpopups/DynamicPopup.qml
@@ -189,6 +195,7 @@ qt_add_qml_module(notationscene_qml
         NotationToolBar.qml
         NotationView.qml
         NoteInputBar.qml
+        MeloAccidentalButton.qml
         PartsDialog.qml
         PercussionPanel.qml
         percussionpanel/PercussionPanelPad.qml

@@ -1,0 +1,307 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<?xml-model href="https://music-encoding.org/schema/5.1/mei-CMN.rng" type="application/xml" schematypens="http://relaxng.org/ns/structure/1.0"?>
+<mei xmlns="http://www.music-encoding.org/ns/mei" xmlns:jm="urn:melopresto:mei:1" xmlns:jx="urn:melopresto:musicxml:5" meiversion="5.1">
+  <meiHead>
+    <fileDesc>
+      <titleStmt>
+        <title type="main">Synthetic 001</title>
+        <composer>
+          <persName>JiMS fixtures</persName>
+        </composer>
+      </titleStmt>
+      <pubStmt>
+        <unpub/>
+      </pubStmt>
+      <sourceDesc>
+        <source type="jims-provenance" xml:id="src-prov-1">
+          <bibl>
+            <identifier type="uri">fixtures/synthetic-001</identifier>
+            <identifier type="sha-256">aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</identifier>
+            <identifier type="media-type">application/vnd.recordare.musicxml+xml</identifier>
+          </bibl>
+        </source>
+      </sourceDesc>
+    </fileDesc>
+    <encodingDesc>
+      <appInfo>
+        <application version="1.0.0" xml:id="app-jims2mei">
+          <name>jims2mei</name>
+        </application>
+        <application xml:id="app-src-1">
+          <name>mei-jims fixture author</name>
+        </application>
+      </appInfo>
+      <classDecls>
+        <taxonomy xml:id="jims.taxonomy">
+          <bibl>JiMS analysis controlled vocabulary v1</bibl>
+          <category xml:id="jims.outcome">
+            <category xml:id="jims.outcome.modulation">
+              <label>modulation</label>
+            </category>
+            <category xml:id="jims.outcome.tonicization">
+              <label>tonicization</label>
+            </category>
+            <category xml:id="jims.outcome.ambiguous">
+              <label>ambiguous</label>
+            </category>
+            <category xml:id="jims.outcome.insufficient-evidence">
+              <label>insufficient-evidence</label>
+            </category>
+          </category>
+          <category xml:id="jims.ambit">
+            <category xml:id="jims.ambit.tonic-bounded">
+              <label>tonic-bounded</label>
+            </category>
+            <category xml:id="jims.ambit.tonic-centered">
+              <label>tonic-centered</label>
+            </category>
+          </category>
+          <category xml:id="jims.melody">
+            <category xml:id="jims.melody.soprano">
+              <label>soprano</label>
+            </category>
+            <category xml:id="jims.melody.alto">
+              <label>alto</label>
+            </category>
+            <category xml:id="jims.melody.tenor">
+              <label>tenor</label>
+            </category>
+            <category xml:id="jims.melody.bass">
+              <label>bass</label>
+            </category>
+          </category>
+          <category xml:id="jims.ambiguity">
+            <category xml:id="jims.ambiguity.short-tonicization-vs-brief-modulation">
+              <label>short-tonicization-vs-brief-modulation</label>
+            </category>
+            <category xml:id="jims.ambiguity.pivot-region">
+              <label>pivot-region</label>
+            </category>
+            <category xml:id="jims.ambiguity.conflicting-cadence-evidence">
+              <label>conflicting-cadence-evidence</label>
+            </category>
+            <category xml:id="jims.ambiguity.insufficient-context">
+              <label>insufficient-context</label>
+            </category>
+          </category>
+        </taxonomy>
+      </classDecls>
+    </encodingDesc>
+    <workList>
+      <work>
+        <title>Synthetic carrier exercise</title>
+      </work>
+    </workList>
+    <extMeta>
+      <jm:record version="1">
+        <jm:musicxml>
+          <jx:reference-timeline><jx:initial-pitch step="D" alter="0" octave="4" /></jx:reference-timeline>
+          <jm:part ref="#sd-1" part-id="P1" name="Soprano" abbrev="S.">
+            <jm:state xml:id="jmstate-P1-1" measure="1" off="0/1" annot="#st-P1-1">
+              <jx:staff-state>
+                <jx:scale>
+                  <jx:step>M2</jx:step>
+                  <jx:step>M2</jx:step>
+                  <jx:step>m2</jx:step>
+                  <jx:step>M2</jx:step>
+                  <jx:step>M2</jx:step>
+                  <jx:step>M2</jx:step>
+                  <jx:step>m2</jx:step>
+                </jx:scale>
+                <jx:collection-rotation>0</jx:collection-rotation>
+                <jx:mode-rotation>0</jx:mode-rotation>
+                <jx:generator-cents>700</jx:generator-cents>
+                <jx:period-cents>1200</jx:period-cents>
+                <jx:embedding large-steps="5" small-steps="2"/>
+                <jx:extent lower-n-gen="0" lower-n-per="0" upper-n-gen="4" upper-n-per="-1"/>
+                <jx:tonic-ambit>tonic-bounded</jx:tonic-ambit>
+                
+              </jx:staff-state>
+            </jm:state>
+            <jm:state xml:id="jmstate-P1-2" measure="2" off="2/1" annot="#st-P1-2">
+              <jx:staff-state>
+                <jx:scale>
+                  <jx:step>M2</jx:step>
+                  <jx:step>M2</jx:step>
+                  <jx:step>m2</jx:step>
+                  <jx:step>M2</jx:step>
+                  <jx:step>M2</jx:step>
+                  <jx:step>M2</jx:step>
+                  <jx:step>m2</jx:step>
+                </jx:scale>
+                <jx:collection-rotation>0</jx:collection-rotation>
+                <jx:mode-rotation>5</jx:mode-rotation>
+                <jx:generator-cents>700</jx:generator-cents>
+                <jx:period-cents>1200</jx:period-cents>
+                <jx:embedding large-steps="5" small-steps="2"/>
+                <jx:extent lower-n-gen="3" lower-n-per="-1" upper-n-gen="3" upper-n-per="-1"/>
+                <jx:tonic-ambit>tonic-bounded</jx:tonic-ambit>
+                
+              </jx:staff-state>
+              
+            </jm:state>
+            <jm:state xml:id="jmstate-P1-3" measure="3" off="0/1" annot="#st-P1-3">
+              <jx:staff-state>
+                <jx:scale>
+                  <jx:step>M2</jx:step>
+                  <jx:step>m2</jx:step>
+                  <jx:step>M2</jx:step>
+                  <jx:step>M2</jx:step>
+                  <jx:step>M2</jx:step>
+                  <jx:step>m2</jx:step>
+                  <jx:step>M2</jx:step>
+                </jx:scale>
+                <jx:collection-rotation>1</jx:collection-rotation>
+                <jx:mode-rotation>5</jx:mode-rotation>
+                <jx:generator-cents>700</jx:generator-cents>
+                <jx:period-cents>1200</jx:period-cents>
+                <jx:embedding large-steps="5" small-steps="2"/>
+                <jx:extent lower-n-gen="0" lower-n-per="0" upper-n-gen="0" upper-n-per="0"/>
+                <jx:tonic-ambit>tonic-bounded</jx:tonic-ambit>
+                
+              </jx:staff-state>
+              
+            </jm:state>
+            <jm:notes>
+              <jm:note ref="#n-P1-1">
+                <jx:pitch n-per="0" n-gen="0"/>
+              </jm:note>
+              <jm:note ref="#n-P1-2">
+                <jx:pitch n-per="-1" n-gen="2"/>
+              </jm:note>
+              <jm:note ref="#n-P1-3">
+                <jx:pitch n-per="-1" n-gen="4"/>
+              </jm:note>
+              <jm:note ref="#n-P1-4">
+                <jx:pitch n-per="0" n-gen="0"/>
+              </jm:note>
+              <jm:note ref="#n-P1-5">
+                <jx:pitch n-per="0" n-gen="1"/>
+              </jm:note>
+              <jm:note ref="#n-P1-6">
+                <jx:pitch n-per="0" n-gen="1"/>
+              </jm:note>
+              <jm:note ref="#n-P1-7">
+                <jx:pitch n-per="-1" n-gen="3"/>
+              </jm:note>
+              <jm:note ref="#n-P1-8">
+                <jx:pitch n-per="0" n-gen="0"/>
+              </jm:note>
+              <jm:note ref="#n-P1-9">
+                <jx:pitch n-per="0" n-gen="0"/>
+              </jm:note>
+            </jm:notes>
+            <jm:trajectory measure="3" off="0/1" staff="1">
+              <jx:tuning-trajectory>
+                <jx:segment duration-divisions="1920" end-cents="-21.5" interpolation="linear" start-cents="0"/>
+                <jx:segment duration-divisions="1920" end-cents="0" interpolation="cubic-bezier" start-cents="-21.5">
+                  <jx:control time="0.25" value-cents="-21.5"/>
+                  <jx:control time="0.75" value-cents="0"/>
+                </jx:segment>
+              </jx:tuning-trajectory>
+            </jm:trajectory>
+          </jm:part>
+          <jm:measures>
+            <jm:measure ref="#m-1" len="4/1"/>
+            <jm:measure ref="#m-2" len="4/1"/>
+            <jm:measure ref="#m-3" len="4/1"/>
+          </jm:measures>
+          <jm:harmony>
+            <jm:event harm="#h-1" measure="1" off="0/1"/>
+            <jm:event harm="#h-2" measure="1" off="7/2"/>
+          </jm:harmony>
+          <jm:source-supplement strict="true">
+            <jm:source ref="#src-prov-1" role="source">synthetic origin</jm:source>
+          </jm:source-supplement>
+          <jm:encoding date="2026-08-26">
+            <jm:software>mei-jims fixture author</jm:software>
+            <jm:supports element="accidental" type="yes"/>
+          </jm:encoding>
+          <jm:misc name="jims-note">synthetic adversarial fixture</jm:misc>
+        </jm:musicxml>
+      </jm:record>
+    </extMeta>
+    <revisionDesc>
+      <change label="jims-mei-generation" resp="#app-jims2mei" xml:id="change-gen">
+        <changeDesc>
+          <p>Generated by jims2mei 1.0.0 from the canonical JiMS-MusicXML and structured review record.</p>
+        </changeDesc>
+      </change>
+    </revisionDesc>
+  </meiHead>
+  <music>
+    <body>
+      <mdiv label="Synthetic 001">
+        <score>
+          <scoreDef>
+            <meterSig count="4" unit="4"/>
+            <staffGrp symbol="bracket">
+              <staffDef n="1" lines="5" xml:id="sd-1" clef.shape="G" clef.line="2">
+                <label>Soprano</label>
+                <labelAbbr>S.</labelAbbr>
+                <keySig sig="0" mode="major"/>
+                <ambitus>
+                  <ambNote type="lowest" pname="c" oct="4"/>
+                  <ambNote type="highest" pname="e" oct="5"/>
+                </ambitus>
+              </staffDef>
+            </staffGrp>
+          </scoreDef>
+          <annot type="jims-tonic-ambit" class="#jims.ambit.tonic-bounded" xml:id="amb-1">tonic-bounded</annot>
+          <annot type="jims-melody-part" class="#jims.melody.soprano" xml:id="mel-1" plist="#sd-1">soprano</annot>
+          <section>
+            <measure n="1" xml:id="m-1">
+              <staff n="1">
+                <layer n="1">
+                  <note xml:id="n-P1-1" pname="c" oct="4" dur="4">
+                    <verse n="1" label="jims-extend">
+                      <syl wordpos="i" con="d">Syn</syl>
+                    </verse>
+                  </note>
+                  <note xml:id="n-P1-2" pname="d" oct="4" dur="8" grace="unacc" stem.mod="1slash"/>
+                  <note xml:id="n-P1-3" pname="e" oct="5" dur="4"/>
+                  <chord dur="2" xml:id="c-P1-4">
+                    <note xml:id="n-P1-4" pname="c" oct="4"/>
+                    <note xml:id="n-P1-5" pname="g" oct="4"/>
+                  </chord>
+                </layer>
+              </staff>
+              <harm type="jims-chord-name" xml:id="h-1" staff="1" startid="#n-P1-1">Do</harm>
+              <harm type="jims-chord-name" xml:id="h-2" staff="1" tstamp="4.5">So7</harm>
+              <annot type="jims-tonal-state" staff="1" xml:id="st-P1-1" tstamp="1" corresp="#jmstate-P1-1"/>
+            </measure>
+            <measure n="2" xml:id="m-2">
+              <staff n="1">
+                <layer n="1">
+                  <note xml:id="n-P1-6" pname="g" oct="4" dur="2">
+                    <verse n="1">
+                      <syl wordpos="t">thetic</syl>
+                    </verse>
+                  </note>
+                  <note xml:id="n-P1-7" pname="a" oct="4" dur="2"/>
+                </layer>
+              </staff>
+              <annot type="jims-tonal-state" staff="1" xml:id="st-P1-2" tstamp="3" corresp="#jmstate-P1-2"/>
+            </measure>
+            <scoreDef>
+              <keySig sig="2s" mode="major"/>
+            </scoreDef>
+            <measure n="3" xml:id="m-3" right="end">
+              <staff n="1">
+                <layer n="1">
+                  <clef shape="F" line="4"/>
+                  <note xml:id="n-P1-8" pname="d" oct="4" dur="2"/>
+                  <clef shape="G" line="2"/>
+                  <note xml:id="n-P1-9" pname="d" oct="4" dur="2"/>
+                </layer>
+              </staff>
+              <fermata startid="#n-P1-9"/>
+              <annot type="jims-tonal-state" staff="1" xml:id="st-P1-3" tstamp="1" corresp="#jmstate-P1-3"/>
+              <tie xml:id="tie-1" startid="#n-P1-8" endid="#n-P1-9"/>
+            </measure>
+          </section>
+        </score>
+      </mdiv>
+    </body>
+  </music>
+</mei>

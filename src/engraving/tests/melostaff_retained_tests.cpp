@@ -13,6 +13,7 @@
 #include "engraving/melo/melochangecontroller.h"
 #include "engraving/melo/melobridge.h"
 #include "utils/scorerw.h"
+#include "utils/melocanonical.h"
 using namespace mu::engraving;
 
 TEST(MeloStaffRetained, MovableNoteTransposeKeepsStructuralIdentityAndUndo)
@@ -55,8 +56,8 @@ TEST(MeloStaffRetained, MovableReferenceChangeIncludesGraceNotes)
     Note* note = grace->notes().front();
     const int per = note->meloNPer(), gen = note->meloNGen();
     String error;
-    ASSERT_TRUE(melo::applyChange(score.get(), 0, score->firstMeasure(), u"bind:reference-pitch:62", error)) << error.toStdString();
-    ASSERT_TRUE(melo::applyChange(score.get(), 0, score->firstMeasure(), u"key:1:0", error)) << error.toStdString();
+    ASSERT_TRUE(melo::validateState(score.get()->staff(0)->staffType(Fraction(0, 1))->meloStateJson(), error)) << error.toStdString();
+    ASSERT_TRUE(test::initialPitch(score.get(), 0, u"C5", error)) << error.toStdString();
     melo::SoundingPitch expected;
     ASSERT_TRUE(melo::noteSoundingPitch(score->staff(0)->staffType(Fraction(0, 1))->meloStateJson(), per, gen, expected));
     EXPECT_EQ(note->pitch(), expected.midiKey);

@@ -134,7 +134,7 @@ Item {
             visible: itemIndex !== 0
         }
 
-        itemDelegate: FlatButton {
+        itemDelegate: MeloAccidentalButton {
             id: btn
 
             required property var itemModel
@@ -143,6 +143,8 @@ Item {
             readonly property bool hasMenu: Boolean(item) && item.subitems.length !== 0
             readonly property var meloAccidental: Boolean(item)
                 ? noteInputModel.accidentalPresentation[item.code] : null
+
+            useMeloIcon: Boolean(meloAccidental)
 
             width: gridView.cellWidth
             height: gridView.cellWidth

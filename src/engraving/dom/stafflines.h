@@ -62,6 +62,18 @@ public:
     const std::vector<MeloGuideLine>& meloGuideLines() const { return m_meloGuideLines; }
     void setMeloGuideLines(const std::vector<MeloGuideLine>& l) { m_meloGuideLines = l; }
 
+    // Screen-rendered header pitch targets only. Key-change annotations never
+    // enter this cache. Layout clears it; a screen paint supplies exact ink.
+    struct MeloHeaderPitchTarget {
+        RectF ink;
+        int periodIndex = 0;
+        String state;
+        String label;
+    };
+    const std::vector<MeloHeaderPitchTarget>& meloHeaderPitchTargets() const { return m_meloHeaderPitchTargets; }
+    void clearMeloHeaderPitchTargets() const { m_meloHeaderPitchTargets.clear(); }
+    void recordMeloHeaderPitchTarget(const MeloHeaderPitchTarget& target) const { m_meloHeaderPitchTargets.push_back(target); }
+
     Measure* measure() const { return (Measure*)explicitParent(); }
     double y1() const;
 
@@ -80,6 +92,7 @@ private:
     double m_lw = 0.0;
     std::vector<LineF> m_lines;
     std::vector<MeloGuideLine> m_meloGuideLines;
+    mutable std::vector<MeloHeaderPitchTarget> m_meloHeaderPitchTargets;
 };
 }
 

@@ -62,12 +62,12 @@ QVariantMap NoteInputBarModel::accidentalPresentation() const
 {
     const auto notation = context()->currentNotation();
     const auto score = notation ? notation->elements()->msScore() : nullptr;
-    return accidentalPresentationForScore(score, engravingFonts()->fallbackFont());
+    return accidentalPresentationForScore(score);
 }
 
-QVariantMap NoteInputBarModel::accidentalPresentationForScore(const engraving::Score* score, const engraving::IEngravingFontPtr& font)
+QVariantMap NoteInputBarModel::accidentalPresentationForScore(const engraving::Score* score)
 {
-    if (!score || !font || score->staves().empty()) {
+    if (!score || score->staves().empty()) {
         return {};
     }
 
@@ -95,21 +95,27 @@ QVariantMap NoteInputBarModel::accidentalPresentationForScore(const engraving::S
         return {};
     }
 
+    // Melo accidental geometry comes from the Kernel-generated font even in
+    // a mixed score whose conventional staves use another engraving font.
+    muse::GlobalInject<engraving::IEngravingFontsProvider> fonts;
+    const auto font = fonts()->fontByName("JiMSMusic");
+    if (!font || font->family() != "JiMSMusic") {
+        return {};
+    }
+
     QFont iconFont(QString::fromStdString(font->family()));
     iconFont.setPixelSize(40);
     QVariantMap presentation { { "font", iconFont } };
-    const auto add = [&](const char* action, engraving::NoteHeadGroup group, const QString& title) {
-        const auto symbol = engraving::Note::noteHead(0, group, engraving::NoteHeadType::HEAD_QUARTER);
+    const auto add = [&](const char* action, engraving::SymId symbol, const QString& title) {
         presentation.insert(action, QVariantMap {
             { "icon", uint(font->symCode(symbol)) },
             { "title", title }
         });
     };
-    // These are the same platform notehead groups used by Melo score drawing.
-    add("sharp", engraving::NoteHeadGroup::HEAD_TRIANGLE_UP, muse::qtrc("notation", "Sharp — upward-pointing triangle"));
-    add("flat", engraving::NoteHeadGroup::HEAD_TRIANGLE_DOWN, muse::qtrc("notation", "Flat — downward-pointing triangle"));
-    add("sharp2", engraving::NoteHeadGroup::HEAD_DIAMOND, muse::qtrc("notation", "Double-sharp — vertex-up square"));
-    add("flat2", engraving::NoteHeadGroup::HEAD_LA, muse::qtrc("notation", "Double-flat — edge-up square"));
+    add("sharp", engraving::SymId::noteheadTriangleUpBlack, muse::qtrc("notation", "Sharp — upward-pointing triangle"));
+    add("flat", engraving::SymId::noteheadTriangleDownBlack, muse::qtrc("notation", "Flat — downward-pointing triangle"));
+    add("sharp2", engraving::SymId::noteheadDiamondBlack, muse::qtrc("notation", "Double-sharp — vertex-up square"));
+    add("flat2", engraving::SymId::noteheadSquareBlack, muse::qtrc("notation", "Double-flat — edge-up square"));
     return presentation;
 }
 

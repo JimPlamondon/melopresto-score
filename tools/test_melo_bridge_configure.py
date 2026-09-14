@@ -34,6 +34,8 @@ def fail(message: str) -> None:
 def write_checkout(root: Path) -> None:
     crate = root / "Libraries/melo/crates/melo-musescore-bridge"
     (crate / "include").mkdir(parents=True)
+    (crate / "src").mkdir()
+    (crate / "src/lib.rs").write_text("initial-source\n", encoding="utf-8")
     (root / "Libraries/melo/.melo-configure-fixture").touch()
     (crate / "Cargo.toml").write_text(
         "[package]\nname = \"melo-musescore-bridge\"\nversion = \"0.0.0\"\n",
@@ -49,7 +51,7 @@ def write_fake_cargo(directory: Path) -> None:
         "if [ \"${1:-}\" = --version ]; then echo fixture-cargo; exit 0; fi\n"
         "test -f .melo-configure-fixture || { echo 'refusing non-fixture workspace' >&2; exit 1; }\n"
         "mkdir -p target/release\n"
-        ": > target/release/libmelo_musescore_bridge.a\n",
+        "cat crates/melo-musescore-bridge/src/lib.rs > target/release/libmelo_musescore_bridge.a\n",
         encoding="utf-8",
     )
     cargo.chmod(cargo.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
@@ -184,6 +186,15 @@ def run_checks(bridge_cmake: Path, expect_env_reset: bool) -> None:
         )
         if selected_root(build) != checkout_b.resolve():
             fail("explicit -DMELO_ROOT switch did not replace the cached checkout")
+
+        source = checkout_b / "Libraries/melo/crates/melo-musescore-bridge/src/lib.rs"
+        source.write_text("changed-after-configuration\n", encoding="utf-8")
+        build_result = subprocess.run(["cmake", "--build", str(build), "--target", "consumer"], text=True,
+                                      stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        require_success(build_result, "build after a Kernel source edit")
+        library = checkout_b / "Libraries/melo/target/release/libmelo_musescore_bridge.a"
+        if library.read_text(encoding="utf-8") != source.read_text(encoding="utf-8"):
+            fail("a normal Score build retained stale Kernel code after the selected source changed")
 
         missing_build = temporary_path / "missing-build"
         missing_result = configure(project, missing_build, cargo_bin, checkout_a, explicit_root=missing_checkout)

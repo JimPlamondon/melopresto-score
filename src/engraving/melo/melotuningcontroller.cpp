@@ -50,6 +50,8 @@ class MeloChangeStaffStates : public UndoCommand
             previous.push_back(st ? st->meloStateJson() : String());
             if (st) {
                 st->setMeloStateJson(m_states[i]);
+                m_staves[i]->staffTypeListChanged(m_ticks[i]);
+                m_staves[i]->score()->setLayoutAll();
             }
         }
         m_states = previous;
@@ -92,22 +94,24 @@ bool TuningController::collectSpans(std::vector<Span>& spans) const
         return false;
     }
 
-    for (staff_idx_t staffIdx = 0; staffIdx < m_score->nstaves(); ++staffIdx) {
-        Staff* staff = m_score->staff(staffIdx);
-        StaffType* base = staff ? staff->staffType(Fraction(0, 1)) : nullptr;
-        if (!base || !base->isMelo()) {
-            continue;
-        }
-        spans.push_back({ staff, Fraction(0, 1), base->meloStateJson() });
-        for (MeasureBase* mb = m_score->first(); mb; mb = mb->next()) {
-            if (!mb->isMeasure()) {
+    for (Score* related : m_score->masterScore()->scoreList()) {
+        for (staff_idx_t staffIdx = 0; staffIdx < related->nstaves(); ++staffIdx) {
+            Staff* staff = related->staff(staffIdx);
+            StaffType* base = staff ? staff->staffType(Fraction(0, 1)) : nullptr;
+            if (!base || !base->isMelo()) {
                 continue;
             }
-            for (EngravingItem* el : mb->el()) {
-                if (el && el->isStaffTypeChange() && el->staffIdx() == staffIdx) {
-                    StaffTypeChange* change = toStaffTypeChange(el);
-                    if (change->staffType() && change->staffType()->isMelo()) {
-                        spans.push_back({ staff, change->tick(), change->staffType()->meloStateJson() });
+            spans.push_back({ staff, Fraction(0, 1), base->meloStateJson() });
+            for (MeasureBase* mb = related->first(); mb; mb = mb->next()) {
+                if (!mb->isMeasure()) {
+                    continue;
+                }
+                for (EngravingItem* el : mb->el()) {
+                    if (el && el->isStaffTypeChange() && el->staffIdx() == staffIdx) {
+                        StaffTypeChange* change = toStaffTypeChange(el);
+                        if (change->staffType() && change->staffType()->isMelo()) {
+                            spans.push_back({ staff, change->tick(), change->staffType()->meloStateJson() });
+                        }
                     }
                 }
             }
@@ -164,7 +168,7 @@ bool TuningController::applyToSpans(double generatorCents)
     }
     size_t repairs = 0;
     String error;
-    if (!normalizeStoredPitchesAfterLoad(m_score, repairs, error, false)) {
+    if (!normalizeStoredPitchesAfterLoad(m_score->masterScore(), repairs, error, false)) {
         restoreSpans(before);
         return false;
     }
@@ -178,44 +182,46 @@ void TuningController::invalidateAndLayout()
     // caches reset (the lattice identities are the durable facts), and
     // the frame cache re-keys by construction because the state string
     // changed. Layout then reprojects through the single seam.
-    for (staff_idx_t staffIdx = 0; staffIdx < m_score->nstaves(); ++staffIdx) {
-        const Staff* staff = m_score->staff(staffIdx);
-        const StaffType* base = staff ? staff->staffType(Fraction(0, 1)) : nullptr;
-        if (!base || !base->isMelo()) {
-            continue;
-        }
-        for (Segment* seg = m_score->firstSegment(SegmentType::ChordRest); seg;
-             seg = seg->next1(SegmentType::ChordRest)) {
-            for (track_idx_t track = staffIdx * VOICES; track < (staffIdx + 1) * VOICES; ++track) {
-                EngravingItem* el = seg->element(track);
-                if (el && el->isChord()) {
-                    for (Note* note : toChord(el)->notes()) {
-                        if (note->hasMeloPitch()) {
-                            note->setMeloPitch(note->meloNPer(), note->meloNGen());
+    for (Score* related : m_score->masterScore()->scoreList()) {
+        for (staff_idx_t staffIdx = 0; staffIdx < related->nstaves(); ++staffIdx) {
+            const Staff* staff = related->staff(staffIdx);
+            const StaffType* base = staff ? staff->staffType(Fraction(0, 1)) : nullptr;
+            if (!base || !base->isMelo()) {
+                continue;
+            }
+            for (Segment* seg = related->firstSegment(SegmentType::ChordRest); seg;
+                 seg = seg->next1(SegmentType::ChordRest)) {
+                for (track_idx_t track = staffIdx * VOICES; track < (staffIdx + 1) * VOICES; ++track) {
+                    EngravingItem* el = seg->element(track);
+                    if (el && el->isChord()) {
+                        for (Note* note : toChord(el)->notes()) {
+                            if (note->hasMeloPitch()) {
+                                note->setMeloPitch(note->meloNPer(), note->meloNGen());
+                            }
                         }
                     }
                 }
             }
         }
-    }
-    m_score->setLayoutAll();
-    m_score->doLayout();
-    // Milestone 7 (playback): a live preview (and its cancel) edits the
-    // staff states outside an undoable command, so nothing tells the
-    // playback model that this staff's notes now sound differently. Send
-    // the score's EXISTING change signal for this staff's whole tick range
-    // — the same channel endCmd uses — so the next rebuild re-derives every
-    // JiMS note's sounding pitch from the current state. Commit already
-    // announces itself through endCmd.
-    if (m_previewing) {
-        ScoreChanges changes;
-        changes.tickFrom = 0;
-        const Measure* last = m_score->lastMeasure();
-        changes.tickTo = last ? last->endTick().ticks() : 0;
-        changes.staffIdxFrom = 0;
-        changes.staffIdxTo = m_score->nstaves() ? m_score->nstaves() - 1 : 0;
-        changes.changedTypes.insert(ElementType::STAFFTYPE_CHANGE);
-        m_score->changesChannel().send(changes);
+        related->setLayoutAll();
+        related->doLayout();
+        // Milestone 7 (playback): a live preview (and its cancel) edits the
+        // staff states outside an undoable command, so nothing tells the
+        // playback model that this staff's notes now sound differently. Send
+        // the score's EXISTING change signal for this staff's whole tick range
+        // — the same channel endCmd uses — so the next rebuild re-derives every
+        // JiMS note's sounding pitch from the current state. Commit already
+        // announces itself through endCmd.
+        if (m_previewing) {
+            ScoreChanges changes;
+            changes.tickFrom = 0;
+            const Measure* last = related->lastMeasure();
+            changes.tickTo = last ? last->endTick().ticks() : 0;
+            changes.staffIdxFrom = 0;
+            changes.staffIdxTo = related->nstaves() ? related->nstaves() - 1 : 0;
+            changes.changedTypes.insert(ElementType::STAFFTYPE_CHANGE);
+            related->changesChannel().send(changes);
+        }
     }
 }
 
@@ -243,7 +249,7 @@ void TuningController::restoreSpans(const std::vector<Span>& spans)
     }
     size_t repairs = 0;
     String error;
-    normalizeStoredPitchesAfterLoad(m_score, repairs, error, false);
+    normalizeStoredPitchesAfterLoad(m_score->masterScore(), repairs, error, false);
     invalidateAndLayout();
 }
 
@@ -288,16 +294,17 @@ bool TuningController::commit(double generatorCents)
     }
     restoreSpans(original);
     const auto t0 = std::chrono::steady_clock::now();
-    m_score->startCmd(mu::engraving::melo::changeTuningAction());
-    m_score->undo(new MeloChangeStaffStates(std::move(staves), std::move(ticks), std::move(states)));
+    Score* composition = m_score->masterScore();
+    composition->startCmd(mu::engraving::melo::changeTuningAction());
+    composition->undo(new MeloChangeStaffStates(std::move(staves), std::move(ticks), std::move(states)));
     size_t repairs = 0;
     String error;
-    if (!normalizeStoredPitchesAfterLoad(m_score, repairs, error, true, true)) {
-        m_score->endCmd();
-        m_score->undoRedo(true, nullptr);
+    if (!normalizeStoredPitchesAfterLoad(composition, repairs, error, true, true)) {
+        composition->endCmd();
+        composition->undoRedo(true, nullptr);
         return false;
     }
-    m_score->endCmd();
+    composition->endCmd();
     invalidateAndLayout();
     m_lastApplyMs = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count();
     return true;

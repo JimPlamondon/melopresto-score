@@ -38,6 +38,7 @@
 #include "io/dir.h"
 
 #include "utils/scorerw.h"
+#include "utils/melocanonical.h"
 
 using namespace mu::engraving;
 using namespace mu::engraving::rendering;
@@ -89,7 +90,7 @@ muse::String extentXml(const muse::String& state)
 {
     muse::String xml;
     muse::String error;
-    if (!melo::musicxmlStaffStateV3Xml(state, 0, xml, &error)) {
+    if (!melo::musicxmlConfigurationV5Xml(state, 0, false, xml, error)) {
         return muse::String();
     }
     const size_t begin = xml.indexOf(u"<melo:extent");
@@ -148,8 +149,8 @@ TEST(Engraving_MeloStaffM10SATBTests, stateChangesKeepDoLinesOnTheSystemHeaderRe
         Measure* second = first->nextMeasure();
         ASSERT_TRUE(second);
         String error;
-        ASSERT_TRUE(melo::applyChange(score, 0, first, u"bind:reference-pitch:62", error));
-        ASSERT_TRUE(melo::applyChange(score, 0, second, u"key:-1:1", error)) << error.toStdString();
+        ASSERT_TRUE(melo::validateState(score->staff(0)->staffType(Fraction(0, 1))->meloStateJson(), error));
+        ASSERT_TRUE(test::relativeKey(score, 0, second->tick(), -1, 1, error)) << error.toStdString();
         StaffType* base = score->staff(0)->staffType(first->tick());
         String widened;
         ASSERT_TRUE(melo::widenExtent(base->meloStateJson(), 3, 0, widened));
@@ -196,9 +197,9 @@ TEST(Engraving_MeloStaffM10SATBTests, systemsShowOnlyTheSectionsTheyContain)
         lineBreak->setTrack(0);
         first->add(lineBreak);
         String error;
-        EXPECT_TRUE(melo::applyChange(score, 0, first, u"bind:reference-pitch:62", error)) << error.toStdString();
+        EXPECT_TRUE(melo::validateState(score->staff(0)->staffType(Fraction(0, 1))->meloStateJson(), error)) << error.toStdString();
         if (withChange) {
-            EXPECT_TRUE(melo::applyChange(score, 0, third, u"key:-1:1", error)) << error.toStdString();
+            EXPECT_TRUE(test::relativeKey(score, 0, third->tick(), -1, 1, error)) << error.toStdString();
             // Give the new section a written note two periods up so its
             // coverage, and therefore the union, is visibly taller.
             StaffType* after = score->staff(0)->staffType(third->tick());
@@ -538,7 +539,7 @@ TEST(Engraving_MeloStaffM10SATBTests, referenceChangesPreserveWrittenAndEmptySta
 {
     const String paths[] = { satbTemplatePath(), ScoreRW::rootPath() + u"/jimstaff_data/m9-satb-mixed.mscx" };
     for (const String& path : paths) {
-        for (double generator : { 686.0, 696.0, 720.0 }) {
+        for (double generator : { 700.0, 4800.0 / 7.0, 720.0 }) {
             MasterScore* score = ScoreRW::readScore(path, true);
             ASSERT_TRUE(score);
             melo::TuningController controller(score, 0);
@@ -556,9 +557,15 @@ TEST(Engraving_MeloStaffM10SATBTests, referenceChangesPreserveWrittenAndEmptySta
             for (const Note* note : writtenNotes) {
                 identities.push_back({ note->meloNPer(), note->meloNGen() });
             }
-            for (const String& key : { String(u"key:0:2"), String(u"key:-1:3"), String(u"key:1:-7") }) {
+            std::vector<String> requestedPitches;
+            for (int period : { -1, 1 }) {
+                melo::TonicPitchLabel target;
+                ASSERT_TRUE(melo::tonicPitchLabelInPeriod(score->staff(0)->staffType(Fraction(0, 1))->meloStateJson(), period, target));
+                requestedPitches.push_back(target.label);
+            }
+            for (const String& pitch : requestedPitches) {
                 String error;
-                ASSERT_TRUE(melo::applyChangeToAllMeloParts(score, score->firstMeasure(), { key }, error))
+                ASSERT_TRUE(test::initialPitch(score, 0, pitch, error))
                     << error.toStdString();
                 score->doLayout();
                 for (staff_idx_t i = 0; i < score->nstaves(); ++i) {
@@ -740,7 +747,7 @@ TEST(Engraving_MeloStaffM10SATBTests, everyEmptyVocalStaffUsesItsKernelRangeCent
     Measure* second = score->firstMeasure()->nextMeasure();
     ASSERT_TRUE(second);
     muse::String error;
-    ASSERT_TRUE(melo::applyChangeToAllMeloParts(score, second, { u"key:-1:3" }, error)) << error.toStdString();
+    ASSERT_TRUE(test::relativeKey(score, 0, second->tick(), -1, 3, error)) << error.toStdString();
     for (staff_idx_t i = 0; i < 4; ++i) {
         Staff* staff = score->staff(i);
         const StaffType* type = staff->staffType(second->tick());
