@@ -72,15 +72,23 @@ bool courtesyChangeIndicator(const Measure* measure, staff_idx_t staffIdx, Chang
 double courtesyTerrainWidth(const Measure* measure);
 
 /// Owner ruling 2026-08-19: the change indicator (tonic indicators and the
-/// key/mode arrow ends) is anchored on the Do-line of the drawn stave stack
-/// that keeps the WHOLE indicator inside the staff — the lowest such Do-line;
-/// when none does, the Do-line that overflows least (extending the staff to
-/// fit is a separate follow-up). Returns the anchor as cents relative to
-/// the frame origin (a multiple of the period); scale-change dot stacks are
-/// instantiated per period and do not depend on it. Falls back to the
-/// stack's lowest period for an empty view.
+/// key/mode arrow ends) is drawn from a Do row of the drawn stave stack that
+/// keeps the WHOLE indicator inside the staff; when none does, the Do row
+/// that overflows least (rule 7b then extends the staff). Owner decision
+/// 2026-09-14 (S3): among the Do rows where everything fits, the one whose
+/// indicator rows lie nearest the staff's notes on that system (`noteCents`,
+/// frame coordinates); with no notes, or all else equal, the highest.
+/// Returns the chosen Do row as cents relative to the frame origin (a
+/// multiple of the period); scale-change dot stacks are instantiated per
+/// period and do not depend on it. Falls back to the stack's lowest period
+/// for an empty view.
 double changeAnchorPeriodCents(const StaffType::MeloFrameView& view, const ChangeIndicator& model, double periodCents,
-                               double doCentsAboveExtentLower = 0.0);
+                               double doCentsAboveExtentLower = 0.0, const std::vector<double>& noteCents = {});
+
+/// The MeloPresto notes of `staffIdx` on `system`, as cents in `displayed`'s
+/// frame coordinates: every section shares the Do row, so a note of another
+/// section is translated by the difference of the two sections' Do0.
+std::vector<double> systemNoteCents(const System* system, staff_idx_t staffIdx, const StaffType* displayed);
 
 /// The change indicator drawn against THIS staff type's frame — the one
 /// whose NEW state is `newStaffType` (its own section start; mid-system or
@@ -100,7 +108,7 @@ bool changeIndicatorsTouchingStaffType(const Score* score, staff_idx_t staffIdx,
 /// frame is then re-derived covering them (Kernel `extra_cents`), so the
 /// staff extends to include the whole indicator.
 std::vector<double> changeIndicatorOverflowCents(const StaffType::MeloFrameView& view, const ChangeIndicator& model, double periodCents,
-                                                 double doCentsAboveExtentLower = 0.0);
+                                                 double doCentsAboveExtentLower = 0.0, const std::vector<double>& noteCents = {});
 
 /// Derive one song-wide tonic ambit from the explicitly designated melody
 /// part and repeat the Kernel token through every MeloPresto transport carrier.

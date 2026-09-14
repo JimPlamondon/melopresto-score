@@ -1424,13 +1424,17 @@ TEST_F(Engraving_MeloStaffM8BandElisionTests, changeIndicatorAnchorsOnTheDoLineT
     doToLa.arrows = { down };
     // One-period staff [0,1200]: only the UPPER Do-line keeps La (900) on the staff.
     EXPECT_DOUBLE_EQ(melo::changeAnchorPeriodCents(whole(0, 1200), doToLa, P), 1200.0);
-    // Two-period staff [0,2400]: the lowest fitting Do-line is 1200 (La at 900).
-    EXPECT_DOUBLE_EQ(melo::changeAnchorPeriodCents(whole(0, 2400), doToLa, P), 1200.0);
-    // Do -> Re (up, inside the same period): the lowest Do-line already fits.
+    // Two-period staff [0,2400]: both 1200 (La at 900) and 2400 (La at 2100)
+    // fit; with no notes to sit beside, the highest wins (owner decision
+    // 2026-09-14; the former lowest-wins was an implementer's tie-break).
+    EXPECT_DOUBLE_EQ(melo::changeAnchorPeriodCents(whole(0, 2400), doToLa, P), 2400.0);
+    // With notes low on the staff, the placement beside them wins.
+    EXPECT_DOUBLE_EQ(melo::changeAnchorPeriodCents(whole(0, 2400), doToLa, P, 0.0, { 200.0, 400.0 }), 1200.0);
+    // Do -> Re (up, inside the same period): both Do-lines fit; no notes, so the highest.
     melo::ChangeIndicator doToRe;
     doToRe.kinds = { u"mode" };
     doToRe.tonicIndicators = { point(0.0, 0), point(1.0 / 6.0, 0) };
-    EXPECT_DOUBLE_EQ(melo::changeAnchorPeriodCents(whole(0, 2400), doToRe, P), 0.0);
+    EXPECT_DOUBLE_EQ(melo::changeAnchorPeriodCents(whole(0, 2400), doToRe, P), 1200.0);
     // Nothing fits (a partial staff [300, 900] with Do -> La): least overflow wins.
     StaffType::MeloFrameView partial;
     StaffType::MeloFrameBand pb;
@@ -1441,7 +1445,7 @@ TEST_F(Engraving_MeloStaffM8BandElisionTests, changeIndicatorAnchorsOnTheDoLineT
     // No Do-line is inside: the upper anchor minimizes overflow to 300 cents.
     EXPECT_DOUBLE_EQ(melo::changeAnchorPeriodCents(partial, doToLa, P), 1200.0);
     // Banded (M8): [0,1200] and [3600,4800]; Do -> La fits in the low band at 1200
-    // (La 900) — the lowest fitting anchor, not the top band's.
+    // (La 900) and in the top band at 4800 (La 4500); no notes, so the top band's.
     StaffType::MeloFrameView banded = whole(0, 1200);
     StaffType::MeloFrameBand top;
     top.segments.push_back({ 3600.0, 4800.0, true });
@@ -1449,7 +1453,7 @@ TEST_F(Engraving_MeloStaffM8BandElisionTests, changeIndicatorAnchorsOnTheDoLineT
     top.upperCents = 4800.0;
     banded.bands.push_back(top);
     banded.banded = true;
-    EXPECT_DOUBLE_EQ(melo::changeAnchorPeriodCents(banded, doToLa, P), 1200.0);
+    EXPECT_DOUBLE_EQ(melo::changeAnchorPeriodCents(banded, doToLa, P), 4800.0);
 
     // Paint check on the accepted M5 piece: Do-mode -> La-mode at bar 2 on a
     // one-period staff. The new tonic's label must be the UPPER register
