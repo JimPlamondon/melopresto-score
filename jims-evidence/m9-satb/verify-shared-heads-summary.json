@@ -1,0 +1,27 @@
+{
+  "fixture": "/Users/jim/Developer/MeloPresto/Temp/fork-headcheck/src/engraving/tests/jimstaff_data/m9-dense-voices.mscx",
+  "mscore": "/Users/jim/Developer/MeloPresto/Temp/fork-mei-gate/build.release/src/app/mscore.app/Contents/MacOS/mscore",
+  "dpi": 600,
+  "reproducible": true,
+  "sha256": {
+    "dense-voices": "da0824352dcd73339d465c23d0d13e9493776f2079a7321b7130bd0361803039",
+    "dense-voices-2": "da0824352dcd73339d465c23d0d13e9493776f2079a7321b7130bd0361803039",
+    "single-voice": "b8ca4b3d19aff00d4d1e924d33dec9bee9a592697782223336fa108337f46b9e"
+  },
+  "bars": {
+    "2": {
+      "head": "hollow triangle",
+      "shared_pair_width_px": 47,
+      "shared_pair_height_px": 289,
+      "single_head_width_px": 47
+    },
+    "3": {
+      "head": "filled triangle",
+      "shared_pair_width_px": 52,
+      "shared_pair_height_px": 289,
+      "single_head_width_px": 51
+    }
+  },
+  "failures": [],
+  "ok": true
+}
