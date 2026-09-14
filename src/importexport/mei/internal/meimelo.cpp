@@ -447,7 +447,10 @@ void MeloMeiExporter::writeScoreAnnots(pugi::xml_node scoreNode)
         annot.append_attribute("class") = ("#melo.melody." + token.toStdString()).c_str();
         for (const StaffPlan& plan : m_staves) {
             const Part* part = plan.staff->part();
-            if (part && part->partName().toLower() == token) {
+            // A MusicXML-imported part carries the role in partName; an
+            // MEI-imported one carries it in the staffDef label, which is
+            // the instrument long name. Either names the melody staff.
+            if (part && (part->partName().toLower() == token || part->longName().toLower() == token)) {
                 annot.append_attribute("plist") = ("#" + plan.staffDefId).c_str();
                 break;
             }
@@ -544,6 +547,42 @@ void MeloMeiExporter::onNote(const Note* note, const std::string& xmlId)
     m_notes.push_back({ xmlId, note });
 }
 
+/// The controlled vocabulary every MeloPresto annot @class points into
+/// (encodingDesc/classDecls), with the same category ids the mei-melo
+/// generator declares, so that MEI's own rule "@class must correspond to
+/// the @xml:id of a category" holds on a fork export as on a direct file.
+void MeloMeiExporter::writeClassDecls(pugi::xml_node meiHead, pugi::xml_node fileDesc)
+{
+    pugi::xml_node encodingDesc = meiHead.child("encodingDesc");
+    if (!encodingDesc) {
+        encodingDesc = fileDesc ? meiHead.insert_child_after("encodingDesc", fileDesc)
+                       : meiHead.prepend_child("encodingDesc");
+    }
+    if (encodingDesc.child("classDecls")) {
+        return;
+    }
+    pugi::xml_node classDecls = encodingDesc.append_child("classDecls");
+    pugi::xml_node taxonomy = classDecls.append_child("taxonomy");
+    taxonomy.append_attribute("xml:id") = "melo.taxonomy";
+    taxonomy.append_child("bibl").text().set("MeloPresto analysis controlled vocabulary v1");
+    static const std::vector<std::pair<const char*, std::vector<const char*> > > groups = {
+        { "outcome", { "modulation", "tonicization", "ambiguous", "insufficient-evidence" } },
+        { "ambit", { "tonic-bounded", "tonic-centered" } },
+        { "melody", { "soprano", "alto", "tenor", "bass" } },
+        { "ambiguity", { "short-tonicization-vs-brief-modulation", "pivot-region",
+                         "conflicting-cadence-evidence", "insufficient-context" } },
+    };
+    for (const auto& group : groups) {
+        pugi::xml_node g = taxonomy.append_child("category");
+        g.append_attribute("xml:id") = (std::string("melo.") + group.first).c_str();
+        for (const char* value : group.second) {
+            pugi::xml_node c = g.append_child("category");
+            c.append_attribute("xml:id") = (std::string("melo.") + group.first + "." + value).c_str();
+            c.append_child("label").text().set(value);
+        }
+    }
+}
+
 bool MeloMeiExporter::writeExtMeta(pugi::xml_node meiHead)
 {
     if (!m_present) {
@@ -569,6 +608,7 @@ bool MeloMeiExporter::writeExtMeta(pugi::xml_node meiHead)
                 pn.text().set(composer.toStdString().c_str());
             }
         }
+        writeClassDecls(meiHead, fileDesc);
         if (!meiHead.child("workList") && !workTitle.isEmpty()) {
             pugi::xml_node revisionForOrder = meiHead.child("revisionDesc");
             pugi::xml_node extForOrder = meiHead.child("extMeta");
@@ -666,9 +706,9 @@ bool MeloMeiExporter::writeExtMeta(pugi::xml_node meiHead)
             te.append_attribute("measure") = int(midx) + 1;
             te.append_attribute("off") = fracStr(quartersOf(t.tick - measure->tick())).c_str();
             te.append_attribute("staff") = plan.staffN;
-            if (!t.placement.isEmpty()) {
-                te.append_attribute("placement") = t.placement.toStdString().c_str();
-            }
+            // Direction placement is layout: the MEI profile grammar (mei-melo
+            // customization/melo-mei-extension.rng, jm:trajectory) does not
+            // carry it; the native score and MusicXML do.
             pugi::xml_node tt = te.append_child("melo:tuning-trajectory");
             for (const melo::TrajectorySegment& seg : t.segments) {
                 pugi::xml_node sege = tt.append_child("melo:segment");
@@ -1247,7 +1287,6 @@ bool MeloMeiImporter::apply(Score* score,
                 }
                 melo::TuningTrajectory trajectory;
                 trajectory.tick = tick;
-                trajectory.placement = String(se.attribute("placement").value());
                 for (pugi::xml_node sege : tt.children()) {
                     if (localName(sege) != "segment") {
                         continue;

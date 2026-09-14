@@ -101,6 +101,7 @@ private:
 
     bool projectPitch(const muse::String& stateJson, int nPer, int nGen, std::string& pname, int& alter, int& octave);
     std::string respIdFor(const muse::String& reviewer);
+    void writeClassDecls(pugi::xml_node meiHead, pugi::xml_node fileDesc);
 
     bool m_present = false;
     muse::String m_error;

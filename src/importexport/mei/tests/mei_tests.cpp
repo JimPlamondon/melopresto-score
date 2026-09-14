@@ -220,6 +220,11 @@ TEST_F(Mei_Tests, mei_melo_roundtrip_01) {
     // trips MEI's own linking rule (mei-melo audit, 2026-09-14).
     EXPECT_TRUE(mei.contains(u"annot=\"#"));
     EXPECT_FALSE(mei.contains(u"corresp=\"#jmstate"));
+    // Every annot @class resolves to a declared category (MEI's class rule).
+    EXPECT_TRUE(mei.contains(u"<classDecls>"));
+    EXPECT_TRUE(mei.contains(u"xml:id=\"melo.ambit.tonic-bounded\""));
+    // Trajectory placement is layout and outside the profile grammar.
+    EXPECT_FALSE(mei.contains(u"<jm:trajectory measure=\"3\" off=\"0/1\" staff=\"1\" placement"));
     delete score;
 }
 
