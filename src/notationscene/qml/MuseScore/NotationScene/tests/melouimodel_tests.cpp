@@ -1503,7 +1503,8 @@ TEST_F(MeloUiModelTests, AccidentalToolbarButtonsRenderSquaresInBothThemesAndSca
     selectMeasure(0);
     const auto presentation = notation::NoteInputBarModel::accidentalPresentationForScore(score.get());
     for (bool dark : { false, true }) {
-        for (int scale : { 1, 2 }) {
+        for (int scale : { 1, 2, 4 }) {
+            SCOPED_TRACE(testing::Message() << "dark=" << dark << " scale=" << scale);
             const QColor background = dark ? Qt::black : Qt::white;
             const QColor foreground = dark ? Qt::white : Qt::black;
             QQmlEngine engine;
@@ -1565,7 +1566,9 @@ TEST_F(MeloUiModelTests, AccidentalToolbarButtonsRenderSquaresInBothThemesAndSca
             ASSERT_GT(square.width(), 4);
             EXPECT_NEAR(square.width(), square.height(), 1);
             EXPECT_NEAR(diamond.width(), diamond.height(), 1);
-            EXPECT_NEAR(double(diamond.width()) / square.width(), std::sqrt(2.0), 0.16);
+            // Each thresholded raster width rounds two edges, with up to one pixel of width error.
+            // Propagate both width errors in pixel units; the 4x render also rejects an unrotated square.
+            EXPECT_NEAR(double(diamond.width()), std::sqrt(2.0) * square.width(), 1.0 + std::sqrt(2.0));
             const QString artifacts = qEnvironmentVariable("MELO_TEST_ARTIFACT_DIR");
             if (!artifacts.isEmpty()) {
                 ASSERT_TRUE(rendered.save(artifacts + QString("/toolbar-%1-%2.png").arg(dark ? "dark" : "light").arg(scale)));
