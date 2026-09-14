@@ -39,23 +39,23 @@
         ],
         [
           588,
-          644
+          637
         ],
         [
-          758,
-          814
+          765,
+          822
         ],
         [
-          883,
-          939
+          891,
+          947
         ],
         [
-          1008,
-          1064
+          1016,
+          1072
         ],
         [
-          1134,
-          1190
+          1141,
+          1191
         ]
       ],
       "systems": [
@@ -76,7 +76,7 @@
             ],
             [
               588,
-              644
+              637
             ]
           ],
           "inter_staff_gaps": [
@@ -118,41 +118,41 @@
           "ok": true,
           "staff_span_y": [
             212,
-            644
+            637
           ]
         },
         {
           "system": 2,
           "staff_frames": [
             [
-              758,
-              814
+              765,
+              822
             ],
             [
-              883,
-              939
+              891,
+              947
             ],
             [
-              1008,
-              1064
+              1016,
+              1072
             ],
             [
-              1134,
-              1190
+              1141,
+              1191
             ]
           ],
           "inter_staff_gaps": [
             [
-              819,
-              878
+              827,
+              886
             ],
             [
-              944,
-              1003
+              952,
+              1011
             ],
             [
-              1069,
-              1129
+              1077,
+              1136
             ]
           ],
           "system_edge_columns": [
@@ -179,8 +179,8 @@
           ],
           "ok": true,
           "staff_span_y": [
-            758,
-            1190
+            765,
+            1191
           ]
         }
       ],
@@ -192,8 +192,8 @@
       "frames_found": 4,
       "staff_frames": [
         [
-          128,
-          185
+          129,
+          186
         ],
         [
           303,
@@ -201,11 +201,11 @@
         ],
         [
           478,
-          535
+          536
         ],
         [
           654,
-          710
+          703
         ]
       ],
       "systems": [
@@ -213,8 +213,8 @@
           "system": 1,
           "staff_frames": [
             [
-              128,
-              185
+              129,
+              186
             ],
             [
               303,
@@ -222,16 +222,16 @@
             ],
             [
               478,
-              535
+              536
             ],
             [
               654,
-              710
+              703
             ]
           ],
           "inter_staff_gaps": [
             [
-              190,
+              191,
               298
             ],
             [
@@ -239,7 +239,7 @@
               473
             ],
             [
-              540,
+              541,
               649
             ]
           ],
@@ -269,8 +269,8 @@
           ],
           "ok": true,
           "staff_span_y": [
-            128,
-            710
+            129,
+            703
           ]
         }
       ],
@@ -295,23 +295,23 @@
         ],
         [
           588,
-          644
+          637
         ],
         [
-          758,
-          814
+          765,
+          822
         ],
         [
-          883,
-          939
+          891,
+          947
         ],
         [
-          1008,
-          1064
+          1016,
+          1072
         ],
         [
-          1134,
-          1190
+          1141,
+          1191
         ]
       ],
       "systems": [
@@ -332,7 +332,7 @@
             ],
             [
               588,
-              644
+              637
             ]
           ],
           "inter_staff_gaps": [
@@ -374,41 +374,41 @@
           "ok": true,
           "staff_span_y": [
             212,
-            644
+            637
           ]
         },
         {
           "system": 2,
           "staff_frames": [
             [
-              758,
-              814
+              765,
+              822
             ],
             [
-              883,
-              939
+              891,
+              947
             ],
             [
-              1008,
-              1064
+              1016,
+              1072
             ],
             [
-              1134,
-              1190
+              1141,
+              1191
             ]
           ],
           "inter_staff_gaps": [
             [
-              819,
-              878
+              827,
+              886
             ],
             [
-              944,
-              1003
+              952,
+              1011
             ],
             [
-              1069,
-              1129
+              1077,
+              1136
             ]
           ],
           "system_edge_columns": [
@@ -435,8 +435,8 @@
           ],
           "ok": true,
           "staff_span_y": [
-            758,
-            1190
+            765,
+            1191
           ]
         }
       ],
@@ -448,8 +448,8 @@
       "frames_found": 4,
       "staff_frames": [
         [
-          128,
-          185
+          129,
+          186
         ],
         [
           303,
@@ -457,11 +457,11 @@
         ],
         [
           478,
-          535
+          536
         ],
         [
           654,
-          710
+          703
         ]
       ],
       "systems": [
@@ -469,8 +469,8 @@
           "system": 1,
           "staff_frames": [
             [
-              128,
-              185
+              129,
+              186
             ],
             [
               303,
@@ -478,16 +478,16 @@
             ],
             [
               478,
-              535
+              536
             ],
             [
               654,
-              710
+              703
             ]
           ],
           "inter_staff_gaps": [
             [
-              190,
+              191,
               298
             ],
             [
@@ -495,7 +495,7 @@
               473
             ],
             [
-              540,
+              541,
               649
             ]
           ],
@@ -525,8 +525,8 @@
           ],
           "ok": true,
           "staff_span_y": [
-            128,
-            710
+            129,
+            703
           ]
         }
       ],
@@ -719,25 +719,25 @@
           "do_rows": [
             {
               "voice": "soprano",
-              "actual_y": 269,
-              "expected_y": 268,
+              "actual_y": 211,
+              "expected_y": 209.971646303937,
               "tolerance": 2,
-              "red_pixels_on_row": 753,
+              "red_pixels_on_row": 751,
               "frame_height_px": 57,
-              "expected_frame_height_px": 57.87,
-              "upper_horn_ink": 47,
-              "lower_horn_ink": 0,
-              "top_closure_run": 18,
-              "bottom_closure_run": 10
+              "expected_frame_height_px": 58.03,
+              "upper_horn_ink": 0,
+              "lower_horn_ink": 45,
+              "top_closure_run": 9,
+              "bottom_closure_run": 18
             },
             {
               "voice": "alto",
               "actual_y": 394,
-              "expected_y": 393,
+              "expected_y": 393.0,
               "tolerance": 2,
               "red_pixels_on_row": 746,
               "frame_height_px": 57,
-              "expected_frame_height_px": 57.87,
+              "expected_frame_height_px": 58.03,
               "upper_horn_ink": 47,
               "lower_horn_ink": 0,
               "top_closure_run": 18,
@@ -745,29 +745,29 @@
             },
             {
               "voice": "tenor",
-              "actual_y": 520,
-              "expected_y": 519,
+              "actual_y": 478,
+              "expected_y": 477.828227711811,
               "tolerance": 2,
-              "red_pixels_on_row": 747,
+              "red_pixels_on_row": 738,
               "frame_height_px": 58,
-              "expected_frame_height_px": 57.87,
-              "upper_horn_ink": 44,
-              "lower_horn_ink": 0,
-              "top_closure_run": 18,
-              "bottom_closure_run": 10
+              "expected_frame_height_px": 58.03,
+              "upper_horn_ink": 45,
+              "lower_horn_ink": 46,
+              "top_closure_run": 14,
+              "bottom_closure_run": 18
             },
             {
               "voice": "bass",
-              "actual_y": 645,
-              "expected_y": 644,
+              "actual_y": 628,
+              "expected_y": 627.763558936378,
               "tolerance": 2,
-              "red_pixels_on_row": 752,
-              "frame_height_px": 57,
-              "expected_frame_height_px": 57.87,
+              "red_pixels_on_row": 739,
+              "frame_height_px": 50,
+              "expected_frame_height_px": 50.41,
               "upper_horn_ink": 47,
-              "lower_horn_ink": 0,
+              "lower_horn_ink": 52,
               "top_closure_run": 18,
-              "bottom_closure_run": 10
+              "bottom_closure_run": 13
             }
           ]
         },
@@ -776,55 +776,55 @@
           "do_rows": [
             {
               "voice": "soprano",
-              "actual_y": 815,
-              "expected_y": 814,
+              "actual_y": 764,
+              "expected_y": 763.971646303937,
               "tolerance": 2,
-              "red_pixels_on_row": 800,
-              "frame_height_px": 57,
-              "expected_frame_height_px": 57.87,
-              "upper_horn_ink": 47,
-              "lower_horn_ink": 0,
-              "top_closure_run": 18,
-              "bottom_closure_run": 9
+              "red_pixels_on_row": 795,
+              "frame_height_px": 58,
+              "expected_frame_height_px": 58.03,
+              "upper_horn_ink": 0,
+              "lower_horn_ink": 47,
+              "top_closure_run": 10,
+              "bottom_closure_run": 18
             },
             {
               "voice": "alto",
-              "actual_y": 940,
-              "expected_y": 939,
-              "tolerance": 2,
-              "red_pixels_on_row": 798,
-              "frame_height_px": 57,
-              "expected_frame_height_px": 57.87,
-              "upper_horn_ink": 45,
-              "lower_horn_ink": 0,
-              "top_closure_run": 18,
-              "bottom_closure_run": 9
-            },
-            {
-              "voice": "tenor",
-              "actual_y": 1066,
-              "expected_y": 1064,
-              "tolerance": 2,
-              "red_pixels_on_row": 788,
-              "frame_height_px": 57,
-              "expected_frame_height_px": 57.87,
-              "upper_horn_ink": 51,
-              "lower_horn_ink": 0,
-              "top_closure_run": 18,
-              "bottom_closure_run": 10
-            },
-            {
-              "voice": "bass",
-              "actual_y": 1191,
-              "expected_y": 1190,
+              "actual_y": 948,
+              "expected_y": 947.0,
               "tolerance": 2,
               "red_pixels_on_row": 796,
               "frame_height_px": 57,
-              "expected_frame_height_px": 57.87,
-              "upper_horn_ink": 45,
+              "expected_frame_height_px": 58.03,
+              "upper_horn_ink": 46,
               "lower_horn_ink": 0,
               "top_closure_run": 18,
               "bottom_closure_run": 10
+            },
+            {
+              "voice": "tenor",
+              "actual_y": 1032,
+              "expected_y": 1030.828227711811,
+              "tolerance": 2,
+              "red_pixels_on_row": 798,
+              "frame_height_px": 57,
+              "expected_frame_height_px": 58.03,
+              "upper_horn_ink": 49,
+              "lower_horn_ink": 47,
+              "top_closure_run": 14,
+              "bottom_closure_run": 18
+            },
+            {
+              "voice": "bass",
+              "actual_y": 1181,
+              "expected_y": 1181.7635589363779,
+              "tolerance": 2,
+              "red_pixels_on_row": 715,
+              "frame_height_px": 51,
+              "expected_frame_height_px": 50.41,
+              "upper_horn_ink": 46,
+              "lower_horn_ink": 60,
+              "top_closure_run": 18,
+              "bottom_closure_run": 12
             }
           ]
         }
@@ -840,25 +840,25 @@
           "do_rows": [
             {
               "voice": "soprano",
-              "actual_y": 186,
-              "expected_y": 185,
+              "actual_y": 128,
+              "expected_y": 127.971646303937,
               "tolerance": 2,
-              "red_pixels_on_row": 793,
+              "red_pixels_on_row": 798,
               "frame_height_px": 58,
-              "expected_frame_height_px": 57.87,
-              "upper_horn_ink": 42,
-              "lower_horn_ink": 0,
-              "top_closure_run": 18,
-              "bottom_closure_run": 10
+              "expected_frame_height_px": 58.03,
+              "upper_horn_ink": 0,
+              "lower_horn_ink": 45,
+              "top_closure_run": 10,
+              "bottom_closure_run": 18
             },
             {
               "voice": "alto",
               "actual_y": 361,
-              "expected_y": 360,
+              "expected_y": 360.0,
               "tolerance": 2,
               "red_pixels_on_row": 796,
               "frame_height_px": 58,
-              "expected_frame_height_px": 57.87,
+              "expected_frame_height_px": 58.03,
               "upper_horn_ink": 43,
               "lower_horn_ink": 0,
               "top_closure_run": 18,
@@ -866,29 +866,29 @@
             },
             {
               "voice": "tenor",
-              "actual_y": 536,
-              "expected_y": 535,
+              "actual_y": 495,
+              "expected_y": 494.828227711811,
               "tolerance": 2,
               "red_pixels_on_row": 798,
-              "frame_height_px": 58,
-              "expected_frame_height_px": 57.87,
-              "upper_horn_ink": 47,
-              "lower_horn_ink": 0,
-              "top_closure_run": 18,
-              "bottom_closure_run": 9
+              "frame_height_px": 59,
+              "expected_frame_height_px": 58.03,
+              "upper_horn_ink": 49,
+              "lower_horn_ink": 47,
+              "top_closure_run": 14,
+              "bottom_closure_run": 18
             },
             {
               "voice": "bass",
-              "actual_y": 711,
-              "expected_y": 710,
+              "actual_y": 694,
+              "expected_y": 693.763558936378,
               "tolerance": 2,
-              "red_pixels_on_row": 801,
-              "frame_height_px": 57,
-              "expected_frame_height_px": 57.87,
-              "upper_horn_ink": 47,
-              "lower_horn_ink": 0,
+              "red_pixels_on_row": 797,
+              "frame_height_px": 50,
+              "expected_frame_height_px": 50.41,
+              "upper_horn_ink": 45,
+              "lower_horn_ink": 49,
               "top_closure_run": 18,
-              "bottom_closure_run": 10
+              "bottom_closure_run": 12
             }
           ]
         }
@@ -904,25 +904,25 @@
           "do_rows": [
             {
               "voice": "soprano",
-              "actual_y": 269,
-              "expected_y": 268,
+              "actual_y": 211,
+              "expected_y": 209.971646303937,
               "tolerance": 2,
-              "red_pixels_on_row": 753,
+              "red_pixels_on_row": 751,
               "frame_height_px": 57,
-              "expected_frame_height_px": 57.87,
-              "upper_horn_ink": 47,
-              "lower_horn_ink": 0,
-              "top_closure_run": 18,
-              "bottom_closure_run": 10
+              "expected_frame_height_px": 58.03,
+              "upper_horn_ink": 0,
+              "lower_horn_ink": 45,
+              "top_closure_run": 9,
+              "bottom_closure_run": 18
             },
             {
               "voice": "alto",
               "actual_y": 394,
-              "expected_y": 393,
+              "expected_y": 393.0,
               "tolerance": 2,
               "red_pixels_on_row": 746,
               "frame_height_px": 57,
-              "expected_frame_height_px": 57.87,
+              "expected_frame_height_px": 58.03,
               "upper_horn_ink": 47,
               "lower_horn_ink": 0,
               "top_closure_run": 18,
@@ -930,29 +930,29 @@
             },
             {
               "voice": "tenor",
-              "actual_y": 520,
-              "expected_y": 519,
+              "actual_y": 478,
+              "expected_y": 477.828227711811,
               "tolerance": 2,
-              "red_pixels_on_row": 747,
+              "red_pixels_on_row": 738,
               "frame_height_px": 58,
-              "expected_frame_height_px": 57.87,
-              "upper_horn_ink": 44,
-              "lower_horn_ink": 0,
-              "top_closure_run": 18,
-              "bottom_closure_run": 10
+              "expected_frame_height_px": 58.03,
+              "upper_horn_ink": 45,
+              "lower_horn_ink": 46,
+              "top_closure_run": 14,
+              "bottom_closure_run": 18
             },
             {
               "voice": "bass",
-              "actual_y": 645,
-              "expected_y": 644,
+              "actual_y": 628,
+              "expected_y": 627.763558936378,
               "tolerance": 2,
-              "red_pixels_on_row": 752,
-              "frame_height_px": 57,
-              "expected_frame_height_px": 57.87,
+              "red_pixels_on_row": 739,
+              "frame_height_px": 50,
+              "expected_frame_height_px": 50.41,
               "upper_horn_ink": 47,
-              "lower_horn_ink": 0,
+              "lower_horn_ink": 52,
               "top_closure_run": 18,
-              "bottom_closure_run": 10
+              "bottom_closure_run": 13
             }
           ]
         },
@@ -961,55 +961,55 @@
           "do_rows": [
             {
               "voice": "soprano",
-              "actual_y": 815,
-              "expected_y": 814,
+              "actual_y": 764,
+              "expected_y": 763.971646303937,
               "tolerance": 2,
-              "red_pixels_on_row": 800,
-              "frame_height_px": 57,
-              "expected_frame_height_px": 57.87,
-              "upper_horn_ink": 47,
-              "lower_horn_ink": 0,
-              "top_closure_run": 18,
-              "bottom_closure_run": 9
+              "red_pixels_on_row": 795,
+              "frame_height_px": 58,
+              "expected_frame_height_px": 58.03,
+              "upper_horn_ink": 0,
+              "lower_horn_ink": 47,
+              "top_closure_run": 10,
+              "bottom_closure_run": 18
             },
             {
               "voice": "alto",
-              "actual_y": 940,
-              "expected_y": 939,
-              "tolerance": 2,
-              "red_pixels_on_row": 798,
-              "frame_height_px": 57,
-              "expected_frame_height_px": 57.87,
-              "upper_horn_ink": 45,
-              "lower_horn_ink": 0,
-              "top_closure_run": 18,
-              "bottom_closure_run": 9
-            },
-            {
-              "voice": "tenor",
-              "actual_y": 1066,
-              "expected_y": 1064,
-              "tolerance": 2,
-              "red_pixels_on_row": 788,
-              "frame_height_px": 57,
-              "expected_frame_height_px": 57.87,
-              "upper_horn_ink": 51,
-              "lower_horn_ink": 0,
-              "top_closure_run": 18,
-              "bottom_closure_run": 10
-            },
-            {
-              "voice": "bass",
-              "actual_y": 1191,
-              "expected_y": 1190,
+              "actual_y": 948,
+              "expected_y": 947.0,
               "tolerance": 2,
               "red_pixels_on_row": 796,
               "frame_height_px": 57,
-              "expected_frame_height_px": 57.87,
-              "upper_horn_ink": 45,
+              "expected_frame_height_px": 58.03,
+              "upper_horn_ink": 46,
               "lower_horn_ink": 0,
               "top_closure_run": 18,
               "bottom_closure_run": 10
+            },
+            {
+              "voice": "tenor",
+              "actual_y": 1032,
+              "expected_y": 1030.828227711811,
+              "tolerance": 2,
+              "red_pixels_on_row": 798,
+              "frame_height_px": 57,
+              "expected_frame_height_px": 58.03,
+              "upper_horn_ink": 49,
+              "lower_horn_ink": 47,
+              "top_closure_run": 14,
+              "bottom_closure_run": 18
+            },
+            {
+              "voice": "bass",
+              "actual_y": 1181,
+              "expected_y": 1181.7635589363779,
+              "tolerance": 2,
+              "red_pixels_on_row": 715,
+              "frame_height_px": 51,
+              "expected_frame_height_px": 50.41,
+              "upper_horn_ink": 46,
+              "lower_horn_ink": 60,
+              "top_closure_run": 18,
+              "bottom_closure_run": 12
             }
           ]
         }
@@ -1025,25 +1025,25 @@
           "do_rows": [
             {
               "voice": "soprano",
-              "actual_y": 186,
-              "expected_y": 185,
+              "actual_y": 128,
+              "expected_y": 127.971646303937,
               "tolerance": 2,
-              "red_pixels_on_row": 793,
+              "red_pixels_on_row": 798,
               "frame_height_px": 58,
-              "expected_frame_height_px": 57.87,
-              "upper_horn_ink": 42,
-              "lower_horn_ink": 0,
-              "top_closure_run": 18,
-              "bottom_closure_run": 10
+              "expected_frame_height_px": 58.03,
+              "upper_horn_ink": 0,
+              "lower_horn_ink": 45,
+              "top_closure_run": 10,
+              "bottom_closure_run": 18
             },
             {
               "voice": "alto",
               "actual_y": 361,
-              "expected_y": 360,
+              "expected_y": 360.0,
               "tolerance": 2,
               "red_pixels_on_row": 796,
               "frame_height_px": 58,
-              "expected_frame_height_px": 57.87,
+              "expected_frame_height_px": 58.03,
               "upper_horn_ink": 43,
               "lower_horn_ink": 0,
               "top_closure_run": 18,
@@ -1051,29 +1051,29 @@
             },
             {
               "voice": "tenor",
-              "actual_y": 536,
-              "expected_y": 535,
+              "actual_y": 495,
+              "expected_y": 494.828227711811,
               "tolerance": 2,
               "red_pixels_on_row": 798,
-              "frame_height_px": 58,
-              "expected_frame_height_px": 57.87,
-              "upper_horn_ink": 47,
-              "lower_horn_ink": 0,
-              "top_closure_run": 18,
-              "bottom_closure_run": 9
+              "frame_height_px": 59,
+              "expected_frame_height_px": 58.03,
+              "upper_horn_ink": 49,
+              "lower_horn_ink": 47,
+              "top_closure_run": 14,
+              "bottom_closure_run": 18
             },
             {
               "voice": "bass",
-              "actual_y": 711,
-              "expected_y": 710,
+              "actual_y": 694,
+              "expected_y": 693.763558936378,
               "tolerance": 2,
-              "red_pixels_on_row": 801,
-              "frame_height_px": 57,
-              "expected_frame_height_px": 57.87,
-              "upper_horn_ink": 47,
-              "lower_horn_ink": 0,
+              "red_pixels_on_row": 797,
+              "frame_height_px": 50,
+              "expected_frame_height_px": 50.41,
+              "upper_horn_ink": 45,
+              "lower_horn_ink": 49,
               "top_closure_run": 18,
-              "bottom_closure_run": 10
+              "bottom_closure_run": 12
             }
           ]
         }
