@@ -1644,9 +1644,15 @@ TEST_F(MusicXml_Melo_Tests, m9SATBTemplateRoundTripsPreservingEachVoicesOwnExten
     score->doLayout();
     ASSERT_EQ(score->nstaves(), 4u);
 
-    // Empty staves carry centre anchors, not a written-note range. Their
-    // geometry must preserve the tonic-bounded ratio frame on reload.
+    // Empty staves retain each singer's range centre. The current policy
+    // expands a half-period window to nearby ratio lines with tempering snap;
+    // it does not force every voice to start on Do. These are the four
+    // independently expected bounding rows of the shipped 12-tet template.
     auto expectEmptyFrames = [](MasterScore* checked) {
+        const double lowerRatios[] = { 4.0 / 3.0, 1.0, 3.0 / 2.0, 15.0 / 8.0 };
+        const double upperRatios[] = { 1.0, 3.0 / 2.0, 9.0 / 8.0, 4.0 / 3.0 };
+        const int lowerPeriods[] = { 0, 0, -1, -2 };
+        const int upperPeriods[] = { 1, 0, 0, -1 };
         for (staff_idx_t idx = 0; idx < checked->nstaves(); ++idx) {
             const StaffType* st = checked->staff(idx)->staffType(Fraction(0, 1));
             const auto& segments = st->meloFrameSegments();
@@ -1654,10 +1660,12 @@ TEST_F(MusicXml_Melo_Tests, m9SATBTemplateRoundTripsPreservingEachVoicesOwnExten
             melo::PeriodicOrigins origins;
             ASSERT_TRUE(melo::periodicOrigins(st->meloStateJson(), origins));
             const double period = st->meloPeriodCents();
-            EXPECT_NEAR(std::remainder(segments.front().lowerCents - origins.doCentsAboveExtentLower, period),
-                        0.0, 1e-9);
-            EXPECT_NEAR(segments.back().upperCents - segments.front().lowerCents,
-                        period * std::log2(3.0 / 2.0), 1e-9);
+            EXPECT_NEAR(segments.front().lowerCents, origins.doCentsAboveExtentLower
+                        + period * (std::log2(lowerRatios[idx]) + lowerPeriods[idx]), 1e-9);
+            EXPECT_NEAR(segments.back().upperCents, origins.doCentsAboveExtentLower
+                        + period * (std::log2(upperRatios[idx]) + upperPeriods[idx]), 1e-9);
+            EXPECT_LE(segments.front().lowerCents, -period / 4.0 + 25.0);
+            EXPECT_GE(segments.back().upperCents, period / 4.0 - 25.0);
         }
     };
     expectEmptyFrames(score);
@@ -1698,12 +1706,13 @@ TEST_F(MusicXml_Melo_Tests, m9SATBTemplateRoundTripsPreservingEachVoicesOwnExten
     auto meloLinesOf = [](const String& doc) {
         StringList out;
         for (const String& line : doc.split(u'\n')) {
-            if (line.contains(u"jims:")) {
+            if (line.contains(u"melo:")) {
                 out.push_back(line.trimmed());
             }
         }
         return out;
     };
+    ASSERT_FALSE(meloLinesOf(xml).empty());
     EXPECT_EQ(meloLinesOf(xml2), meloLinesOf(xml)) << "the MeloPresto content must not drift across a second round trip";
     EXPECT_EQ(xml2.count(u"lower-n-per=\"0\" lower-n-gen=\"1\" upper-n-per=\"0\" upper-n-gen=\"1\""), 1);
     EXPECT_EQ(xml2.count(u"lower-n-per=\"-1\" lower-n-gen=\"2\" upper-n-per=\"-1\" upper-n-gen=\"2\""), 1);
