@@ -1657,12 +1657,12 @@ TEST_F(MusicXml_Melo_Tests, m9SATBTemplateRoundTripsPreservingEachVoicesOwnExten
             const StaffType* st = checked->staff(idx)->staffType(Fraction(0, 1));
             const auto& segments = st->meloFrameSegments();
             ASSERT_FALSE(segments.empty());
-            melo::PeriodicOrigins origins;
-            ASSERT_TRUE(melo::periodicOrigins(st->meloStateJson(), origins));
+            double doZero = 0.0;
+            ASSERT_TRUE(melo::noteCentsAboveExtentLower(st->meloStateJson(), 1, -2, doZero));
             const double period = st->meloPeriodCents();
-            EXPECT_NEAR(segments.front().lowerCents, origins.doCentsAboveExtentLower
+            EXPECT_NEAR(segments.front().lowerCents, doZero
                         + period * (std::log2(lowerRatios[idx]) + lowerPeriods[idx]), 1e-9);
-            EXPECT_NEAR(segments.back().upperCents, origins.doCentsAboveExtentLower
+            EXPECT_NEAR(segments.back().upperCents, doZero
                         + period * (std::log2(upperRatios[idx]) + upperPeriods[idx]), 1e-9);
             EXPECT_LE(segments.front().lowerCents, -period / 4.0 + 25.0);
             EXPECT_GE(segments.back().upperCents, period / 4.0 - 25.0);
