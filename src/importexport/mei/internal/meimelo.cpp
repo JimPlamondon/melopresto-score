@@ -586,7 +586,7 @@ void MeloMeiExporter::writeClassDecls(pugi::xml_node meiHead, pugi::xml_node fil
     }
     pugi::xml_node taxonomy = classDecls.append_child("taxonomy");
     taxonomy.append_attribute("xml:id") = "melo.taxonomy";
-    taxonomy.append_child("bibl").text().set("MeloPresto analysis controlled vocabulary v1");
+    taxonomy.append_child("bibl").text().set(melo::analysisVocabularyCitation);
     static const std::vector<std::pair<const char*, std::vector<const char*> > > groups = {
         { "outcome", { "modulation", "tonicization", "ambiguous", "insufficient-evidence" } },
         { "ambit", { "tonic-bounded", "tonic-centered" } },
