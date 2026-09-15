@@ -3,6 +3,7 @@
   <programVersion>4.7.4</programVersion>
   <programRevision>abc123456</programRevision>
   <Score>
+    <metaTag name="meloReferenceTimelineV1">{"schema":"jimstaff-reference-v1","initial":{"step":"D","alter":0,"octave":4},"events":[]}</metaTag>
     <Style>
       <musicalSymbolFont>JiMSMusic</musicalSymbolFont>
       <hideInstrumentNameIfOneInstrument>0</hideInstrumentNameIfOneInstrument>
@@ -38,7 +39,7 @@
         <ledgerlines>0</ledgerlines>
         <jims>1</jims>
         <jimsJiLines>1</jimsJiLines>
-        <jimsStateJson>{"scale":["M2","m2","M2","M2","M2","m2","M2"],"collection_rotation":0,"mode_rotation":0,"generator_cents":700.0,"period_cents":1200.0,"embedding":{"large_steps":5,"small_steps":2},"extent":{"lower":{"nPer":1,"nGen":-2},"upper":{"nPer":2,"nGen":-2}},"reference":"none","tonic_ambit":"tonic-bounded"}</jimsStateJson>
+        <jimsStateJson>{"scale":["M2","m2","M2","M2","M2","m2","M2"],"collection_rotation":0,"mode_rotation":0,"generator_cents":700.0,"period_cents":1200.0,"embedding":{"large_steps":5,"small_steps":2},"extent":{"lower":{"nPer":1,"nGen":-2},"upper":{"nPer":2,"nGen":-2}},"tonic_ambit":"tonic-bounded","schema":"jimstaff-v3"}</jimsStateJson>
         </StaffType>
         </Staff>
       <trackName>Jimmy</trackName>
@@ -175,7 +176,7 @@
           <ledgerlines>0</ledgerlines>
           <jims>1</jims>
           <jimsJiLines>1</jimsJiLines>
-          <jimsStateJson>{"scale":["M2","m2","M2","M2","M2","m2","M2"],"collection_rotation":0,"mode_rotation":5,"generator_cents":700.0,"period_cents":1200.0,"embedding":{"large_steps":5,"small_steps":2},"extent":{"lower":{"nPer":1,"nGen":-2},"upper":{"nPer":2,"nGen":-2}},"reference":"none","tonic_ambit":"tonic-bounded"}</jimsStateJson>
+          <jimsStateJson>{"scale":["M2","m2","M2","M2","M2","m2","M2"],"collection_rotation":0,"mode_rotation":5,"generator_cents":700.0,"period_cents":1200.0,"embedding":{"large_steps":5,"small_steps":2},"extent":{"lower":{"nPer":1,"nGen":-2},"upper":{"nPer":2,"nGen":-2}},"tonic_ambit":"tonic-bounded","schema":"jimstaff-v3"}</jimsStateJson>
           </StaffType>
         </StaffTypeChange>
       <eid>s8xCHjXNR9H_v3eiPaQhPJO</eid>

@@ -5012,6 +5012,7 @@ void TLayout::layoutStaffLines(StaffLines* item, LayoutContext& ctx)
 void TLayout::layoutForWidth(StaffLines* item, double w, LayoutContext& ctx)
 {
     LAYOUT_CALL_ITEM(item);
+    item->clearMeloHeaderPitchTargets();
     StaffLines::LayoutData* ldata = item->mutldata();
     const Staff* s = item->staff();
     double _spatium = item->spatium();

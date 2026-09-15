@@ -22,6 +22,8 @@
 
 #include <gtest/gtest.h>
 #include <QFile>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QTemporaryDir>
 #include <QXmlStreamReader>
 #include "engraving/dom/part.h"
@@ -41,6 +43,9 @@
 #include "engraving/dom/segment.h"
 #include "engraving/dom/staff.h"
 #include "engraving/dom/stafftype.h"
+#include "engraving/melo/melotuningcontroller.h"
+#include "engraving/melo/melochangecontroller.h"
+#include "engraving/melo/melobridge.h"
 
 #include "modularity/ioc.h"
 #include "importexport/mei/imeiconfiguration.h"
@@ -162,7 +167,7 @@ TEST_F(Mei_Tests, mei_melo_roundtrip_01) {
         return meiWriter.writeScore(score, path);
     };
 
-    MasterScore* score = ScoreRW::readScore(MEI_DIR + u"jims/jims-synthetic.mei", false, importFunc);
+    MasterScore* score = ScoreRW::readScore(MEI_DIR + u"jims/v5/jims-synthetic.mei", false, importFunc);
     ASSERT_TRUE(score);
 
     // Typed staff state: MeloPresto staff type at tick 0 plus two later states.
@@ -238,7 +243,7 @@ TEST_F(Mei_Tests, generated_chord_evidence_roundtrip_and_stale_export)
         MeiWriter writer;
         return writer.writeScore(score, path);
     };
-    std::unique_ptr<MasterScore> score(ScoreRW::readScore(MEI_DIR + u"jims/generated-chord-evidence.mei", false, importFunc));
+    std::unique_ptr<MasterScore> score(ScoreRW::readScore(MEI_DIR + u"jims/v5/generated-chord-evidence.mei", false, importFunc));
     ASSERT_TRUE(score);
     Harmony* harmony = nullptr;
     Note* note = nullptr;
@@ -531,7 +536,7 @@ TEST_F(Mei_Tests, mei_tuplet_03) {
 }
 TEST_F(Mei_Tests, missingStateIsExplainedAndDoesNotLeakIntoTheNextFileError)
 {
-    QFile source(QString::fromUtf8(iex_mei_tests_DATA_ROOT) + "/data/jims/jims-synthetic.mei");
+    QFile source(QString::fromUtf8(iex_mei_tests_DATA_ROOT) + "/data/jims/v5/jims-synthetic.mei");
     ASSERT_TRUE(source.open(QIODevice::ReadOnly));
     QByteArray xml = source.readAll();
     int start = xml.indexOf("<extMeta>");
@@ -578,5 +583,258 @@ TEST_F(Mei_Tests, unrelatedTypeTokenDoesNotClaimTheFileUsesTheProfile)
     };
     std::unique_ptr<MasterScore> score(ScoreRW::readScore(String::fromQString(output.fileName()), true, import));
     EXPECT_TRUE(score);
+}
+
+TEST_F(Mei_Tests, latticeExportRefusesMissingIdentityAndDivergentReferencesBeforeWriting)
+{
+    for (bool missingIdentity : { true, false }) {
+        std::unique_ptr<MasterScore> score(ScoreRW::readScore(u"../../../engraving/tests/jimstaff_data/m9-satb-hymn.mscx"));
+        ASSERT_TRUE(score);
+        score->rebuildMidiMapping();
+        QTemporaryDir directory;
+        const QString path = directory.filePath("protected.mei");
+        MeiWriter writer;
+        ASSERT_EQ(writer.writeScore(score.get(), path), Err::NoError);
+        QFile original(path);
+        ASSERT_TRUE(original.open(QIODevice::ReadOnly));
+        const QByteArray before = original.readAll();
+        original.close();
+        if (missingIdentity) {
+            Note* note = toChord(score->firstSegment(SegmentType::ChordRest)->element(0))->notes().front();
+            ASSERT_TRUE(note->hasMeloPitch());
+            note->setMeloPitch(INT_MIN, INT_MIN);
+        } else {
+            auto* type = score->staff(1)->staffType(Fraction(0, 1));
+            auto json = QJsonDocument::fromJson(type->meloStateJson().toQString().toUtf8()).object();
+            auto reference = json["reference_timeline"].toObject();
+            auto pitch = reference["initial"].toObject();
+            ASSERT_TRUE(pitch.contains("step"));
+            pitch["step"] = "E";
+            reference["initial"] = pitch;
+            json["reference_timeline"] = reference;
+            type->setMeloStateJson(String::fromUtf8(QJsonDocument(json).toJson(QJsonDocument::Compact).constData()));
+        }
+        EXPECT_NE(writer.writeScore(score.get(), path), Err::NoError);
+        ASSERT_TRUE(original.open(QIODevice::ReadOnly));
+        EXPECT_EQ(original.readAll(), before);
+    }
+}
+
+TEST_F(Mei_Tests, latticeImportRefusesOmittedIdentityWithoutChangingInput)
+{
+    QFile source(QString::fromUtf8(iex_mei_tests_DATA_ROOT) + "/data/jims/v5/jims-synthetic.mei");
+    ASSERT_TRUE(source.open(QIODevice::ReadOnly));
+    QByteArray xml = source.readAll();
+    const int start = xml.indexOf("<jm:note ref=");
+    const int end = xml.indexOf("</jm:note>", start);
+    ASSERT_GE(start, 0);
+    ASSERT_GT(end, start);
+    xml.remove(start, end + int(sizeof("</jm:note>") - 1) - start);
+    QTemporaryDir directory;
+    QFile stripped(directory.filePath("omitted-identity.mei"));
+    ASSERT_TRUE(stripped.open(QIODevice::WriteOnly));
+    ASSERT_EQ(stripped.write(xml), xml.size());
+    stripped.close();
+    muse::Ret received;
+    auto import = [&received](MasterScore* score, const muse::io::path_t& input) {
+        MeiReader reader(nullptr);
+        received = reader.read(score, input);
+        return received ? Err::NoError : Err::FileCriticallyCorrupted;
+    };
+    std::unique_ptr<MasterScore> refused(ScoreRW::readScore(String::fromQString(stripped.fileName()), true, import));
+    EXPECT_FALSE(refused);
+    EXPECT_FALSE(received);
+    EXPECT_NE(received.text().find("coordinates"), std::string::npos) << received.text();
+    ASSERT_TRUE(stripped.open(QIODevice::ReadOnly));
+    EXPECT_EQ(stripped.readAll(), xml);
+}
+
+TEST_F(Mei_Tests, latticeImportRefusesDivergentReferencesWithoutChangingInput)
+{
+    std::unique_ptr<MasterScore> score(ScoreRW::readScore(u"../../../engraving/tests/jimstaff_data/m9-satb-hymn.mscx"));
+    ASSERT_TRUE(score);
+    score->rebuildMidiMapping();
+    QTemporaryDir directory;
+    QFile file(directory.filePath("reference.mei"));
+    MeiWriter writer;
+    ASSERT_EQ(writer.writeScore(score.get(), file.fileName()), Err::NoError);
+    ASSERT_TRUE(file.open(QIODevice::ReadOnly));
+    QByteArray xml = file.readAll();
+    file.close();
+    const int start = xml.indexOf("<melo:reference-timeline>");
+    const int end = xml.indexOf("</melo:reference-timeline>") + int(QByteArray("</melo:reference-timeline>").size());
+    ASSERT_GE(start, 0);
+    ASSERT_GT(end, start);
+    QByteArray conflicting = xml.mid(start, end - start);
+    conflicting.replace("step=\"D\"", "step=\"E\"");
+    xml.insert(end, conflicting);
+    ASSERT_TRUE(file.open(QIODevice::WriteOnly));
+    ASSERT_EQ(file.write(xml), xml.size());
+    file.close();
+    muse::Ret received;
+    auto import = [&received](MasterScore* destination, const muse::io::path_t& input) {
+        MeiReader reader(nullptr);
+        received = reader.read(destination, input);
+        return received ? Err::NoError : Err::FileCriticallyCorrupted;
+    };
+    std::unique_ptr<MasterScore> refused(ScoreRW::readScore(String::fromQString(file.fileName()), true, import));
+    EXPECT_FALSE(refused);
+    EXPECT_FALSE(received);
+    EXPECT_NE(received.text().find("exactly one canonical reference timeline"), std::string::npos) << received.text();
+    ASSERT_TRUE(file.open(QIODevice::ReadOnly));
+    EXPECT_EQ(file.readAll(), xml);
+}
+
+TEST_F(Mei_Tests, CanonicalV5ReferenceRoundTripInAllThreeTunings)
+{
+    for (double generator : { 700.0, 4800.0 / 7.0, 720.0 }) {
+        SCOPED_TRACE(generator);
+        std::unique_ptr<MasterScore> score(ScoreRW::readScore(u"../../../engraving/tests/jimstaff_data/m9-satb-hymn.mscx"));
+        ASSERT_TRUE(score);
+        const String initial
+            = u"{\"schema\":\"jimstaff-reference-v1\",\"initial\":{\"step\":\"D\",\"alter\":-1,\"octave\":4},\"events\":[]}";
+        score->setMetaTag(melo::REFERENCE_TIMELINE_TAG, initial);
+        for (Staff* staff : score->staves()) {
+            StaffType* type = staff->staffType(Fraction(0, 1));
+            auto configuration
+                = QJsonDocument::fromJson(type->meloStateJson().toQString().toUtf8()).object().value("configuration").toObject();
+            configuration["schema"] = "jimstaff-v3";
+            type->setMeloStateJson(String::fromUtf8(QJsonDocument(configuration).toJson(QJsonDocument::Compact).constData()));
+        }
+        String error;
+        ASSERT_TRUE(melo::rebuildCanonicalReferenceContexts(score.get(), error)) << error.toStdString();
+        melo::TuningController tuning(score.get(), 0);
+        ASSERT_TRUE(tuning.beginPreview());
+        ASSERT_TRUE(tuning.commit(generator));
+        const Fraction tick(1, 2);
+        ASSERT_TRUE(melo::changeRelativeKey(score.get(), 0, tick, u"{\"nPer\":-1,\"nGen\":3}", initial, error)) << error.toStdString();
+        score->rebuildMidiMapping();
+        score->doLayout();
+        QTemporaryDir directory;
+        ASSERT_TRUE(directory.isValid());
+        const QString path = directory.filePath("canonical.mei");
+        MeiWriter writer;
+        ASSERT_EQ(writer.writeScore(score.get(), path), Err::NoError);
+        QFile file(path);
+        ASSERT_TRUE(file.open(QIODevice::ReadOnly));
+        const auto bytes = file.readAll();
+        const QString artifactDirectory = qEnvironmentVariable("MELO_REFERENCE_ARTIFACT_DIR");
+        if (!artifactDirectory.isEmpty()) {
+            const int divisions = generator == 700.0 ? 12 : generator == 720.0 ? 5 : 7;
+            QFile artifact(artifactDirectory + QString("/canonical-%1-tet.mei").arg(divisions));
+            ASSERT_TRUE(artifact.open(QIODevice::WriteOnly));
+            ASSERT_EQ(artifact.write(bytes), bytes.size());
+        }
+        EXPECT_TRUE(bytes.contains("urn:melopresto:musicxml:5"));
+        EXPECT_EQ(bytes.count("<melo:reference-timeline>"), 1);
+        EXPECT_FALSE(bytes.contains("<melo:reference>"));
+        EXPECT_FALSE(bytes.contains("key-number"));
+        const auto import = [](MasterScore* destination, const muse::io::path_t& input) {
+            MeiReader reader(nullptr);
+            return reader.import(destination, input);
+        };
+        std::unique_ptr<MasterScore> reopened(ScoreRW::readScore(String::fromQString(path), true, import));
+        ASSERT_TRUE(reopened);
+        EXPECT_EQ(reopened->metaTag(melo::REFERENCE_TIMELINE_TAG), score->metaTag(melo::REFERENCE_TIMELINE_TAG));
+        ASSERT_EQ(reopened->nstaves(), 4u);
+        for (staff_idx_t staff = 0; staff < reopened->nstaves(); ++staff) {
+            melo::RelativeKeyEditor editor;
+            ASSERT_TRUE(melo::prepareRelativeKeyEditor(reopened.get(), staff, tick, nullptr, editor, error)) << error.toStdString();
+            EXPECT_EQ(editor.expression, u"M6");
+            double actual = 0, period = 0;
+            ASSERT_TRUE(melo::staffMetrics(editor.destinationState, actual, period));
+            EXPECT_DOUBLE_EQ(actual, generator);
+        }
+        const int rootStart = bytes.indexOf("<melo:reference-timeline>");
+        const int rootEnd = bytes.indexOf("</melo:reference-timeline>") + int(QByteArray("</melo:reference-timeline>").size());
+        ASSERT_GE(rootStart, 0);
+        ASSERT_GT(rootEnd, rootStart);
+        const auto rootXml = bytes.mid(rootStart, rootEnd - rootStart);
+        for (const auto& invalid : {
+                bytes.left(rootStart) + bytes.mid(rootEnd),
+                bytes.left(rootStart) + rootXml + bytes.mid(rootStart),
+                QByteArray(bytes).replace("step=\"D\" alter=\"-1\" octave=\"4\"", "key-number=\"61\""),
+                QByteArray(bytes).replace("</melo:staff-state>", "<melo:reference><melo:none/></melo:reference></melo:staff-state>"),
+                QByteArray(bytes).replace("<melo:reference-timeline>",
+                                          "<melo:reference-timeline xmlns:melo=\"urn:melopresto:musicxml:4\">"),
+                QByteArray(bytes).replace("<melo:staff-state", "<melo:staff-state xmlns:melo=\"urn:melopresto:musicxml:4\"")
+            }) {
+            QFile malformed(directory.path() + "/invalid.mei");
+            ASSERT_TRUE(malformed.open(QIODevice::WriteOnly));
+            ASSERT_EQ(malformed.write(invalid), invalid.size());
+            malformed.close();
+            std::unique_ptr<MasterScore> refused(ScoreRW::readScore(String::fromQString(malformed.fileName()), true, import));
+            EXPECT_FALSE(refused);
+            ASSERT_TRUE(malformed.open(QIODevice::ReadOnly));
+            EXPECT_EQ(malformed.readAll(), invalid);
+            file.seek(0);
+            EXPECT_EQ(file.readAll(), bytes);
+        }
+        const QByteArray namespaceDeclaration(" xmlns:melo=\"urn:melopresto:musicxml:5\"");
+        for (const bool localToEachElement : { false, true }) {
+            QByteArray relocated = bytes;
+            ASSERT_TRUE(relocated.contains(namespaceDeclaration));
+            relocated.replace(namespaceDeclaration, "");
+            if (localToEachElement) {
+                relocated.replace("<melo:reference-timeline>", "<melo:reference-timeline" + namespaceDeclaration + ">");
+                relocated.replace("<melo:staff-state", "<melo:staff-state" + namespaceDeclaration);
+                relocated.replace("<melo:pitch", "<melo:pitch" + namespaceDeclaration);
+            } else {
+                relocated.replace("<jm:musicxml>", "<jm:musicxml" + namespaceDeclaration + ">");
+            }
+            QFile relocatedFile(directory.path() + "/relocated.mei");
+            ASSERT_TRUE(relocatedFile.open(QIODevice::WriteOnly));
+            ASSERT_EQ(relocatedFile.write(relocated), relocated.size());
+            relocatedFile.close();
+            std::unique_ptr<MasterScore> restored(ScoreRW::readScore(String::fromQString(relocatedFile.fileName()), true, import));
+            ASSERT_TRUE(restored) << "V5 declarations may be placed on the embedded subtree or its elements";
+            EXPECT_EQ(restored->metaTag(melo::REFERENCE_TIMELINE_TAG), score->metaTag(melo::REFERENCE_TIMELINE_TAG));
+        }
+    }
+}
+
+TEST_F(Mei_Tests, exactEqualTemperamentRoundTripRestoresDerivedTuning)
+{
+    for (double generator : { 700.0, 1200.0 * 4.0 / 7.0, 720.0 }) {
+        SCOPED_TRACE(generator);
+        std::unique_ptr<MasterScore> score(ScoreRW::readScore(u"../../../engraving/tests/jimstaff_data/m9-satb-hymn.mscx"));
+        ASSERT_TRUE(score);
+        melo::TuningController tuning(score.get(), 0);
+        ASSERT_TRUE(tuning.beginPreview());
+        ASSERT_TRUE(tuning.commit(generator));
+        auto values = [](Score* score) {
+            std::vector<std::pair<NoteVal, double> > result;
+            for (Segment* segment = score->firstSegment(SegmentType::ChordRest); segment;
+                 segment = segment->next1(SegmentType::ChordRest)) {
+                for (track_idx_t track = 0; track < score->ntracks(); ++track) {
+                    auto* item = segment->element(track);
+                    if (item && item->isChord()) {
+                        for (Note* note : toChord(item)->notes()) {
+                            result.emplace_back(note->noteVal(), note->tuning());
+                        }
+                    }
+                }
+            }
+            return result;
+        };
+        const auto before = values(score.get());
+        score->rebuildMidiMapping();
+        QTemporaryDir directory;
+        const QString path = directory.filePath("tempered.mei");
+        MeiWriter writer;
+        ASSERT_EQ(writer.writeScore(score.get(), path), Err::NoError);
+        auto import = [](MasterScore* destination, const muse::io::path_t& input) {
+            MeiReader reader(nullptr);
+            return reader.import(destination, input);
+        };
+        std::unique_ptr<MasterScore> reopened(ScoreRW::readScore(String::fromQString(path), true, import));
+        ASSERT_TRUE(reopened);
+        const auto after = values(reopened.get());
+        ASSERT_EQ(after.size(), before.size());
+        for (size_t i = 0; i < before.size(); ++i) {
+            EXPECT_TRUE(after[i].first == before[i].first) << "note " << i;
+            EXPECT_NEAR(after[i].second, before[i].second, 1e-8) << "note " << i;
+        }
+    }
 }
 }

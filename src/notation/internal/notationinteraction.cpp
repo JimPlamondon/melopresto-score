@@ -6070,7 +6070,11 @@ bool NotationInteraction::transpose(const TransposeOptions& options)
     bool ok = Transpose::transpose(score(), options.mode, options.direction, options.key, options.interval,
                                    options.needTransposeKeys, options.needTransposeChordNames, options.needTransposeDoubleSharpsFlats);
 
-    apply();
+    if (ok) {
+        apply();
+    } else {
+        rollback();
+    }
 
     return ok;
 }

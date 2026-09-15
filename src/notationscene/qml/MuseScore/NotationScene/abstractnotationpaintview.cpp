@@ -680,6 +680,15 @@ void AbstractNotationPaintView::paint(QPainter* qp)
     bool isPrinting = publishMode() || m_inputController->readonly();
     notation()->painting()->paintView(painter, toLogical(rect), isPrinting);
 
+    const RectF headerFocus = m_inputController->focusedMeloHeaderPitchInk();
+    if (!isPrinting && !headerFocus.isEmpty()) {
+        painter->save();
+        painter->setBrush(muse::draw::BrushStyle::NoBrush);
+        painter->setPen(muse::draw::Pen(muse::draw::Color(0, 102, 204), 1.0 / currentScaling()));
+        painter->drawRect(headerFocus.adjusted(-2, -2, 2, 2));
+        painter->restore();
+    }
+
     const ui::UiContext& uiCtx = uiContextResolver()->currentUiContext();
     const bool isOnNotationPage = uiCtx == ui::UiCtxProjectOpened || uiCtx == ui::UiCtxProjectFocused;
 

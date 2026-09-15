@@ -23,6 +23,7 @@ set(MODULE_TEST notationscene_qml_tests)
 set(MODULE_TEST_SRC
     ${PROJECT_SOURCE_DIR}/src/engraving/tests/utils/scorerw.cpp
     ${PROJECT_SOURCE_DIR}/src/engraving/tests/utils/scorerw.h
+    ${PROJECT_SOURCE_DIR}/src/engraving/tests/utils/testutils.cpp
     ${PROJECT_SOURCE_DIR}/src/framework/stubs/shortcuts/shortcutsregisterstub.cpp
     ${PROJECT_SOURCE_DIR}/src/framework/stubs/shortcuts/shortcutsregisterstub.h
 
@@ -31,11 +32,15 @@ set(MODULE_TEST_SRC
     ${CMAKE_CURRENT_LIST_DIR}/environment.cpp
     ${CMAKE_CURRENT_LIST_DIR}/notationviewinputcontroller_tests.cpp
     ${CMAKE_CURRENT_LIST_DIR}/melouimodel_tests.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/melosaveas_tests.cpp
 )
 
 find_package(Qt6 REQUIRED COMPONENTS Test)
 
 set(MODULE_TEST_LINK
+    project
+    muse_actions
+    notation
     engraving
     inspector_qml
     muse_ui_qml
@@ -48,9 +53,21 @@ set(MODULE_TEST_LINK
 
 set(MODULE_TEST_DATA_ROOT ${CMAKE_CURRENT_LIST_DIR})
 
+if (MUE_BUILD_BRAILLE_QML)
+    list(APPEND MODULE_TEST_LINK braille_qml)
+endif()
+
 include(SetupGTest)
+
+# These tests capture actual QQuickWindow pixels; the minimal platform cannot grab them.
+set_tests_properties(${MODULE_TEST} PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software;QT_QUICK_CONTROLS_STYLE=Basic"
+)
 
 target_compile_definitions(${MODULE_TEST} PRIVATE MELO_UI_TEST_DATA_ROOT="${PROJECT_SOURCE_DIR}/src/engraving/tests")
 
 target_include_directories(${MODULE_TEST} PRIVATE ${PROJECT_SOURCE_DIR}/src/inspector)
+target_include_directories(${MODULE_TEST} PRIVATE ${PROJECT_SOURCE_DIR}/src/notation)
+target_include_directories(${MODULE_TEST} PRIVATE ${PROJECT_SOURCE_DIR}/src/project)
+target_include_directories(${MODULE_TEST} PRIVATE ${PROJECT_SOURCE_DIR}/src/framework/ui)
 target_include_directories(${MODULE_TEST} PRIVATE ${PROJECT_SOURCE_DIR}/src/inspector/qml/MuseScore/Inspector)

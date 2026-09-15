@@ -83,7 +83,7 @@ jobs:
       uses: dtolnay/rust-toolchain@stable
     - name: Point the build at the Kernel
       run: |
-        echo "JIMS_ROOT=${{ github.workspace }}/melo-kernel" | tee -a $GITHUB_ENV
+        echo "MELO_ROOT=${{ github.workspace }}/melo-kernel" | tee -a $GITHUB_ENV
         cargo --version
 
     - name: Verify MeloPresto Kernel checkout persistence

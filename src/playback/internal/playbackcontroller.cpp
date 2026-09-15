@@ -416,7 +416,12 @@ void PlaybackController::playNotes(const NoteValList& notes, staff_idx_t staffId
         Note* note = engraving::Factory::createNote(chord);
         note->setParent(chord);
         note->setStaffIdx(staffIdx);
-        note->setNval(nval);
+        if (!note->setNval(nval)) {
+            delete note;
+            delete chord;
+            DeleteAll(elements);
+            return;
+        }
         elements.push_back(note);
     }
 

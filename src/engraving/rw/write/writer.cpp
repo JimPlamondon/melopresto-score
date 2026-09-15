@@ -19,6 +19,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+#include "engraving/melo/melochangecontroller.h"
 #include "writer.h"
 
 #include "../types/types.h"
@@ -117,6 +118,12 @@ Writer::Writer(const muse::modularity::ContextPtr& iocCtx)
 bool Writer::writeScore(Score* score, io::IODevice* device, rw::WriteInOutData* inout)
 {
     TRACEFUNC;
+
+    String error;
+    if (!melo::validateLatticeContent(score, error)) {
+        LOGE() << error;
+        return false;
+    }
 
     XmlWriter xml(device);
     WriteContext ctx(score);

@@ -36,6 +36,7 @@
 #include "engraving/editing/editstaff.h"
 #include "engraving/editing/editsystemlocks.h"
 #include "engraving/editing/transpose.h"
+#include "engraving/melo/melochangecontroller.h"
 
 #include "igetscore.h"
 
@@ -548,7 +549,20 @@ void NotationParts::setStaffType(const ID& staffId, StaffTypeId type)
 
     startEdit(TranslatableString("undoableAction", "Set staff type"));
 
-    mu::engraving::EditPart::setStaffType(score(), staff, type);
+    const bool activatingMelo = staffType->isMelo() && !staff->staffType(DEFAULT_TICK)->isMelo();
+    if (staffType->isMelo() && !activatingMelo) {
+        StaffType replacement = *staffType;
+        replacement.setMeloStateJson(staff->staffType(DEFAULT_TICK)->meloStateJson());
+        score()->undo(new ChangeStaffType(staff, replacement));
+    } else {
+        mu::engraving::EditPart::setStaffType(score(), staff, type);
+    }
+    String error;
+    if (activatingMelo && score()->firstMeasure() && !melo::initializeAuthoredMeloStaves(score(), { staff }, error)) {
+        LOGE() << error;
+        rollback();
+        return;
+    }
 
     apply();
 
@@ -570,7 +584,14 @@ void NotationParts::setStaffConfig(const ID& staffId, const StaffConfig& config)
 
     startEdit(TranslatableString("undoableAction", "Edit staff properties"));
 
+    const bool activatingMelo = config.staffType.isMelo() && !staff->staffType(DEFAULT_TICK)->isMelo();
     doSetStaffConfig(staff, config);
+    String error;
+    if (activatingMelo && score()->firstMeasure() && !melo::initializeAuthoredMeloStaves(score(), { staff }, error)) {
+        LOGE() << error;
+        rollback();
+        return;
+    }
 
     apply();
 
@@ -592,6 +613,12 @@ bool NotationParts::appendStaff(Staff* staff, const ID& destinationPartId)
 
     startEdit(TranslatableString("undoableAction", "Add staff"));
     doAppendStaff(staff, destinationPart);
+    String error;
+    if (score()->firstMeasure() && !melo::initializeAuthoredMeloStaves(score(), { staff }, error)) {
+        LOGE() << error;
+        rollback();
+        return false;
+    }
     apply();
 
     return true;
@@ -931,7 +958,11 @@ void NotationParts::doSetStaffConfig(Staff* staff, const StaffConfig& config)
                                                  config.hideSystemBarline, config.mergeMatchingRests,
                                                  config.reflectTranspositionInLinkedTab));
 
-    score()->undo(new mu::engraving::ChangeStaffType(staff, config.staffType));
+    StaffType replacement = config.staffType;
+    if (replacement.isMelo() && staffType->isMelo()) {
+        replacement.setMeloStateJson(staffType->meloStateJson());
+    }
+    score()->undo(new mu::engraving::ChangeStaffType(staff, replacement));
 }
 
 void NotationParts::doInsertPart(Part* part, size_t index)

@@ -521,7 +521,7 @@ public:
 
     void updateInstrumentChangeTranspositions(KeySigEvent& key, Staff* staff, const Fraction& tick);
 
-    Note* setGraceNote(Chord*,  int pitch, NoteType type, int len);
+    Note* setGraceNote(Chord*, int pitch, NoteType type, int len, const Note* source = nullptr);
 
     GuitarBend* addGuitarBend(GuitarBendType type, Note* note, Note* endNote = nullptr);
 

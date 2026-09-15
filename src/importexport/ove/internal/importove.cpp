@@ -1654,7 +1654,8 @@ void OveToMScore::convertNotes(Measure* measure, int part, int staff, int track)
                     int alter = accidentalToAlter(oveNote->getAccidental());
                     NoteVal nv(pitch);
                     note->setTrack(cr->track());
-                    note->setNval(nv, Fraction::fromTicks(tick));
+                    // This importer creates conventional staves; no lattice conversion is possible here.
+                    (void)note->setNval(nv, Fraction::fromTicks(tick));
                     // note->setTpcFromPitch();
                     note->setTpc(step2tpc(tone, AccidentalVal(alter)));
                     if (oveNote->getShowAccidental()) {

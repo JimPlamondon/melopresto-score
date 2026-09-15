@@ -5,6 +5,8 @@
  * JiMStaff Milestone 5 — change-indicator seam. See melochange.h.
  */
 #include "melochange.h"
+#include "melopitchlabel.h"
+#include "draw/fontmetrics.h"
 
 #include <map>
 
@@ -24,6 +26,7 @@
 #include "dom/stafftypechange.h"
 #include "dom/system.h"
 #include "editing/undo.h"
+#include "serialization/json.h"
 
 using namespace muse;
 
@@ -37,6 +40,7 @@ class ChangeMeloExtent : public UndoCommand
     Fraction m_tick;
     String m_state;
     bool m_emptyDefault = false;
+    bool m_referenceOnly = false;
 
     void flip(EditData*) override
     {
@@ -46,6 +50,12 @@ class ChangeMeloExtent : public UndoCommand
         }
         String previous = st->meloStateJson();
         const bool previousEmptyDefault = st->meloExtentIsEmptyDefault();
+        auto* carrier = const_cast<StaffTypeChange*>(changeCarrierAt(m_staff->score()->tick2measure(m_tick), m_staff->idx(), m_tick));
+        if (carrier) {
+            const bool previousReferenceOnly = carrier->meloReferenceOnly();
+            carrier->setMeloReferenceOnly(m_referenceOnly);
+            m_referenceOnly = previousReferenceOnly;
+        }
         st->setMeloStateJson(m_state);
         st->setMeloExtentIsEmptyDefault(m_emptyDefault);
         m_state = previous;
@@ -55,8 +65,9 @@ class ChangeMeloExtent : public UndoCommand
     }
 
 public:
-    ChangeMeloExtent(Staff* staff, const Fraction& tick, String state)
-        : m_staff(staff), m_tick(tick), m_state(std::move(state)) {}
+    ChangeMeloExtent(Staff* staff, const Fraction& tick, String state, bool emptyDefault = false)
+        : m_staff(staff), m_tick(Fraction::fromTicks(std::max(0, staff->staffTypeRange(tick).first))),
+        m_state(std::move(state)), m_emptyDefault(emptyDefault) {}
     UNDO_NAME("ChangeMeloExtent")
     UNDO_CHANGED_OBJECTS({ m_staff })
 };
@@ -151,6 +162,37 @@ StaffType::MeloHeaderGeometry changeTerrainGeometry(const StaffType* staffType, 
                                                     double defaultSpatium, const ChangeIndicator& model)
 {
     auto geometry = staffType->meloHeaderGeometry(spatium, defaultSpatium);
+    // The terrain can merge classes which are not together in a scale-dot
+    // row. Measure the actual merged label, including its spelled pitch.
+    muse::draw::Font labelFont(u"Edwin", muse::draw::Font::Type::Text);
+    labelFont.setPointSizeF(9.0 * spatium / defaultSpatium);
+    const auto font = staffType->score() ? staffType->score()->engravingFont() : nullptr;
+    TonicPitchLabel tonic;
+    const bool haveTonic = tonicPitchLabel(staffType->meloStateJson(), tonic);
+    const double oldBand = geometry.changeLabelBand;
+    auto measureLabel = [&](String text, bool hasTonic) {
+        if (hasTonic && haveTonic) {
+            text = tonic.label + u": " + text;
+        }
+        const auto layout = pitchLabelLayout(text, labelFont, font);
+        geometry.changeLabelBand = std::max(geometry.changeLabelBand, layout.bounds.width() + 0.25 * spatium);
+    };
+    for (const ChangeStack& stack : model.dotStacks) {
+        String text;
+        bool hasTonic = false;
+        for (const ChangePoint& member : stack.members) {
+            if (!text.isEmpty()) {
+                text += u" ";
+            }
+            text += member.label;
+            hasTonic = hasTonic || (haveTonic && member.nGen == tonic.nGen);
+        }
+        measureLabel(text, hasTonic);
+    }
+    for (const ChangePoint& point : model.tonicIndicators) {
+        measureLabel(point.label, haveTonic && point.nGen == tonic.nGen);
+    }
+    geometry.changeTerrainWidth += geometry.changeLabelBand - oldBand;
     if (!model.arrows.empty()) {
         // Owner rule 2026-09-12 (2a), from the corpus census (mode-only is the
         // rarest kind in every corpus, key-only the commonest): mode arrows
@@ -636,24 +678,26 @@ int deriveTonicAmbits(Score* score)
             if (!st || !st->isMelo() || token == st->meloTonicAmbit()) {
                 continue;
             }
-            String state = st->meloStateJson();
-            static const String key = u"\"tonic_ambit\":\"";
-            const size_t at = state.indexOf(key);
-            if (at != muse::nidx) {
-                const size_t from = at + key.size();
-                const size_t to = state.indexOf(u'"', from);
-                if (to == muse::nidx) {
-                    continue;
-                }
-                state = state.left(from) + token + state.mid(to);
-            } else {
-                const size_t close = state.lastIndexOf(u'}');
-                if (close == muse::nidx) {
-                    continue;
-                }
-                state = state.left(close) + u",\"tonic_ambit\":\"" + token + u"\"}";
+            JsonObject request = JsonDocument::fromJson(st->meloStateJson().toUtf8()).rootObject();
+            JsonObject configuration = request.value("configuration").toObject();
+            configuration.set("tonic_ambit", token);
+            request.set("configuration", configuration);
+            String state = String::fromUtf8(JsonDocument(request).toJson(JsonDocument::Format::Compact));
+            String error;
+            if (!validateState(state, error)) {
+                continue;
             }
-            st->setMeloStateJson(state);
+            if (score->undoStack()->hasActiveCommand()) {
+                // A melody edit affects every repeated carrier. Capture those
+                // derived fields in the same command so cancel/undo is complete.
+                score->undo(new ChangeMeloExtent(staff, starts[i], state, st->meloExtentIsEmptyDefault()));
+            } else {
+                st->setMeloStateJson(state);
+                auto* carrier = const_cast<StaffTypeChange*>(changeCarrierAt(score->tick2measure(starts[i]), staffIdx, starts[i]));
+                if (carrier) {
+                    carrier->setMeloReferenceOnly(false);
+                }
+            }
             ++changed;
         }
     }
@@ -794,7 +838,24 @@ int reconcileExtents(Score* score)
             }
             if (ok && updated != st->meloStateJson()) {
                 st->setMeloStateJson(updated);
+                // A fitted extent is a reference-free configuration. Preserve
+                // it even when this boundary originated as a relative event.
+                auto* carrier = const_cast<StaffTypeChange*>(changeCarrierAt(score->tick2measure(starts[i]), staffIdx, starts[i]));
+                if (carrier) {
+                    carrier->setMeloReferenceOnly(false);
+                }
                 ++changed;
+            }
+            if (i > 0) {
+                auto* carrier = const_cast<StaffTypeChange*>(changeCarrierAt(score->tick2measure(starts[i]), staffIdx, starts[i]));
+                if (carrier && carrier->meloReferenceOnly()) {
+                    String previousConfiguration, currentConfiguration, error;
+                    if (staffConfiguration(staff->staffType(starts[i - 1])->meloStateJson(), previousConfiguration, error)
+                        && staffConfiguration(st->meloStateJson(), currentConfiguration, error)
+                        && previousConfiguration != currentConfiguration) {
+                        carrier->setMeloReferenceOnly(false);
+                    }
+                }
             }
         }
     }

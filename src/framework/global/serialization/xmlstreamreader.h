@@ -104,6 +104,8 @@ public:
     double doubleAttribute(const char* name) const;
     double doubleAttribute(const char* name, double def) const;
     std::vector<Attribute> attributes() const;
+    /// Resolve the nearest declaration in scope, including ancestor elements.
+    String namespaceUri(const String& prefix) const;
 
     bool noChildren() const;
 

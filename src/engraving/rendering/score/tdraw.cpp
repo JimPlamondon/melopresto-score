@@ -2739,9 +2739,313 @@ void TDraw::draw(const Spacer* item, Painter* painter, const PaintOptions& opt)
     painter->drawPath(item->ldata()->path);
 }
 
+void TDraw::drawMeloChangeTerrain(const StaffLines* item, Painter* painter, const PaintOptions& opt,
+                                  const melo::ChangeIndicator& model, const StaffType* changeSt,
+                                  const StaffType* displayedSt, double x0, ChangePlacement placement)
+{
+    {
+        const double _spatium = item->spatium();
+        const double dist = displayedSt->lineDistance().val() * _spatium;
+        const double topY = item->pos().y();
+        // The semantic state supplies the incoming labels and glyphs.
+        // Vertical placement instead uses the staff frame visibly drawn
+        // in this measure. They are the same at a bar boundary; inside
+        // a bar the measure keeps its starting frame, so using the
+        // incoming frame would detach every element from its note-line.
+        const StaffType::MeloFrameView& view
+            = displayedSt->meloFrameView(item->score(), item->staffIdx(), item->measure()->system());
+        const double periodCents = displayedSt->meloPeriodCents();
+        if (!view.empty() && periodCents > 0.0) {
+            melo::PeriodicOrigins origins;
+            if (!melo::periodicOrigins(displayedSt->meloStateJson(), origins)) {
+                return;
+            }
+            auto yOf = [&](double cents) {
+                return topY + displayedSt->meloYFromCents(cents, view) * _spatium;
+            };
+            const StaffType::MeloHeaderGeometry g
+                = melo::changeTerrainGeometry(changeSt, _spatium, item->score()->style().defaultSpatium(), model);
+            const double indicatorW = g.indicatorW;
+            // Terrain columns, left to right, from the measure's left edge.
+            const double labelRight = x0 + 0.3 * _spatium + g.changeLabelBand;
+            // Owner rule 2026-09-12 (2a): the mode-arrow lane sits between
+            // the labels and the dots; the key-arrow lane stays right of them.
+            const double leftLaneLeft = labelRight;
+            const double dotCenterX = labelRight + g.changeLeftArrowLane + indicatorW;
+            const double rightLabelLeft = dotCenterX + indicatorW;                 // Grey labels start here
+            const double arrowLaneLeft = rightLabelLeft + g.changeRightLabelBand;
+            // Period 0 of the model = the anchor Do-line: the lowest Do-line
+            // of the stave stack that keeps the whole indicator inside the
+            // staff (owner ruling 2026-08-19; melo::changeAnchorPeriodCents).
+            const double basePeriod = melo::changeAnchorPeriodCents(
+                view, model, periodCents, origins.doCentsAboveExtentLower,
+                melo::systemNoteCents(item->measure()->system(), item->staffIdx(), displayedSt));
+            auto centsOf = [&](const melo::ChangePoint& p) {
+                return basePeriod + (p.periodOffset + p.ordinate) * periodCents;
+            };
+            // A scale-change stack is a HEADER stack: like the system
+            // header it is instantiated in every period of the stave
+            // stack, boundary-inclusive (M3 ruling: the top Do-line
+            // always carries its dot and indicator). Arrow endpoints
+            // (key/mode) are single glyphs at their model position.
+            const bool scaleKind = std::find(model.kinds.begin(), model.kinds.end(), u"scale") != model.kinds.end();
+            const double eps = 1e-6;
+            auto instancesOf = [&](const melo::ChangePoint& p) {
+                std::vector<double> out;
+                if (!scaleKind) {
+                    out.push_back(centsOf(p));
+                    return out;
+                }
+                for (const StaffType::MeloFrameBand& band : view.bands) {
+                    for (const StaffType::MeloSegment& segment : band.segments) {
+                        const double segBase = origins.doCentsAboveExtentLower
+                                               + std::floor((segment.lowerCents - origins.doCentsAboveExtentLower)
+                                                            / periodCents + eps) * periodCents;
+                        for (double period = segBase; period <= segment.upperCents + eps; period += periodCents) {
+                            const double c = period + p.ordinate * periodCents;
+                            if (c >= segment.lowerCents - eps && c <= segment.upperCents + eps) {
+                                out.push_back(c);
+                            }
+                        }
+                    }
+                }
+                return out;
+            };
+            const IEngravingFontPtr font = item->score()->engravingFont();
+            Font labelFont(u"Edwin", Font::Type::Text);
+            labelFont.setPointSizeF(9.0 * item->spatium() / item->defaultSpatium());
+            FontMetrics fm(labelFont);
+            const double gap = 0.25 * _spatium;
+            // Only the Kernel's new tonic class receives a pitch prefix.
+            // A key arrow names a common pitch, not a tonic destination.
+            melo::TonicPitchLabel keyLabel;
+            const bool haveKeyLabel = melo::tonicPitchLabel(changeSt->meloStateJson(), keyLabel);
+            // Locate that exact tonic lattice instance in the displayed
+            // frame. Its first Do can belong to a different octave from
+            // the incoming state's first Do after an extent change.
+            double incomingTonicOrigin = 0.0;
+            if (haveKeyLabel && !melo::noteCentsAboveExtentLower(displayedSt->meloStateJson(),
+                                                                 keyLabel.nPer, keyLabel.nGen, incomingTonicOrigin)) {
+                return;
+            }
+            std::map<int, muse::String> labelByPeriod;
+            auto keyLabelForRow = [&](double rowCents) -> muse::String {
+                const int k = int(std::lround((rowCents - incomingTonicOrigin) / periodCents));
+                auto found = labelByPeriod.find(k);
+                if (found != labelByPeriod.end()) {
+                    return found->second;
+                }
+                melo::TonicPitchLabel rowLabel;
+                const muse::String text = melo::tonicPitchLabelInPeriod(changeSt->meloStateJson(), k, rowLabel)
+                                          ? rowLabel.label : keyLabel.label;
+                labelByPeriod[k] = text;
+                return text;
+            };
+            auto isNewTonic = [&](const melo::ChangePoint& tp) {
+                if (!haveKeyLabel || tp.nGen != keyLabel.nGen) {
+                    return false;
+                }
+                for (const melo::ChangeArrow& a : model.arrows) {
+                    if (a.kind == u"mode" || a.trumps == u"mode") {
+                        return a.to.nGen == tp.nGen && a.to.periodOffset == tp.periodOffset;
+                    }
+                }
+                return true;
+            };
+
+            // Flanking strokes are continuous over the whole stack,
+            // through every band gap. Boundary placements retain one
+            // synthetic solid flank beside the real bar line. A mid-bar
+            // placement owns both dashed grey flanks. Every synthetic
+            // stroke resolves the normal bar-line width from the style.
+            const double flankWidth = item->style().styleMM(Sid::barWidth);
+            const double top = yOf(view.topCents());
+            const double bottom = yOf(view.bottomCents());
+            if (placement == ChangePlacement::MID_BAR) {
+                painter->setPen(Pen(item->curColor(item->visible(), item->style().value(Sid::meloMidBarFlankColor).value<Color>(),
+                                                   opt), flankWidth,
+                                    PenStyle::DashLine, PenCapStyle::FlatCap));
+                painter->drawLine(LineF(x0, top, x0, bottom));
+                painter->drawLine(LineF(x0 + g.changeTerrainWidth, top,
+                                        x0 + g.changeTerrainWidth, bottom));
+            } else {
+                const double strokeX = placement == ChangePlacement::END_BAR_COURTESY
+                                       ? x0 : x0 + g.changeTerrainWidth;
+                painter->setPen(Pen(item->curColor(opt), flankWidth,
+                                    PenStyle::SolidLine, PenCapStyle::FlatCap));
+                painter->drawLine(LineF(strokeX, top, strokeX, bottom));
+            }
+
+            // Dots (Kernel notehead classes); ALL labels LEFT of the dots
+            // (owner ruling 2026-08-16: the change stack must look like
+            // the header stack — same interval pattern, same collisions).
+            for (const melo::ChangeStack& stack : model.dotStacks) {
+                for (double stackCents : instancesOf(stack.members.front())) {
+                    double dx = 0.0;
+                    String text;
+                    String rightText;
+                    for (const melo::ChangePoint& member : stack.members) {
+                        String token = member.noteheadToken;
+                        SymId dotSym = SymId::noteheadHalf;
+                        const bool haveToken = !token.isEmpty() || melo::noteheadToken(changeSt->meloStateJson(), member.nGen, token);
+                        const bool grey = false; // all labels left (owner ruling); right band unused
+                        if (font && haveToken) {
+                            if (token == u"triangle-vertex-up") {
+                                dotSym = SymId::noteheadTriangleUpBlack;
+                            } else if (token == u"triangle-vertex-down") {
+                                dotSym = SymId::noteheadTriangleDownBlack;
+                            } else if (token == u"square-vertex-up") {
+                                dotSym = SymId::noteheadDiamondBlack;
+                            } else if (token == u"square-edge-up") {
+                                dotSym = SymId::noteheadSquareBlack;
+                            }
+                        }
+                        if (font) {
+                            RectF gb = font->bbox(dotSym, 1.0);
+                            double centroidDy = 0.0;
+                            if (dotSym == SymId::noteheadTriangleUpBlack) {
+                                centroidDy = -gb.height() / 6.0;
+                            } else if (dotSym == SymId::noteheadTriangleDownBlack) {
+                                centroidDy = gb.height() / 6.0;
+                            }
+                            painter->setPen(Pen(item->curColor(opt), item->lw()));
+                            font->draw(dotSym, painter, 1.0,
+                                       PointF(dotCenterX - gb.width() / 2.0 + dx, yOf(stackCents) + centroidDy));
+                            dx += 0.15 * _spatium;
+                        }
+                        String& side = grey ? rightText : text;
+                        if (!side.isEmpty()) {
+                            side += u" ";
+                        }
+                        side += member.label;
+                    }
+                    const double cy = yOf(stackCents);
+                    // The new tonic's row carries "[PitchN]:" first.
+                    for (const melo::ChangePoint& member : stack.members) {
+                        if (isNewTonic(member) && !text.isEmpty()) {
+                            text = keyLabelForRow(stackCents) + u": " + text;
+                            break;
+                        }
+                    }
+                    if (!text.isEmpty()) {
+                        const melo::PitchLabelLayout textLayout
+                            = melo::pitchLabelLayout(text, labelFont, font);
+                        painter->setPen(Pen(item->curColor(opt)));
+                        melo::drawPitchLabel(painter,
+                                             PointF(labelRight - gap - textLayout.bounds.right(),
+                                                    cy - (textLayout.bounds.top() + textLayout.bounds.bottom()) / 2.0),
+                                             labelFont, font, textLayout);
+                    }
+                    if (!rightText.isEmpty()) {
+                        RectF tb = fm.boundingRect(rightText);
+                        painter->setFont(labelFont);
+                        painter->setPen(Pen(item->curColor(opt)));
+                        painter->drawText(PointF(rightLabelLeft + gap, cy - (tb.top() + tb.bottom()) / 2.0), rightText);
+                    }
+                }
+            }
+            // Tonic indicators (settled §3.3 construction) with labels
+            // left when no dot already labels that row; the NEW
+            // tonic's row carries the current-key label "[PitchN]:"
+            // (owner spec 2026-08-17).
+            for (const melo::ChangePoint& tp : model.tonicIndicators) {
+                for (double tpCents : instancesOf(tp)) {
+                    const double h = 1.15 * dist + 0.025 * dist;
+                    const double cy = yOf(tpCents);
+                    PainterPath ring;
+                    ring.moveTo(dotCenterX, cy - h);
+                    ring.lineTo(dotCenterX + h, cy);
+                    ring.lineTo(dotCenterX, cy + h);
+                    ring.lineTo(dotCenterX - h, cy);
+                    ring.closeSubpath();
+                    painter->setPen(Pen(item->curColor(opt), 0.15 * dist));
+                    painter->setBrush(BrushStyle::NoBrush);
+                    painter->drawPath(ring);
+                    bool labelled = false;
+                    for (const melo::ChangeStack& stack : model.dotStacks) {
+                        for (const melo::ChangePoint& m : stack.members) {
+                            if (m.nGen == tp.nGen && m.periodOffset == tp.periodOffset) {
+                                labelled = true;
+                            }
+                        }
+                    }
+                    if (!labelled) {
+                        muse::String text = tp.label;
+                        if (isNewTonic(tp)) {
+                            text = keyLabelForRow(tpCents) + u": " + text;
+                        }
+                        const melo::PitchLabelLayout textLayout
+                            = melo::pitchLabelLayout(text, labelFont, font);
+                        painter->setPen(Pen(item->curColor(opt)));
+                        melo::drawPitchLabel(painter,
+                                             PointF(labelRight - gap - textLayout.bounds.right(),
+                                                    cy - (textLayout.bounds.top() + textLayout.bounds.bottom()) / 2.0),
+                                             labelFont, font, textLayout);
+                    }
+                }
+            }
+            // Arrows in the arrow lane: shaft between endpoint centroids,
+            // Kernel connector head at the `to` end.
+            melo::ConnectorGlyph head;
+            if (melo::connectorGlyph(head)) {
+                const double pen = head.penCents / StaffType::MELO_CENTS_PER_LINE_DISTANCE * dist;
+                const double hh = head.headHeightCents / StaffType::MELO_CENTS_PER_LINE_DISTANCE * dist;
+                const double hw = head.headHalfWidthCents / StaffType::MELO_CENTS_PER_LINE_DISTANCE * dist;
+                // Owner ruling (M5 gate, 2026-08-16): arrows in black ink,
+                // heavier than the tonic indicator, large head.
+                const Color arrowInk = opt.isPrinting ? Color::BLACK
+                                       : item->curColor(item->visible(),
+                                                        item->style().value(Sid::meloChangeArrowColor).value<Color>(), opt);
+                size_t modeArrows = 0;
+                size_t keyArrows = 0;
+                for (const melo::ChangeArrow& a : model.arrows) {
+                    (a.kind == u"mode" ? modeArrows : keyArrows)++;
+                }
+                const double leftLaneWidth = g.changeLeftArrowLane / std::max(size_t(1), modeArrows);
+                const double rightLaneWidth = g.changeArrowLane / std::max(size_t(1), keyArrows);
+                size_t modeIndex = 0;
+                size_t keyIndex = 0;
+                for (const melo::ChangeArrow& a : model.arrows) {
+                    const bool modeArrow = a.kind == u"mode";
+                    const double arrowX = modeArrow
+                                          ? leftLaneLeft + (modeIndex++ + 0.5) * leftLaneWidth
+                                          : arrowLaneLeft + (keyIndex++ + 0.5) * rightLaneWidth;
+                    const double yFrom = yOf(centsOf(a.from));
+                    const double yTo = yOf(centsOf(a.to));
+                    painter->setPen(Pen(arrowInk, pen, PenStyle::SolidLine, PenCapStyle::RoundCap));
+                    // Solid head at the `to` end (owner ruling 2026-08-16:
+                    // "close the notehead"), drawn as MuseScore's SMuFL
+                    // arrowhead glyph (owner decision 6a, 2026-08-19: follow
+                    // MuseScore's arrows) scaled to the Kernel's head height;
+                    // the shaft stops at the head's base so it never pokes
+                    // through the apex.
+                    const double back = a.up ? hh : -hh; // toward `from`
+                    painter->drawLine(LineF(arrowX, yFrom, arrowX, yTo + back));
+                    const SymId headSym = a.up ? SymId::arrowheadBlackUp : SymId::arrowheadBlackDown;
+                    const RectF gb = font->bbox(headSym, 1.0);
+                    if (gb.height() > 0.0) {
+                        const double mag = hh / gb.height();
+                        // Glyph origin: SMuFL arrowheads sit on the baseline with
+                        // the apex up (Up) or down (Down); centre horizontally on
+                        // the shaft and put the apex on the `to` row.
+                        const double x = arrowX - gb.width() * mag / 2.0 - gb.left() * mag;
+                        const double y = a.up ? yTo - gb.top() * mag : yTo - gb.bottom() * mag;
+                        painter->setPen(Pen(arrowInk, pen));
+                        font->draw(headSym, painter, mag, PointF(x, y));
+                    }
+                    UNUSED(hw);
+                }
+            }
+        }
+    }
+}
+
 void TDraw::draw(const StaffLines* item, Painter* painter, const PaintOptions& opt)
 {
     TRACE_DRAW_ITEM;
+    if (!opt.isPrinting) {
+        item->clearMeloHeaderPitchTargets();
+    }
     painter->save();
 
     setMask(item, painter);
@@ -3049,8 +3353,9 @@ void TDraw::draw(const StaffLines* item, Painter* painter, const PaintOptions& o
                                             side += member.label;
                                         }
                                     }
-                                    if (haveKeyLabel && std::abs(stack.cents - tonicCents) < epsilon
-                                        && std::abs(cents - lowestTonicRow) < epsilon) {
+                                    const bool pitchRow = haveKeyLabel && std::abs(stack.cents - tonicCents) < epsilon
+                                                          && std::abs(cents - lowestTonicRow) < epsilon;
+                                    if (pitchRow) {
                                         // Do's pitch label fits inside the crescent. Other
                                         // tonics keep their pitch label left of the dot.
                                         muse::String& side = tonicIsDo ? rightText : leftText;
@@ -3073,6 +3378,13 @@ void TDraw::draw(const StaffLines* item, Painter* painter, const PaintOptions& o
                                         melo::drawPitchLabel(painter,
                                                              PointF(dotColLeft - gap - textLayout.bounds.right(), baseline),
                                                              labelFont, item->score()->engravingFont(), textLayout);
+                                        if (pitchRow && !tonicIsDo && !opt.isPrinting) {
+                                            const auto prefix = melo::pitchLabelLayout(keyText, labelFont, item->score()->engravingFont());
+                                            item->recordMeloHeaderPitchTarget({ prefix.bounds.translated(PointF(dotColLeft - gap
+                                                                                                                - textLayout.bounds.right(),
+                                                                                                                baseline)),
+                                                                                band.labelPeriodIndex, meloSt->meloStateJson(), keyText });
+                                        }
                                     }
                                     if (!rightText.isEmpty()) {
                                         const melo::PitchLabelLayout textLayout
@@ -3091,6 +3403,11 @@ void TDraw::draw(const StaffLines* item, Painter* painter, const PaintOptions& o
                                         painter->setPen(Pen(item->curColor(opt)));
                                         melo::drawPitchLabel(painter, PointF(x, baseline), labelFont,
                                                              item->score()->engravingFont(), textLayout);
+                                        if (pitchRow && tonicIsDo && !opt.isPrinting) {
+                                            const auto prefix = melo::pitchLabelLayout(keyText, labelFont, item->score()->engravingFont());
+                                            item->recordMeloHeaderPitchTarget({ prefix.bounds.translated(PointF(x, baseline)),
+                                                                                band.labelPeriodIndex, meloSt->meloStateJson(), keyText });
+                                        }
                                     }
                                 }
                             }
@@ -3238,308 +3555,9 @@ void TDraw::draw(const StaffLines* item, Painter* painter, const PaintOptions& o
         // END of the last measure of this system (added stroke left, the
         // closing barline right); and (3) inside a bar, with two dashed grey
         // strokes. Nothing is inferred here.
-        enum class ChangePlacement {
-            START_BAR,
-            END_BAR_COURTESY,
-            MID_BAR
-        };
         auto paintChangeTerrain = [&](const melo::ChangeIndicator& model, const StaffType* changeSt,
                                       const StaffType* displayedSt, double x0, ChangePlacement placement) {
-            {
-                const double _spatium = item->spatium();
-                const double dist = displayedSt->lineDistance().val() * _spatium;
-                const double topY = item->pos().y();
-                // The semantic state supplies the incoming labels and glyphs.
-                // Vertical placement instead uses the staff frame visibly drawn
-                // in this measure. They are the same at a bar boundary; inside
-                // a bar the measure keeps its starting frame, so using the
-                // incoming frame would detach every element from its note-line.
-                const StaffType::MeloFrameView& view
-                    = displayedSt->meloFrameView(item->score(), item->staffIdx(), item->measure()->system());
-                const double periodCents = displayedSt->meloPeriodCents();
-                if (!view.empty() && periodCents > 0.0) {
-                    melo::PeriodicOrigins origins;
-                    if (!melo::periodicOrigins(displayedSt->meloStateJson(), origins)) {
-                        return;
-                    }
-                    auto yOf = [&](double cents) {
-                        return topY + displayedSt->meloYFromCents(cents, view) * _spatium;
-                    };
-                    const StaffType::MeloHeaderGeometry g
-                        = melo::changeTerrainGeometry(changeSt, _spatium, item->score()->style().defaultSpatium(), model);
-                    const double indicatorW = g.indicatorW;
-                    // Terrain columns, left to right, from the measure's left edge.
-                    const double labelRight = x0 + 0.3 * _spatium + g.changeLabelBand;
-                    // Owner rule 2026-09-12 (2a): the mode-arrow lane sits between
-                    // the labels and the dots; the key-arrow lane stays right of them.
-                    const double leftLaneLeft = labelRight;
-                    const double dotCenterX = labelRight + g.changeLeftArrowLane + indicatorW;
-                    const double rightLabelLeft = dotCenterX + indicatorW;                 // Grey labels start here
-                    const double arrowLaneLeft = rightLabelLeft + g.changeRightLabelBand;
-                    // Period 0 of the model = the anchor Do-line: the lowest Do-line
-                    // of the stave stack that keeps the whole indicator inside the
-                    // staff (owner ruling 2026-08-19; melo::changeAnchorPeriodCents).
-                    const double basePeriod = melo::changeAnchorPeriodCents(
-                        view, model, periodCents, origins.doCentsAboveExtentLower,
-                        melo::systemNoteCents(item->measure()->system(), item->staffIdx(), displayedSt));
-                    auto centsOf = [&](const melo::ChangePoint& p) {
-                        return basePeriod + (p.periodOffset + p.ordinate) * periodCents;
-                    };
-                    // A scale-change stack is a HEADER stack: like the system
-                    // header it is instantiated in every period of the stave
-                    // stack, boundary-inclusive (M3 ruling: the top Do-line
-                    // always carries its dot and indicator). Arrow endpoints
-                    // (key/mode) are single glyphs at their model position.
-                    const bool scaleKind = std::find(model.kinds.begin(), model.kinds.end(), u"scale") != model.kinds.end();
-                    const double eps = 1e-6;
-                    auto instancesOf = [&](const melo::ChangePoint& p) {
-                        std::vector<double> out;
-                        if (!scaleKind) {
-                            out.push_back(centsOf(p));
-                            return out;
-                        }
-                        for (const StaffType::MeloFrameBand& band : view.bands) {
-                            for (const StaffType::MeloSegment& segment : band.segments) {
-                                const double segBase = origins.doCentsAboveExtentLower
-                                                       + std::floor((segment.lowerCents - origins.doCentsAboveExtentLower)
-                                                                    / periodCents + eps) * periodCents;
-                                for (double period = segBase; period <= segment.upperCents + eps; period += periodCents) {
-                                    const double c = period + p.ordinate * periodCents;
-                                    if (c >= segment.lowerCents - eps && c <= segment.upperCents + eps) {
-                                        out.push_back(c);
-                                    }
-                                }
-                            }
-                        }
-                        return out;
-                    };
-                    const IEngravingFontPtr font = item->score()->engravingFont();
-                    Font labelFont(u"Edwin", Font::Type::Text);
-                    labelFont.setPointSizeF(9.0 * item->spatium() / item->defaultSpatium());
-                    FontMetrics fm(labelFont);
-                    const double gap = 0.25 * _spatium;
-                    // Only the Kernel's new tonic class receives a pitch prefix.
-                    // A key arrow names a common pitch, not a tonic destination.
-                    melo::TonicPitchLabel keyLabel;
-                    const bool haveKeyLabel = melo::tonicPitchLabel(changeSt->meloStateJson(), keyLabel);
-                    // Locate that exact tonic lattice instance in the displayed
-                    // frame. Its first Do can belong to a different octave from
-                    // the incoming state's first Do after an extent change.
-                    double incomingTonicOrigin = 0.0;
-                    if (haveKeyLabel && !melo::noteCentsAboveExtentLower(displayedSt->meloStateJson(),
-                                                                         keyLabel.nPer, keyLabel.nGen, incomingTonicOrigin)) {
-                        return;
-                    }
-                    std::map<int, muse::String> labelByPeriod;
-                    auto keyLabelForRow = [&](double rowCents) -> muse::String {
-                        const int k = int(std::lround((rowCents - incomingTonicOrigin) / periodCents));
-                        auto found = labelByPeriod.find(k);
-                        if (found != labelByPeriod.end()) {
-                            return found->second;
-                        }
-                        melo::TonicPitchLabel rowLabel;
-                        const muse::String text = melo::tonicPitchLabelInPeriod(changeSt->meloStateJson(), k, rowLabel)
-                                                  ? rowLabel.label : keyLabel.label;
-                        labelByPeriod[k] = text;
-                        return text;
-                    };
-                    auto isNewTonic = [&](const melo::ChangePoint& tp) {
-                        if (!haveKeyLabel || tp.nGen != keyLabel.nGen) {
-                            return false;
-                        }
-                        for (const melo::ChangeArrow& a : model.arrows) {
-                            if (a.kind == u"mode" || a.trumps == u"mode") {
-                                return a.to.nGen == tp.nGen && a.to.periodOffset == tp.periodOffset;
-                            }
-                        }
-                        return true;
-                    };
-
-                    // Flanking strokes are continuous over the whole stack,
-                    // through every band gap. Boundary placements retain one
-                    // synthetic solid flank beside the real bar line. A mid-bar
-                    // placement owns both dashed grey flanks. Every synthetic
-                    // stroke resolves the normal bar-line width from the style.
-                    const double flankWidth = item->style().styleMM(Sid::barWidth);
-                    const double top = yOf(view.topCents());
-                    const double bottom = yOf(view.bottomCents());
-                    if (placement == ChangePlacement::MID_BAR) {
-                        painter->setPen(Pen(item->curColor(item->visible(), item->style().value(Sid::meloMidBarFlankColor).value<Color>(),
-                                                           opt), flankWidth,
-                                            PenStyle::DashLine, PenCapStyle::FlatCap));
-                        painter->drawLine(LineF(x0, top, x0, bottom));
-                        painter->drawLine(LineF(x0 + g.changeTerrainWidth, top,
-                                                x0 + g.changeTerrainWidth, bottom));
-                    } else {
-                        const double strokeX = placement == ChangePlacement::END_BAR_COURTESY
-                                               ? x0 : x0 + g.changeTerrainWidth;
-                        painter->setPen(Pen(item->curColor(opt), flankWidth,
-                                            PenStyle::SolidLine, PenCapStyle::FlatCap));
-                        painter->drawLine(LineF(strokeX, top, strokeX, bottom));
-                    }
-
-                    // Dots (Kernel notehead classes); ALL labels LEFT of the dots
-                    // (owner ruling 2026-08-16: the change stack must look like
-                    // the header stack — same interval pattern, same collisions).
-                    for (const melo::ChangeStack& stack : model.dotStacks) {
-                        for (double stackCents : instancesOf(stack.members.front())) {
-                            double dx = 0.0;
-                            String text;
-                            String rightText;
-                            for (const melo::ChangePoint& member : stack.members) {
-                                String token;
-                                SymId dotSym = SymId::noteheadHalf;
-                                const bool haveToken = melo::noteheadToken(changeSt->meloStateJson(), member.nGen, token);
-                                const bool grey = false; // all labels left (owner ruling); right band unused
-                                if (font && haveToken) {
-                                    if (token == u"triangle-vertex-up") {
-                                        dotSym = SymId::noteheadTriangleUpBlack;
-                                    } else if (token == u"triangle-vertex-down") {
-                                        dotSym = SymId::noteheadTriangleDownBlack;
-                                    } else if (token == u"square-vertex-up") {
-                                        dotSym = SymId::noteheadDiamondBlack;
-                                    } else if (token == u"square-edge-up") {
-                                        dotSym = SymId::noteheadSquareBlack;
-                                    }
-                                }
-                                if (font) {
-                                    RectF gb = font->bbox(dotSym, 1.0);
-                                    double centroidDy = 0.0;
-                                    if (dotSym == SymId::noteheadTriangleUpBlack) {
-                                        centroidDy = -gb.height() / 6.0;
-                                    } else if (dotSym == SymId::noteheadTriangleDownBlack) {
-                                        centroidDy = gb.height() / 6.0;
-                                    }
-                                    painter->setPen(Pen(item->curColor(opt), item->lw()));
-                                    font->draw(dotSym, painter, 1.0,
-                                               PointF(dotCenterX - gb.width() / 2.0 + dx, yOf(stackCents) + centroidDy));
-                                    dx += 0.15 * _spatium;
-                                }
-                                String& side = grey ? rightText : text;
-                                if (!side.isEmpty()) {
-                                    side += u" ";
-                                }
-                                side += member.label;
-                            }
-                            const double cy = yOf(stackCents);
-                            // The new tonic's row carries "[PitchN]:" first.
-                            for (const melo::ChangePoint& member : stack.members) {
-                                if (isNewTonic(member) && !text.isEmpty()) {
-                                    text = keyLabelForRow(stackCents) + u": " + text;
-                                    break;
-                                }
-                            }
-                            if (!text.isEmpty()) {
-                                const melo::PitchLabelLayout textLayout
-                                    = melo::pitchLabelLayout(text, labelFont, font);
-                                painter->setPen(Pen(item->curColor(opt)));
-                                melo::drawPitchLabel(painter,
-                                                     PointF(labelRight - gap - textLayout.bounds.right(),
-                                                            cy - (textLayout.bounds.top() + textLayout.bounds.bottom()) / 2.0),
-                                                     labelFont, font, textLayout);
-                            }
-                            if (!rightText.isEmpty()) {
-                                RectF tb = fm.boundingRect(rightText);
-                                painter->setFont(labelFont);
-                                painter->setPen(Pen(item->curColor(opt)));
-                                painter->drawText(PointF(rightLabelLeft + gap, cy - (tb.top() + tb.bottom()) / 2.0), rightText);
-                            }
-                        }
-                    }
-                    // Tonic indicators (settled §3.3 construction) with labels
-                    // left when no dot already labels that row; the NEW
-                    // tonic's row carries the current-key label "[PitchN]:"
-                    // (owner spec 2026-08-17).
-                    for (const melo::ChangePoint& tp : model.tonicIndicators) {
-                        for (double tpCents : instancesOf(tp)) {
-                            const double h = 1.15 * dist + 0.025 * dist;
-                            const double cy = yOf(tpCents);
-                            PainterPath ring;
-                            ring.moveTo(dotCenterX, cy - h);
-                            ring.lineTo(dotCenterX + h, cy);
-                            ring.lineTo(dotCenterX, cy + h);
-                            ring.lineTo(dotCenterX - h, cy);
-                            ring.closeSubpath();
-                            painter->setPen(Pen(item->curColor(opt), 0.15 * dist));
-                            painter->setBrush(BrushStyle::NoBrush);
-                            painter->drawPath(ring);
-                            bool labelled = false;
-                            for (const melo::ChangeStack& stack : model.dotStacks) {
-                                for (const melo::ChangePoint& m : stack.members) {
-                                    if (m.nGen == tp.nGen && m.periodOffset == tp.periodOffset) {
-                                        labelled = true;
-                                    }
-                                }
-                            }
-                            if (!labelled) {
-                                muse::String text = tp.label;
-                                if (isNewTonic(tp)) {
-                                    text = keyLabelForRow(tpCents) + u": " + text;
-                                }
-                                const melo::PitchLabelLayout textLayout
-                                    = melo::pitchLabelLayout(text, labelFont, font);
-                                painter->setPen(Pen(item->curColor(opt)));
-                                melo::drawPitchLabel(painter,
-                                                     PointF(labelRight - gap - textLayout.bounds.right(),
-                                                            cy - (textLayout.bounds.top() + textLayout.bounds.bottom()) / 2.0),
-                                                     labelFont, font, textLayout);
-                            }
-                        }
-                    }
-                    // Arrows in the arrow lane: shaft between endpoint centroids,
-                    // Kernel connector head at the `to` end.
-                    melo::ConnectorGlyph head;
-                    if (melo::connectorGlyph(head)) {
-                        const double pen = head.penCents / StaffType::MELO_CENTS_PER_LINE_DISTANCE * dist;
-                        const double hh = head.headHeightCents / StaffType::MELO_CENTS_PER_LINE_DISTANCE * dist;
-                        const double hw = head.headHalfWidthCents / StaffType::MELO_CENTS_PER_LINE_DISTANCE * dist;
-                        // Owner ruling (M5 gate, 2026-08-16): arrows in black ink,
-                        // heavier than the tonic indicator, large head.
-                        const Color arrowInk = opt.isPrinting ? Color::BLACK
-                                               : item->curColor(item->visible(),
-                                                                item->style().value(Sid::meloChangeArrowColor).value<Color>(), opt);
-                        size_t modeArrows = 0;
-                        size_t keyArrows = 0;
-                        for (const melo::ChangeArrow& a : model.arrows) {
-                            (a.kind == u"mode" ? modeArrows : keyArrows)++;
-                        }
-                        const double leftLaneWidth = g.changeLeftArrowLane / std::max(size_t(1), modeArrows);
-                        const double rightLaneWidth = g.changeArrowLane / std::max(size_t(1), keyArrows);
-                        size_t modeIndex = 0;
-                        size_t keyIndex = 0;
-                        for (const melo::ChangeArrow& a : model.arrows) {
-                            const bool modeArrow = a.kind == u"mode";
-                            const double arrowX = modeArrow
-                                                  ? leftLaneLeft + (modeIndex++ + 0.5) * leftLaneWidth
-                                                  : arrowLaneLeft + (keyIndex++ + 0.5) * rightLaneWidth;
-                            const double yFrom = yOf(centsOf(a.from));
-                            const double yTo = yOf(centsOf(a.to));
-                            painter->setPen(Pen(arrowInk, pen, PenStyle::SolidLine, PenCapStyle::RoundCap));
-                            // Solid head at the `to` end (owner ruling 2026-08-16:
-                            // "close the notehead"), drawn as MuseScore's SMuFL
-                            // arrowhead glyph (owner decision 6a, 2026-08-19: follow
-                            // MuseScore's arrows) scaled to the Kernel's head height;
-                            // the shaft stops at the head's base so it never pokes
-                            // through the apex.
-                            const double back = a.up ? hh : -hh; // toward `from`
-                            painter->drawLine(LineF(arrowX, yFrom, arrowX, yTo + back));
-                            const SymId headSym = a.up ? SymId::arrowheadBlackUp : SymId::arrowheadBlackDown;
-                            const RectF gb = font->bbox(headSym, 1.0);
-                            if (gb.height() > 0.0) {
-                                const double mag = hh / gb.height();
-                                // Glyph origin: SMuFL arrowheads sit on the baseline with
-                                // the apex up (Up) or down (Down); centre horizontally on
-                                // the shaft and put the apex on the `to` row.
-                                const double x = arrowX - gb.width() * mag / 2.0 - gb.left() * mag;
-                                const double y = a.up ? yTo - gb.top() * mag : yTo - gb.bottom() * mag;
-                                painter->setPen(Pen(arrowInk, pen));
-                                font->draw(headSym, painter, mag, PointF(x, y));
-                            }
-                            UNUSED(hw);
-                        }
-                    }
-                }
-            }
+            drawMeloChangeTerrain(item, painter, opt, model, changeSt, displayedSt, x0, placement);
         };
         if (meloSt && meloSt->isMelo()) {
             melo::ChangeIndicator model;

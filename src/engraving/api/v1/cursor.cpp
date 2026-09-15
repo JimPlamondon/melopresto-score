@@ -285,6 +285,14 @@ void Cursor::add(EngravingItem* wrapped)
     const int m_track = track();
     mu::engraving::Segment* _segment = segment();
 
+    if (s->isNote()) {
+        mu::engraving::EngravingItem* destination = currentElement();
+        if (destination && destination->isChord() && Chord::addInternal(toChord(destination), s)) {
+            wrapped->setOwnership(Ownership::SCORE);
+        }
+        return;
+    }
+
     wrapped->setOwnership(Ownership::SCORE);
     s->setScore(m_score);
     s->setTrack(m_track);

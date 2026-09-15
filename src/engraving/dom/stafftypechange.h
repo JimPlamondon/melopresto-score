@@ -51,6 +51,10 @@ public:
     Fraction tick() const override;
     Fraction rtick() const override { return m_rtick; }
     void setRtick(const Fraction& tick) { m_rtick = tick; }
+    // Runtime carrier rebuilt from the composition's relative reference root.
+    // It does not author a staff configuration boundary and is not persisted.
+    bool meloReferenceOnly() const { return m_meloReferenceOnly; }
+    void setMeloReferenceOnly(bool value) { m_meloReferenceOnly = value; }
 
     PropertyValue getProperty(Pid propertyId) const override;
     bool setProperty(Pid propertyId, const PropertyValue&) override;
@@ -68,6 +72,7 @@ private:
     bool m_ownsStaffType = false;
     double m_lw = 0.0;
     Fraction m_rtick { 0, 1 };
+    bool m_meloReferenceOnly = false;
 };
 } // namespace mu::engraving
 

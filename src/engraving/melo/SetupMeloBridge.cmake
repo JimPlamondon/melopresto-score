@@ -34,7 +34,7 @@ function(setup_melo_bridge target)
 
     set(MELO_BRIDGE_LIB "${MELO_WORKSPACE}/target/release/libmelo_musescore_bridge.a")
     execute_process(
-        COMMAND ${CARGO_EXECUTABLE} build --release -p melo-musescore-bridge
+        COMMAND ${CARGO_EXECUTABLE} build --locked --release -p melo-musescore-bridge
         WORKING_DIRECTORY ${MELO_WORKSPACE}
         RESULT_VARIABLE MELO_CARGO_RESULT
         OUTPUT_VARIABLE MELO_CARGO_OUT
@@ -47,6 +47,17 @@ function(setup_melo_bridge target)
     endif()
 
     add_library(melo_musescore_bridge STATIC IMPORTED GLOBAL)
+    # Cargo checks its complete dependency graph on every Score build. A
+    # configure-only invocation leaves the imported archive stale after Rust
+    # source edits, even when MELO_ROOT still selects the correct checkout.
+    add_custom_target(melo_bridge_build
+        COMMAND ${CARGO_EXECUTABLE} build --locked --release -p melo-musescore-bridge
+        WORKING_DIRECTORY "${MELO_WORKSPACE}"
+        BYPRODUCTS "${MELO_BRIDGE_LIB}"
+        COMMENT "Checking the selected MeloPresto Kernel bridge"
+        VERBATIM)
+    add_dependencies(melo_musescore_bridge melo_bridge_build)
+    add_dependencies(${target} melo_bridge_build)
     set_target_properties(melo_musescore_bridge PROPERTIES
                           IMPORTED_LOCATION "${MELO_BRIDGE_LIB}")
     target_include_directories(${target} PRIVATE "${MELO_BRIDGE_CRATE}/include")

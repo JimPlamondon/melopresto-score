@@ -21,6 +21,9 @@
  */
 
 #include "tiejumppointlist.h"
+#include "engraving/melo/melochangecontroller.h"
+#include "staff.h"
+#include "stafftype.h"
 
 #include "../editing/edittie.h"
 
@@ -223,6 +226,13 @@ void TieJumpPointList::undoAddTieToScore(TieJumpPoint* jumpPoint)
     Score* score = note ? note->score() : nullptr;
     Tie* tie = startTie();
     if (!tie || !score) {
+        return;
+    }
+
+    Note* source = tie->startNote();
+    if (source && source->staff() && source->staff()->staffTypeForElement(source)->isMelo()
+        && !melo::validateTieEndpoints(source, note)) {
+        MScore::setError(MsError::CANNOT_RESOLVE_LATTICE_NOTE);
         return;
     }
 

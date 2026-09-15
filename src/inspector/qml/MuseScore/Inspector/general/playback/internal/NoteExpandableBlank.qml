@@ -86,5 +86,13 @@ ExpandableBlank {
                 propertyItem: root.model ? root.model.tuning : null
             }
         }
+
+        StyledTextLabel {
+            width: parent.width
+            visible: root.model && !root.model.tuning.isEnabled && root.model.hasMeloSelection
+            text: qsTrc("inspector", "Tuning is derived from the note’s lattice position and staff settings.")
+            wrapMode: Text.WordWrap
+            horizontalAlignment: Text.AlignLeft
+        }
     }
 }

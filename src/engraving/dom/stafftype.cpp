@@ -1022,7 +1022,7 @@ void StaffType::meloEnsureFrame(const Score* score, staff_idx_t staffIdx) const
             }
         }
     } else {
-        LOGE() << "MeloPresto section frame alignment failed for staff " << staffIdx;
+        LOGE() << melo::sectionFrameAlignmentFailed << staffIdx;
     }
     setMeloFrame(key, segments);
 }
@@ -1489,7 +1489,7 @@ const StaffType::MeloFrameView& StaffType::meloFrameView(const Score* score, sta
             y += view.bands[i - 1].heightLd() + view.gapLd;
         }
     } else {
-        LOGE() << "MeloPresto section band alignment failed for staff " << staffIdx;
+        LOGE() << melo::sectionBandAlignmentFailed << staffIdx;
     }
     return m_meloFrameViews[rangeKey] = view;
 }
@@ -1675,7 +1675,7 @@ const StaffType::MeloFrameView& StaffType::meloSystemUnionFrameView(const Score*
     view.banded = true;   // one band whose top is this system's, not the whole piece's
     view.gapLd = 0.0;
     if (!alignFor(this, view)) {
-        LOGE() << "MeloPresto per-system frame union failed for staff " << staffIdx;
+        LOGE() << melo::systemFrameUnionFailed << staffIdx;
     }
     // An empty union (no derivable section frame) is "no frame", exactly as
     // the whole-piece path reports it: never an empty banded view.
@@ -2245,15 +2245,13 @@ void StaffType::initStaffTypes(const Color& defaultColor)
                    13, 0, 1, false, true, false, true, false, false, false, defaultColor);
     melo.setMelo(true);
     melo.setMeloJiLines(true);
-    // Kernel-owned default section state: White collection, Do-mode,
-    // 12-TET, one Do-bounded period from register 4 (JiMStaffStateV1).
-    melo.setMeloStateJson(String::fromUtf8(
-                              "{\"scale\":[\"M2\",\"m2\",\"M2\",\"M2\",\"M2\",\"m2\",\"M2\"],"
-                              "\"collection_rotation\":0,\"mode_rotation\":0,"
-                              "\"generator_cents\":700.0,\"period_cents\":1200.0,"
-                              "\"embedding\":{\"large_steps\":5,\"small_steps\":2},"
-                              "\"extent\":{\"lower\":{\"nPer\":1,\"nGen\":-2},\"upper\":{\"nPer\":2,\"nGen\":-2}},"
-                              "\"reference\":\"none\",\"tonic_ambit\":\"tonic-bounded\"}"));
+    // A preset contains configuration only. The new-score authoring boundary
+    // creates the composition's single spelled reference after measures exist.
+    String configuration, error;
+    if (!melo::defaultStaffConfiguration(configuration, error)) {
+        LOGE() << error;
+    }
+    melo.setMeloStateJson(configuration);
     m_presets.push_back(melo);
 }
 /* *INDENT-ON* */

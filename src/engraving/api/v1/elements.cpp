@@ -21,6 +21,7 @@
  */
 
 #include "elements.h"
+#include "engraving/melo/melochangecontroller.h"
 
 #include "engraving/dom/chord.h"
 #include "engraving/dom/guitarbend.h"
@@ -353,10 +354,9 @@ void Chord::add(apiv1::EngravingItem* wrapped)
             LOGW("Chord::add: Cannot add this element. The element is already part of the score.");
             return;              // Don't allow operation.
         }
-        // Score now owns the object.
-        wrapped->setOwnership(Ownership::SCORE);
-
-        addInternal(chord(), s);
+        if (addInternal(chord(), s)) {
+            wrapped->setOwnership(Ownership::SCORE);
+        }
     }
 }
 
@@ -364,18 +364,28 @@ void Chord::add(apiv1::EngravingItem* wrapped)
 //   Chord::addInternal
 //---------------------------------------------------------
 
-void Chord::addInternal(mu::engraving::Chord* chord, mu::engraving::EngravingItem* s)
+bool Chord::addInternal(mu::engraving::Chord* chord, mu::engraving::EngravingItem* s)
 {
+    NoteVal value;
+    if (s->isNote()) {
+        value = toNote(s)->noteVal();
+        if (!mu::engraving::melo::prepareLinkedNoteValue(value, chord)) {
+            return false;
+        }
+    }
     // Provide parentage for element.
     s->setScore(chord->score());
     s->setParent(chord);
     // If a note, ensure the element has proper Tpc values. (Will crash otherwise)
     if (s->isNote()) {
         s->setTrack(chord->track());
-        toNote(s)->setTpcFromPitch();
+        if (!toNote(s)->setNval(value, chord->tick())) {
+            return false;
+        }
     }
     // Create undo op and add the element.
     chord->score()->undoAddElement(s);
+    return true;
 }
 
 //---------------------------------------------------------
@@ -676,7 +686,7 @@ EngravingItem* mu::engraving::apiv1::wrap(mu::engraving::EngravingItem* e, Owner
     }
 
 #define API_WRAP(type) \
-    if (e->is##type()) { return wrap<type>(to##type(e), own); }
+        if (e->is##type()) { return wrap<type>(to##type(e), own); }
 
     API_WRAP(Tie)
     API_WRAP(Ornament)

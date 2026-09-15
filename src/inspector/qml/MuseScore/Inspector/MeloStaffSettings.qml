@@ -35,8 +35,7 @@ InspectorSectionView {
         }
         Repeater {
             model: [
-                { key: "tonics", label: qsTrc("inspector", "Tonic (mode centre)") },
-                { key: "keys", label: qsTrc("inspector", "Key shift (changes the pitch of Do0)") },
+                { key: "tonics", label: qsTrc("inspector", "Tonic") },
                 { key: "scales", label: qsTrc("inspector", "Scale") }
             ]
             Column {
@@ -49,7 +48,7 @@ InspectorSectionView {
                     width: parent.width
                     model: root.model.settings[parent.modelData.key] ?? []
                     currentIndex: root.model.settings[parent.modelData.key + "Index"] ?? -1
-                    enabled: !!root.model.settings.canChange && (parent.modelData.key !== "keys" || !!root.model.settings.referenceBound)
+                    enabled: !!root.model.settings.canChange
                     navigation.panel: root.navigationPanel
                     navigation.row: root.navigationRow(parent.index + 1)
                     navigation.name: parent.modelData.key
@@ -58,25 +57,13 @@ InspectorSectionView {
                 }
             }
         }
-        StyledTextLabel {
+        FlatButton {
             width: parent.width
-            visible: !root.model.settings.referenceBound
-            text: qsTrc("inspector", "Bind Re0, the reference Re pitch, before shifting key. This binding applies to this staff.")
-            wrapMode: Text.WordWrap
-            horizontalAlignment: Text.AlignLeft
-        }
-        TextInputField {
-            id: referencePitch
-            property bool escaping: false
-            onEscaped: { escaping = true; inputField.text = ""; Qt.callLater(function() { referencePitch.escaping = false }) }
-            width: parent.width
-            visible: !root.model.settings.referenceBound
-            hint: qsTrc("inspector", "Reference-pitch number")
+            text: qsTrc("inspector", "Add or edit relative key change…")
+            enabled: !!root.model.settings.canKeyChange
             navigation.panel: root.navigationPanel
             navigation.row: root.navigationRow(5)
-            navigation.name: "ReferencePitch"
-            navigation.accessible.name: qsTrc("inspector", "Reference-pitch number for Re0")
-            onTextEditingFinished: function(newText) { if (!escaping) root.model.bindReference(newText) }
+            onClicked: root.model.editKeyChange()
         }
         FlatButton {
             width: parent.width

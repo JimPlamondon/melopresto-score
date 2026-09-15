@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0" xmlns:jims="urn:melopresto:musicxml:5">
+  <part-list><score-part id="P1"><part-name>Invalid JiMS harmony</part-name></score-part></part-list>
+  <part id="P1"><measure number="1">
+    <attributes><divisions>4</divisions></attributes>
+    <harmony><jims:chord-name>~So7/3</jims:chord-name></harmony>
+    <note><rest/><duration>4</duration><type>whole</type></note>
+  </measure></part>
+</score-partwise>

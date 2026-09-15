@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="4.0" xmlns:jims="urn:melopresto:musicxml:5">
+  <work><work-title>Sharp-Flat Collision and Second Cluster</work-title></work>
+  <jims:reference-timeline><jims:initial-pitch step="D" alter="0" octave="4" /><jims:relative-key-change numerator="1" denominator="1" n-per="-1" n-gen="1" /></jims:reference-timeline>
+  <part-list><score-part id="P1"><part-name>Jimmy</part-name></score-part></part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes><divisions>1</divisions><time><beats>4</beats><beat-type>4</beat-type></time>
+        <jims:staff-state>
+          <jims:scale><jims:step>M2</jims:step><jims:step>m2</jims:step><jims:step>M2</jims:step><jims:step>M2</jims:step><jims:step>M2</jims:step><jims:step>m2</jims:step><jims:step>M2</jims:step></jims:scale>
+          <jims:collection-rotation>0</jims:collection-rotation>
+          <jims:mode-rotation>0</jims:mode-rotation>
+          <jims:generator-cents>700</jims:generator-cents>
+          <jims:period-cents>1200</jims:period-cents>
+          <jims:embedding large-steps="5" small-steps="2"/>
+          <jims:extent lower-n-per="1" lower-n-gen="-2" upper-n-per="2" upper-n-gen="-2"/>
+          <jims:tonic-ambit>tonic-bounded</jims:tonic-ambit>
+          
+        </jims:staff-state>
+      </attributes>
+      <note><pitch><step>D</step><alter>1</alter><octave>4</octave></pitch>
+        <jims:pitch n-per="-4" n-gen="7"/><duration>1</duration><type>quarter</type></note>
+      <note><pitch><step>E</step><alter>-1</alter><octave>4</octave></pitch>
+        <jims:pitch n-per="3" n-gen="-5"/><duration>1</duration><type>quarter</type></note>
+      <note><pitch><step>D</step><alter>1</alter><octave>4</octave></pitch>
+        <jims:pitch n-per="-4" n-gen="7"/><duration>1</duration><type>quarter</type></note>
+      <note><pitch><step>E</step><alter>-1</alter><octave>4</octave></pitch>
+        <jims:pitch n-per="3" n-gen="-5"/><duration>1</duration><type>quarter</type></note>
+    </measure>
+    <measure number="2">
+      <attributes>
+        <jims:staff-state>
+          <jims:scale><jims:step>M2</jims:step><jims:step>m2</jims:step><jims:step>M2</jims:step><jims:step>M2</jims:step><jims:step>M2</jims:step><jims:step>m2</jims:step><jims:step>M2</jims:step></jims:scale>
+          <jims:collection-rotation>0</jims:collection-rotation>
+          <jims:mode-rotation>0</jims:mode-rotation>
+          <jims:generator-cents>700</jims:generator-cents>
+          <jims:period-cents>1200</jims:period-cents>
+          <jims:embedding large-steps="5" small-steps="2"/>
+          <jims:extent lower-n-per="1" lower-n-gen="-2" upper-n-per="2" upper-n-gen="-2"/>
+          <jims:tonic-ambit>tonic-bounded</jims:tonic-ambit>
+          
+        </jims:staff-state>
+        
+      </attributes>
+      <note><pitch><step>D</step><alter>1</alter><octave>4</octave></pitch>
+        <jims:pitch n-per="-4" n-gen="7"/><duration>2</duration><type>half</type></note>
+      <note><chord/><pitch><step>E</step><alter>-1</alter><octave>4</octave></pitch>
+        <jims:pitch n-per="3" n-gen="-5"/><duration>2</duration><type>half</type></note>
+      <note><pitch><step>C</step><octave>4</octave></pitch>
+        <jims:pitch n-per="1" n-gen="-2"/><duration>2</duration><type>half</type></note>
+      <note><chord/><pitch><step>D</step><octave>4</octave></pitch>
+        <jims:pitch n-per="0" n-gen="0"/><duration>2</duration><type>half</type></note>
+      <note><chord/><pitch><step>E</step><octave>4</octave></pitch>
+        <jims:pitch n-per="-1" n-gen="2"/><duration>2</duration><type>half</type></note>
+      <note><chord/><pitch><step>F</step><octave>4</octave></pitch>
+        <jims:pitch n-per="2" n-gen="-3"/><duration>2</duration><type>half</type></note>
+    </measure>
+    <measure number="3">
+      <note><pitch><step>C</step><octave>4</octave></pitch>
+        <jims:pitch n-per="1" n-gen="-2"/><duration>2</duration><type>half</type></note>
+      <note><pitch><step>C</step><octave>5</octave></pitch>
+        <jims:pitch n-per="2" n-gen="-2"/><duration>2</duration><type>half</type></note>
+    </measure>
+  </part>
+</score-partwise>

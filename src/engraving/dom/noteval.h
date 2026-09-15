@@ -33,6 +33,10 @@ namespace mu::engraving {
 ///   \cond PLUGIN_API \private \endcond
 //---------------------------------------------------------
 struct NoteVal {
+    // Exact structural coordinates, when supplied by a lattice-aware producer.
+    bool hasMeloPitch = false;
+    int meloNPer = 0;
+    int meloNGen = 0;
     int pitch = -1;
     int velocityOverride = 0;
     int tpc1 = Tpc::TPC_INVALID;
@@ -47,7 +51,9 @@ struct NoteVal {
 
     bool operator==(const NoteVal& v) const
     {
-        return pitch == v.pitch
+        return hasMeloPitch == v.hasMeloPitch
+               && (!hasMeloPitch || (meloNPer == v.meloNPer && meloNGen == v.meloNGen))
+               && pitch == v.pitch
                && velocityOverride == v.velocityOverride
                && tpc1 == v.tpc1
                && tpc2 == v.tpc2

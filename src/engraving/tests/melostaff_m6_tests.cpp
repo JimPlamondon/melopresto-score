@@ -69,6 +69,7 @@
 #include "io/file.h"
 
 #include "utils/scorerw.h"
+#include "utils/melocanonical.h"
 
 using namespace mu::engraving;
 using namespace mu::engraving::rendering;
@@ -142,7 +143,7 @@ Score* syntheticCommonToneScore()
         score->deleteMeasures(third, third);
     }
     String error;
-    if (!melo::applyChange(score, 0, measureNo(score, 1), u"bind:reference-pitch:62", error)) {
+    if (!melo::validateState(score->staff(0)->staffType(Fraction(0, 1))->meloStateJson(), error)) {
         delete score;
         return nullptr;
     }
@@ -172,7 +173,7 @@ Score* syntheticCommonToneScore()
     score->startCmd(TranslatableString::untranslatable("common-tone tie"));
     score->undoAddElement(tie);
     score->endCmd();
-    if (!melo::applyChange(score, 0, measureNo(score, 2), u"key:-1:3", error)) {
+    if (!test::relativeKey(score, 0, measureNo(score, 2)->tick(), -1, 3, error)) {
         delete score;
         return nullptr;
     }
@@ -332,7 +333,6 @@ TEST(MeloStaffTests, m6ChangeControllerAuthorsCarriersFromKernelStates)
     EXPECT_TRUE(options.tonics[0].current);
     EXPECT_EQ(options.tonics[5].label, muse::String(u"La"));
     EXPECT_EQ(options.tonics[5].id, muse::String(u"mode:1"));
-    EXPECT_FALSE(options.referenceBound);
     muse::String why;
     EXPECT_TRUE(melo::canInsertChange(score, 0, m2, why)) << why.toStdString();
 
@@ -353,7 +353,7 @@ TEST(MeloStaffTests, m6ChangeControllerAuthorsCarriersFromKernelStates)
         }
         return out;
     };
-    EXPECT_EQ(withoutAmbit(stc->staffType()->meloStateJson()), withoutAmbit(expected));
+    EXPECT_EQ(withoutAmbit(test::configuration(stc->staffType()->meloStateJson())), withoutAmbit(test::configuration(expected)));
     EXPECT_TRUE(stc->staffType()->meloStateJson().contains(u"\"tonic_ambit\":\"tonic-"));
     EXPECT_TRUE(stc->staffType()->meloStateJson().contains(u"\"mode_rotation\":5"));
     melo::ChangeIndicator model;
@@ -369,24 +369,24 @@ TEST(MeloStaffTests, m6ChangeControllerAuthorsCarriersFromKernelStates)
     score->doLayout();
     ASSERT_TRUE(melo::changeCarrier(m2, 0));
 
-    // A key change needs a bound reference: refused, then bind-first, then key.
+    // Removed numeric commands refuse; the canonical default needs no binding.
     EXPECT_FALSE(melo::applyChange(score, 0, m2, u"key:-1:3", error));
-    ASSERT_TRUE(melo::applyChange(score, 0, m2, u"bind:reference-pitch:62", error)) << error.toStdString();
-    ASSERT_TRUE(melo::applyChange(score, 0, m2, u"key:-1:3", error)) << error.toStdString();
+    EXPECT_FALSE(melo::applyChange(score, 0, m2, u"bind:reference-pitch:62", error));
+    ASSERT_TRUE(melo::validateState(score->staff(0)->staffType(Fraction(0, 1))->meloStateJson(), error)) << error.toStdString();
+    ASSERT_TRUE(test::relativeKey(score, 0, m2->tick(), -1, 3, error)) << error.toStdString();
     score->doLayout();
     stc = melo::changeCarrier(m2, 0);
     ASSERT_TRUE(stc);
-    EXPECT_TRUE(stc->staffType()->meloStateJson().contains(u"\"key_number\":53"));
+    EXPECT_TRUE((test::referenceNumber(stc->staffType()->meloStateJson()) == 71));
     EXPECT_TRUE(stc->staffType()->meloStateJson().contains(u"\"mode_rotation\":5"));
     // The base staff type keeps its mode: the mode/key change is carried at
     // the measure only — but the BIND is staff-wide (a reference names what
     // the staff's Re0 is), so the base is now bound to 62 as well.
     EXPECT_TRUE(meloStaffType(score)->meloStateJson().contains(u"\"mode_rotation\":0"));
-    EXPECT_TRUE(meloStaffType(score)->meloStateJson().contains(u"\"key_number\":62"));
+    EXPECT_TRUE((test::referenceNumber(meloStaffType(score)->meloStateJson()) == 62));
     // Compounded from the carrier: options now report La as current.
     ASSERT_TRUE(melo::changeOptions(score, 0, m2, options));
     EXPECT_TRUE(options.tonics[5].current);
-    EXPECT_TRUE(options.referenceBound);
     // With the base bound, the indicator at m2 is the owner's worked
     // example (kinds key, mode) — binding at the change bar no longer
     // leaves it silently undrawable.
@@ -397,14 +397,17 @@ TEST(MeloStaffTests, m6ChangeControllerAuthorsCarriersFromKernelStates)
         EXPECT_EQ(model.kinds[0], muse::String(u"key"));
         EXPECT_EQ(model.kinds[1], muse::String(u"mode"));
     }
-    // Remove: carrier gone; undo brings it back with the last state.
+    // Removing the configuration leaves the separately authored key event.
     ASSERT_TRUE(melo::removeChange(score, 0, m2, error)) << error.toStdString();
     score->doLayout();
-    EXPECT_FALSE(melo::changeCarrier(m2, 0));
+    ASSERT_TRUE(melo::changeCarrier(m2, 0));
+    EXPECT_TRUE(melo::changeCarrier(m2, 0)->meloReferenceOnly());
+    EXPECT_TRUE(melo::changeCarrier(m2, 0)->staffType()->meloStateJson().contains(u"\"mode_rotation\":0"));
     score->undoRedo(true, nullptr);
     score->doLayout();
     ASSERT_TRUE(melo::changeCarrier(m2, 0));
-    EXPECT_TRUE(melo::changeCarrier(m2, 0)->staffType()->meloStateJson().contains(u"\"key_number\":53"));
+    EXPECT_TRUE(melo::changeCarrier(m2, 0)->staffType()->meloStateJson().contains(u"\"mode_rotation\":5"));
+    EXPECT_EQ(test::referenceNumber(melo::changeCarrier(m2, 0)->staffType()->meloStateJson()), 71);
     // Foreign choice ids are refused without touching the score.
     EXPECT_FALSE(melo::applyChange(score, 0, m2, u"tuning:700", error));
     delete score;
@@ -435,9 +438,9 @@ TEST(MeloStaffTests, midBarChangeStartsAtTheSelectedExactTick)
     EXPECT_EQ(carrier->tick(), changeTick);
     EXPECT_EQ(carrier->rtick(), changeTick - measure->tick());
     EXPECT_EQ(staff->staffType(changeTick - Fraction::fromTicks(1))->meloStateJson(), beforeState);
-    EXPECT_EQ(staff->staffType(changeTick)->meloStateJson(), expected);
+    EXPECT_EQ(test::configuration(staff->staffType(changeTick)->meloStateJson()), test::configuration(expected));
     EXPECT_EQ(staff->staffTypeForElement(notes.front())->meloStateJson(), beforeState);
-    EXPECT_EQ(staff->staffTypeForElement(notes.back())->meloStateJson(), expected);
+    EXPECT_EQ(test::configuration(staff->staffTypeForElement(notes.back())->meloStateJson()), test::configuration(expected));
 
     auto withoutAmbit = [](const String& json) {
         String out = json;
@@ -448,7 +451,7 @@ TEST(MeloStaffTests, midBarChangeStartsAtTheSelectedExactTick)
     };
     String expectedShared;
     String projectionError;
-    ASSERT_TRUE(melo::musicxmlSharedStateV3Xml(withoutAmbit(expected), expectedShared, &projectionError))
+    ASSERT_TRUE(melo::musicxmlConfigurationV5Xml(withoutAmbit(expected), 0, true, expectedShared, projectionError))
         << projectionError.toStdString();
     for (const String& path : { String(u"midbar-change-roundtrip.mscx"), String(u"midbar-change-roundtrip.mscz") }) {
         if (path.endsWith(u".mscz")) {
@@ -476,8 +479,8 @@ TEST(MeloStaffTests, midBarChangeStartsAtTheSelectedExactTick)
         ASSERT_TRUE(reopenedCarrier);
         EXPECT_EQ(reopenedCarrier->rtick(), changeTick - measure->tick());
         String reopenedShared;
-        ASSERT_TRUE(melo::musicxmlSharedStateV3Xml(
-                        withoutAmbit(reopened->staff(0)->staffType(changeTick)->meloStateJson()), reopenedShared, &projectionError))
+        ASSERT_TRUE(melo::musicxmlConfigurationV5Xml(
+                        withoutAmbit(reopened->staff(0)->staffType(changeTick)->meloStateJson()), 0, true, reopenedShared, projectionError))
             << projectionError.toStdString();
         EXPECT_EQ(reopenedShared, expectedShared);
         delete reopened;
@@ -607,9 +610,9 @@ TEST(MeloStaffTests, midBarIndicatorElementsAlignWithTheDisplayedStaffNoteLines)
     ASSERT_GE(notes.size(), 2u);
     const Fraction changeTick = notes.back()->tick();
     String error;
-    ASSERT_TRUE(melo::applyChange(score, 0, firstMeasure, u"bind:reference-pitch:62", error)) << error.toStdString();
+    ASSERT_TRUE(melo::validateState(score->staff(0)->staffType(Fraction(0, 1))->meloStateJson(), error)) << error.toStdString();
     ASSERT_TRUE(melo::applyChange(score, 0, measure, changeTick, u"mode:1", error)) << error.toStdString();
-    ASSERT_TRUE(melo::applyChange(score, 0, measure, changeTick, u"key:-1:3", error)) << error.toStdString();
+    ASSERT_TRUE(test::relativeKey(score, 0, changeTick, -1, 3, error)) << error.toStdString();
     score->doLayout();
 
     const StaffLines* lines = measure->staffLines(0);
@@ -704,12 +707,12 @@ TEST(MeloStaffTests, m6WorkedExampleAuthoredThroughTheControllerMatchesM5)
     Measure* m2 = measureNo(score, 2);
     muse::String error;
     // Binding at measure 1 edits the base staff type (no carrier at the origin).
-    ASSERT_TRUE(melo::applyChange(score, 0, m1, u"bind:reference-pitch:62", error)) << error.toStdString();
+    ASSERT_TRUE(melo::validateState(score->staff(0)->staffType(Fraction(0, 1))->meloStateJson(), error)) << error.toStdString();
     score->doLayout();
     EXPECT_FALSE(melo::changeCarrier(m1, 0)) << "the origin measure has no carrier; the base state is edited";
-    EXPECT_TRUE(meloStaffType(score)->meloStateJson().contains(u"\"key_number\":62"));
+    EXPECT_TRUE((test::referenceNumber(meloStaffType(score)->meloStateJson()) == 62));
     ASSERT_TRUE(melo::applyChange(score, 0, m2, u"mode:1", error)) << error.toStdString();
-    ASSERT_TRUE(melo::applyChange(score, 0, m2, u"key:-1:3", error)) << error.toStdString();
+    ASSERT_TRUE(test::relativeKey(score, 0, m2->tick(), -1, 3, error)) << error.toStdString();
     score->doLayout();
     melo::ChangeIndicator model;
     ASSERT_TRUE(melo::midSystemChangeIndicator(m2, 0, model));
@@ -732,8 +735,12 @@ TEST(MeloStaffTests, stateChangeAtomicallyReinterpretsAFullTieAtExactFrequency)
     Note* continuation = notes[4];
     start->setMeloPitch(0, 0);
     start->setPitch(62, 16, 16);
-    continuation->setMeloPitch(0, 0);
-    continuation->setPitch(62, 16, 16);
+    melo::SoundingPitch initialSound, initialContinuation;
+    ASSERT_TRUE(melo::noteSoundingPitch(start->staff()->staffTypeForElement(start)->meloStateJson(), 0, 0, initialSound));
+    ASSERT_TRUE(melo::noteContinuation(continuation->staff()->staffTypeForElement(continuation)->meloStateJson(),
+                                       initialSound.frequencyHz, initialContinuation));
+    continuation->setMeloPitch(initialContinuation.nPer, initialContinuation.nGen);
+    ASSERT_TRUE(continuation->setNval(continuation->noteVal()));
     Tie* tie = Factory::createTie(score->dummy());
     tie->setStartNote(start);
     tie->setEndNote(continuation);
@@ -755,7 +762,7 @@ TEST(MeloStaffTests, stateChangeAtomicallyReinterpretsAFullTieAtExactFrequency)
     const double oldTuning = continuation->tuning();
 
     String error;
-    ASSERT_TRUE(melo::applyChange(score, 0, measureNo(score, 2), u"mode:1", error)) << error.toStdString();
+    ASSERT_TRUE(test::relativeKey(score, 0, measureNo(score, 2)->tick(), -1, 3, error)) << error.toStdString();
     const StaffType* newState = continuation->staff()->staffTypeForElement(continuation);
     melo::SoundingPitch projected;
     ASSERT_TRUE(melo::noteSoundingPitch(newState->meloStateJson(), continuation->meloNPer(), continuation->meloNGen(), projected));
@@ -790,10 +797,8 @@ TEST(MeloStaffTests, stateChangeKeepsAnExistingFullTieIdentityAtTheSameReference
     Measure* m2 = measureNo(score, 2);
     ASSERT_TRUE(m2);
     String error;
-    // The fixture's key carrier changes Re0 from key 62 to key 55. Remove it
-    // through the controller so the two sides of this regression share one
-    // reference before the mode-only edit under test.
-    ASSERT_TRUE(melo::removeChange(score, 0, m2, error)) << error.toStdString();
+    // Remove only the separately authored relative event.
+    ASSERT_TRUE(test::relativeKey(score, 0, m2->tick(), 0, 0, error)) << error.toStdString();
     score->doLayout();
 
     auto notes = meloNotes(score);
@@ -802,7 +807,9 @@ TEST(MeloStaffTests, stateChangeKeepsAnExistingFullTieIdentityAtTheSameReference
     Note* continuation = notes[4];
     const String sameState = meloStaffType(score)->meloStateJson();
     ASSERT_EQ(start->staff()->staffTypeForElement(start)->meloStateJson(), sameState);
-    ASSERT_EQ(continuation->staff()->staffTypeForElement(continuation)->meloStateJson(), sameState);
+    bool sameReference = false;
+    ASSERT_TRUE(melo::sameReference(continuation->staff()->staffTypeForElement(continuation)->meloStateJson(), sameState, sameReference));
+    ASSERT_TRUE(sameReference);
     double generatorCents = 0.0;
     double periodCents = 0.0;
     ASSERT_TRUE(melo::staffMetrics(sameState, generatorCents, periodCents));
@@ -833,7 +840,7 @@ TEST(MeloStaffTests, stateChangeKeepsAnExistingFullTieIdentityAtTheSameReference
     ASSERT_TRUE(melo::applyChange(score, 0, m2, u"mode:1", error)) << error.toStdString();
     const StaffType* newState = continuation->staff()->staffTypeForElement(continuation);
     ASSERT_TRUE(newState);
-    EXPECT_TRUE(newState->meloStateJson().contains(u"\"key_number\":62"));
+    EXPECT_TRUE((test::referenceNumber(newState->meloStateJson()) == 62));
     EXPECT_TRUE(newState->meloStateJson().contains(u"\"generator_cents\":700.0"));
     melo::SoundingPitch projected;
     ASSERT_TRUE(melo::noteSoundingPitch(newState->meloStateJson(), -6, 12, projected));
@@ -943,8 +950,11 @@ TEST(MeloStaffTests, consecutiveStateChangesKeepAMultiSegmentTieExact)
     ASSERT_GE(notes.size(), 9u);
     Note* chain[] = { notes[3], notes[4], notes[8] };
     for (Note* note : chain) {
-        note->setMeloPitch(0, 0);
-        note->setPitch(62, 16, 16);
+        melo::SoundingPitch reference, continuation;
+        ASSERT_TRUE(melo::noteSoundingPitch(chain[0]->staff()->staffTypeForElement(chain[0])->meloStateJson(), 0, 0, reference));
+        ASSERT_TRUE(melo::noteContinuation(note->staff()->staffTypeForElement(note)->meloStateJson(), reference.frequencyHz, continuation));
+        note->setMeloPitch(continuation.nPer, continuation.nGen);
+        ASSERT_TRUE(note->setNval(note->noteVal()));
     }
     score->startCmd(TranslatableString::untranslatable("multi-segment tie fixture"));
     for (size_t i = 0; i < 2; ++i) {
@@ -961,25 +971,7 @@ TEST(MeloStaffTests, consecutiveStateChangesKeepAMultiSegmentTieExact)
     ASSERT_TRUE(melo::noteSoundingPitch(chain[0]->staff()->staffTypeForElement(chain[0])->meloStateJson(), 0, 0, established));
     String error;
     ASSERT_TRUE(melo::applyChange(score, 0, measureNo(score, 2), u"mode:1", error)) << error.toStdString();
-    melo::StateChangeOptions options;
-    ASSERT_TRUE(melo::changeOptions(score, 0, measureNo(score, 3), options));
-    bool changedAgain = false;
-    for (const melo::StateChangeOption& option : options.keyTargets) {
-        if (option.current) {
-            continue;
-        }
-        const String current = score->staff(0)->staffType(measureNo(score, 3)->tick())->meloStateJson();
-        String candidate;
-        melo::SoundingPitch candidateProjection;
-        if (melo::applyStateChange(current, option.id, candidate, error)
-            && melo::noteContinuation(candidate, established.frequencyHz, candidateProjection, &error)
-            && (candidateProjection.nPer != chain[1]->meloNPer() || candidateProjection.nGen != chain[1]->meloNGen())
-            && melo::applyChange(score, 0, measureNo(score, 3), option.id, error)) {
-            changedAgain = true;
-            break;
-        }
-    }
-    ASSERT_TRUE(changedAgain) << error.toStdString();
+    ASSERT_TRUE(test::relativeKey(score, 0, measureNo(score, 3)->tick(), 0, 1, error)) << error.toStdString();
     for (Note* note : chain) {
         melo::SoundingPitch projection;
         ASSERT_TRUE(melo::noteSoundingPitch(note->staff()->staffTypeForElement(note)->meloStateJson(),
@@ -988,7 +980,7 @@ TEST(MeloStaffTests, consecutiveStateChangesKeepAMultiSegmentTieExact)
         EXPECT_EQ(note->pitch(), projection.midiKey);
         EXPECT_NEAR(note->tuning(), projection.centsOffset, 1e-9);
     }
-    EXPECT_NE(chain[0]->meloNGen(), chain[1]->meloNGen());
+    EXPECT_NE(chain[0]->meloNGen(), chain[2]->meloNGen());
     delete score;
 }
 
@@ -1032,7 +1024,7 @@ TEST(MeloStaffTests, linkedNotesReceiveOneCoherentProjection)
     delete score;
 }
 
-TEST(MeloStaffTests, stateProjectionSpanStopsAtTheNextIndependentCarrier)
+TEST(MeloStaffTests, relativeKeyRevisionPropagatesThroughALaterModeCarrier)
 {
     Score* score = ScoreRW::readScore(u"jimstaff_data/m5-key-up.mscx");
     ASSERT_TRUE(score);
@@ -1040,32 +1032,22 @@ TEST(MeloStaffTests, stateProjectionSpanStopsAtTheNextIndependentCarrier)
     Measure* m3 = measureNo(score, 3);
     String error;
     ASSERT_TRUE(melo::applyChange(score, 0, m3, u"mode:1", error)) << error.toStdString();
-    std::vector<Note*> m2Notes = notesInMeasure(m2);
-    std::vector<Note*> m3Notes = notesInMeasure(m3);
-    ASSERT_FALSE(m2Notes.empty());
-    ASSERT_FALSE(m3Notes.empty());
-    std::vector<std::tuple<int, int, int, int, int, double> > laterBefore;
-    for (Note* note : m3Notes) {
-        laterBefore.emplace_back(note->meloNPer(), note->meloNGen(), note->pitch(), note->tpc1(), note->tpc2(), note->tuning());
+    const auto later = notesInMeasure(m3);
+    ASSERT_FALSE(later.empty());
+    std::vector<NoteVal> before;
+    for (Note* note : later) {
+        before.push_back(note->noteVal());
     }
-    const int affectedPitchBefore = m2Notes.front()->pitch();
-    melo::StateChangeOptions options;
-    ASSERT_TRUE(melo::changeOptions(score, 0, m2, options));
-    auto current = std::find_if(options.keyTargets.begin(), options.keyTargets.end(),
-                                [](const melo::StateChangeOption& option) { return option.current; });
-    ASSERT_NE(current, options.keyTargets.end());
-    auto target = std::min_element(options.keyTargets.begin(), options.keyTargets.end(),
-                                   [&](const melo::StateChangeOption& a, const melo::StateChangeOption& b) {
-        const int da = a.current ? INT_MAX : std::abs(a.nPer - current->nPer) + std::abs(a.nGen - current->nGen);
-        const int db = b.current ? INT_MAX : std::abs(b.nPer - current->nPer) + std::abs(b.nGen - current->nGen);
-        return da < db;
-    });
-    ASSERT_NE(target, options.keyTargets.end());
-    ASSERT_TRUE(melo::applyChange(score, 0, m2, target->id, error)) << error.toStdString();
-    EXPECT_NE(m2Notes.front()->pitch(), affectedPitchBefore);
-    for (size_t i = 0; i < m3Notes.size(); ++i) {
-        EXPECT_EQ(std::make_tuple(m3Notes[i]->meloNPer(), m3Notes[i]->meloNGen(), m3Notes[i]->pitch(),
-                                  m3Notes[i]->tpc1(), m3Notes[i]->tpc2(), m3Notes[i]->tuning()), laterBefore[i]);
+    ASSERT_TRUE(test::relativeKey(score, 0, m2->tick(), 1, 0, error)) << error.toStdString();
+    for (size_t i = 0; i < later.size(); ++i) {
+        EXPECT_EQ(later[i]->meloNPer(), before[i].meloNPer);
+        EXPECT_EQ(later[i]->meloNGen(), before[i].meloNGen);
+        EXPECT_NE(later[i]->pitch(), before[i].pitch);
+    }
+    EXPECT_TRUE(score->staff(0)->staffType(m3->tick())->meloStateJson().contains(u"\"mode_rotation\":5"));
+    score->undoRedo(true, nullptr);
+    for (size_t i = 0; i < later.size(); ++i) {
+        EXPECT_TRUE(later[i]->noteVal() == before[i]);
     }
     delete score;
 }
@@ -1224,8 +1206,8 @@ TEST(MeloStaffTests, conventionalEntryUsesTheEffectivePostChangeState)
     Score* score = ScoreRW::readScore(u"jimstaff_data/jims-template.mscx");
     ASSERT_TRUE(score);
     String error;
-    ASSERT_TRUE(melo::applyChange(score, 0, measureNo(score, 1), u"bind:reference-pitch:62", error)) << error.toStdString();
-    ASSERT_TRUE(melo::applyChange(score, 0, measureNo(score, 2), u"key:-1:3", error)) << error.toStdString();
+    ASSERT_TRUE(melo::validateState(score->staff(0)->staffType(Fraction(0, 1))->meloStateJson(), error)) << error.toStdString();
+    ASSERT_TRUE(test::relativeKey(score, 0, measureNo(score, 2)->tick(), -1, 3, error)) << error.toStdString();
     const StaffType* state = score->staff(0)->staffType(measureNo(score, 2)->tick());
     ASSERT_TRUE(state && state->isMelo());
     melo::SoundingPitch expected;
@@ -1289,7 +1271,7 @@ TEST(MeloStaffTests, m6WriteEditingScenario)
 
     // Bar 1: bind Re0 to key number 62 (the base state).
     muse::String error;
-    ASSERT_TRUE(melo::applyChange(score, 0, measureNo(score, 1), u"bind:reference-pitch:62", error)) << error.toStdString();
+    ASSERT_TRUE(melo::validateState(score->staff(0)->staffType(Fraction(0, 1))->meloStateJson(), error)) << error.toStdString();
 
     // Notes, typed. Letters as Score::resolveNoteInputParams' step (octave index = pitch/12).
     InputState& is = score->inputState();
@@ -1327,7 +1309,7 @@ TEST(MeloStaffTests, m6WriteEditingScenario)
     // Bar 2: mode Do -> La, key Do0 -> La0 (the owner's worked example).
     Measure* m2 = measureNo(score, 2);
     ASSERT_TRUE(melo::applyChange(score, 0, m2, u"mode:1", error)) << error.toStdString();
-    ASSERT_TRUE(melo::applyChange(score, 0, m2, u"key:-1:3", error)) << error.toStdString();
+    ASSERT_TRUE(test::relativeKey(score, 0, m2->tick(), -1, 3, error)) << error.toStdString();
     score->doLayout();
     melo::ChangeIndicator model;
     ASSERT_TRUE(melo::midSystemChangeIndicator(m2, 0, model));
@@ -1370,7 +1352,7 @@ TEST(MeloStaffTests, changeTerrainLabelsOnlyTheNewTonicAndSeparatesCompoundArrow
             Measure* first = measureNo(score, 1);
             Measure* measure = measureNo(score, 2);
             String error;
-            ASSERT_TRUE(melo::applyChange(score, 0, first, u"bind:reference-pitch:62", error));
+            ASSERT_TRUE(melo::validateState(score->staff(0)->staffType(Fraction(0, 1))->meloStateJson(), error));
             ASSERT_TRUE(melo::applyChange(score, 0, first, u"mode:1", error));
             const Fraction tick = placement == 0 ? notesInMeasure(measure).back()->tick() : measure->tick();
             if (placement == 2) {
@@ -1381,7 +1363,7 @@ TEST(MeloStaffTests, changeTerrainLabelsOnlyTheNewTonicAndSeparatesCompoundArrow
             }
             std::vector<String> choices;
             if (c.key) {
-                choices.push_back(u"key:0:-1");
+                ASSERT_TRUE(test::relativeKey(score, 0, tick, 0, 1, error));
             }
             if (c.mode) {
                 choices.push_back(u"mode:-2");

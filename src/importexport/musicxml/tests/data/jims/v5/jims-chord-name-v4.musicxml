@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="4.0" xmlns:jims="urn:melopresto:musicxml:5">
+  <work><work-title>JiMS chord names on a JiMStaff beside conventional harmony</work-title></work>
+  <jims:reference-timeline><jims:initial-pitch step="D" alter="0" octave="4" /></jims:reference-timeline>
+  <part-list>
+    <score-part id="P1"><part-name>JiMS chord names (JiMStaff)</part-name></score-part>
+    <score-part id="P2"><part-name>Conventional chords (stock staff)</part-name></score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>4</divisions>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <jims:staff-state>
+          <jims:scale>
+            <jims:step>M2</jims:step><jims:step>m2</jims:step><jims:step>M2</jims:step>
+            <jims:step>M2</jims:step><jims:step>M2</jims:step><jims:step>m2</jims:step>
+            <jims:step>M2</jims:step>
+          </jims:scale>
+          <jims:collection-rotation>0</jims:collection-rotation>
+          <jims:mode-rotation>0</jims:mode-rotation>
+          <jims:generator-cents>700.0</jims:generator-cents>
+          <jims:period-cents>1200.0</jims:period-cents>
+          <jims:embedding large-steps="5" small-steps="2"/>
+          <jims:extent lower-n-per="1" lower-n-gen="-2" upper-n-per="2" upper-n-gen="-2"/>
+          <jims:tonic-ambit>tonic-bounded</jims:tonic-ambit>
+          
+        </jims:staff-state>
+      </attributes>
+      <harmony placement="above"><jims:chord-name>!So7/3</jims:chord-name><staff>1</staff></harmony>
+      <note>
+        <pitch><step>C</step><octave>4</octave></pitch>
+        <jims:pitch n-per="1" n-gen="-2"/>
+        <duration>16</duration><type>whole</type>
+      </note>
+    </measure>
+    <measure number="2">
+      <print new-system="yes"/>
+      <harmony placement="above"><jims:chord-name>Re:So7</jims:chord-name><staff>1</staff></harmony>
+      <note>
+        <pitch><step>C</step><octave>5</octave></pitch>
+        <jims:pitch n-per="2" n-gen="-2"/>
+        <duration>16</duration><type>whole</type>
+      </note>
+    </measure>
+  </part>
+  <part id="P2">
+    <measure number="1">
+      <attributes>
+        <divisions>4</divisions>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+      <harmony placement="above"><root><root-step>C</root-step></root><kind>major</kind><staff>1</staff></harmony>
+      <note><pitch><step>C</step><octave>4</octave></pitch><duration>16</duration><type>whole</type></note>
+    </measure>
+    <measure number="2">
+      <harmony placement="above"><root><root-step>G</root-step></root><kind>major</kind><staff>1</staff></harmony>
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>16</duration><type>whole</type></note>
+    </measure>
+  </part>
+</score-partwise>

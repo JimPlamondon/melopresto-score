@@ -64,7 +64,7 @@ class MeloImportContext
 public:
     /// The MeloPresto namespace versions this importer understands.
     static constexpr int MIN_VERSION = 1;
-    static constexpr int MAX_VERSION = 4;
+    static constexpr int MAX_VERSION = 5;
 
     /// Resolve the MeloPresto prefix from the root element's attributes. Returns
     /// NoError when no MeloPresto namespace is declared or exactly one supported
@@ -86,6 +86,7 @@ public:
     /// `staffNumber` is the optional `number` attribute (0 when absent).
     /// Returns false with `error` set on a malformed state.
     bool parseStaffState(muse::XmlStreamReader& e, muse::String& json, int& staffNumber, muse::String& error) const;
+    bool parseReferenceTimeline(muse::XmlStreamReader& e, muse::String& json, muse::String& error) const;
 
     /// A parsed state waiting to be applied after normal part parsing.
     struct BufferedState {
@@ -123,12 +124,9 @@ public:
     /// come from the enclosing direction and are set by the caller.
     bool parseTuningTrajectory(muse::XmlStreamReader& e, const std::function<engraving::Fraction(int)>& ticksOf,
                                engraving::melo::TuningTrajectory& out, muse::String& error) const;
-    /// Owner rule 2026-08-19 (multi-part documents): several JiMS parts are
-    /// allowed and mixed JiMS + stock parts are allowed, but every JiMS part
-    /// must carry the SAME state timeline (same declaring ticks, same Kernel
-    /// states). Returns false (after logging) when two JiMS parts differ.
-    /// Staff numbering within a part is compared as written.
-    bool checkSharedStatesAcrossParts(MusicXmlLogger* logger) const;
+    /// Every MeloPresto staff must share the Kernel's musical-state projection
+    /// at every effective boundary; redundant transport carriers are allowed.
+    bool checkSharedStatesAcrossParts(const engraving::Score* score, MusicXmlLogger* logger) const;
     /// Python-repr-style number text for the state JSON ("700" -> "700.0",
     /// "696.578" stays), so the importer's JSON is byte-identical to the
     /// converter's for the same document.

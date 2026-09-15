@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0" xmlns:zz="urn:melopresto:musicxml:5">
+  <work><work-title>Sharp-Flat Collision and Second Cluster</work-title></work>
+  <zz:reference-timeline><zz:initial-pitch step="D" alter="0" octave="4" /></zz:reference-timeline>
+  <part-list><score-part id="P1"><part-name>Jimmy</part-name></score-part></part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes><divisions>1</divisions><time><beats>4</beats><beat-type>4</beat-type></time>
+        <zz:staff-state>
+          <zz:scale><zz:step>M2</zz:step><zz:step>m2</zz:step><zz:step>M2</zz:step><zz:step>M2</zz:step><zz:step>M2</zz:step><zz:step>m2</zz:step><zz:step>M2</zz:step></zz:scale>
+          <zz:collection-rotation>0</zz:collection-rotation>
+          <zz:mode-rotation>0</zz:mode-rotation>
+          <zz:generator-cents>700</zz:generator-cents>
+          <zz:period-cents>1200</zz:period-cents>
+          <zz:embedding large-steps="5" small-steps="2"/>
+          <zz:extent lower-n-per="1" lower-n-gen="-2" upper-n-per="2" upper-n-gen="-2"/>
+          <zz:tonic-ambit>tonic-bounded</zz:tonic-ambit>
+          
+        </zz:staff-state>
+      </attributes>
+      <note><pitch><step>D</step><alter>1</alter><octave>4</octave></pitch>
+        <zz:pitch n-per="-4" n-gen="7"/><duration>1</duration><type>quarter</type></note>
+      <note><pitch><step>E</step><alter>-1</alter><octave>4</octave></pitch>
+        <zz:pitch n-per="3" n-gen="-5"/><duration>1</duration><type>quarter</type></note>
+      <note><pitch><step>D</step><alter>1</alter><octave>4</octave></pitch>
+        <zz:pitch n-per="-4" n-gen="7"/><duration>1</duration><type>quarter</type></note>
+      <note><pitch><step>E</step><alter>-1</alter><octave>4</octave></pitch>
+        <zz:pitch n-per="3" n-gen="-5"/><duration>1</duration><type>quarter</type></note>
+    </measure>
+    <measure number="2">
+      <attributes>
+        <zz:staff-state>
+          <zz:scale><zz:step>M2</zz:step><zz:step>m2</zz:step><zz:step>M2</zz:step><zz:step>M2</zz:step><zz:step>M2</zz:step><zz:step>m2</zz:step><zz:step>M2</zz:step></zz:scale>
+          <zz:collection-rotation>0</zz:collection-rotation>
+          <zz:mode-rotation>5</zz:mode-rotation>
+          <zz:generator-cents>700</zz:generator-cents>
+          <zz:period-cents>1200</zz:period-cents>
+          <zz:embedding large-steps="5" small-steps="2"/>
+          <zz:extent lower-n-per="1" lower-n-gen="-2" upper-n-per="2" upper-n-gen="-2"/>
+          <zz:tonic-ambit>tonic-bounded</zz:tonic-ambit>
+          
+        </zz:staff-state>
+        
+      </attributes>
+      <note><pitch><step>D</step><alter>1</alter><octave>4</octave></pitch>
+        <zz:pitch n-per="-4" n-gen="7"/><duration>2</duration><type>half</type></note>
+      <note><chord/><pitch><step>E</step><alter>-1</alter><octave>4</octave></pitch>
+        <zz:pitch n-per="3" n-gen="-5"/><duration>2</duration><type>half</type></note>
+      <note><pitch><step>C</step><octave>4</octave></pitch>
+        <zz:pitch n-per="1" n-gen="-2"/><duration>2</duration><type>half</type></note>
+      <note><chord/><pitch><step>D</step><octave>4</octave></pitch>
+        <zz:pitch n-per="0" n-gen="0"/><duration>2</duration><type>half</type></note>
+      <note><chord/><pitch><step>E</step><octave>4</octave></pitch>
+        <zz:pitch n-per="-1" n-gen="2"/><duration>2</duration><type>half</type></note>
+      <note><chord/><pitch><step>F</step><octave>4</octave></pitch>
+        <zz:pitch n-per="2" n-gen="-3"/><duration>2</duration><type>half</type></note>
+    </measure>
+    <measure number="3">
+      <note><pitch><step>C</step><octave>4</octave></pitch>
+        <zz:pitch n-per="1" n-gen="-2"/><duration>2</duration><type>half</type></note>
+      <note><pitch><step>C</step><octave>5</octave></pitch>
+        <zz:pitch n-per="2" n-gen="-2"/><duration>2</duration><type>half</type></note>
+    </measure>
+  </part>
+</score-partwise>

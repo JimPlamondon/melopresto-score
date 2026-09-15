@@ -1,0 +1,184 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<?xml-model href="https://music-encoding.org/schema/5.1/mei-CMN.rng" type="application/xml" schematypens="http://relaxng.org/ns/structure/1.0"?>
+<mei xmlns="http://www.music-encoding.org/ns/mei" xmlns:jm="urn:melopresto:mei:1" xmlns:jx="urn:melopresto:musicxml:5" meiversion="5.1">
+  <meiHead>
+    <fileDesc>
+      <titleStmt>
+        <title type="main"></title>
+      </titleStmt>
+      <pubStmt>
+        <unpub/>
+      </pubStmt>
+      <sourceDesc>
+        <source>
+          <bibl>
+            <title>unrecorded</title>
+          </bibl>
+        </source>
+      </sourceDesc>
+    </fileDesc>
+    <encodingDesc>
+      <appInfo>
+        <application version="1.0.0" xml:id="app-jims2mei">
+          <name>melo2mei</name>
+        </application>
+      </appInfo>
+      <classDecls>
+        <taxonomy xml:id="jims.taxonomy">
+          <bibl>MeloPresto analysis controlled vocabulary v1</bibl>
+          <category xml:id="jims.outcome">
+            <category xml:id="jims.outcome.modulation">
+              <label>modulation</label>
+            </category>
+            <category xml:id="jims.outcome.tonicization">
+              <label>tonicization</label>
+            </category>
+            <category xml:id="jims.outcome.ambiguous">
+              <label>ambiguous</label>
+            </category>
+            <category xml:id="jims.outcome.insufficient-evidence">
+              <label>insufficient-evidence</label>
+            </category>
+          </category>
+          <category xml:id="jims.ambit">
+            <category xml:id="jims.ambit.tonic-bounded">
+              <label>tonic-bounded</label>
+            </category>
+            <category xml:id="jims.ambit.tonic-centered">
+              <label>tonic-centered</label>
+            </category>
+          </category>
+          <category xml:id="jims.melody">
+            <category xml:id="jims.melody.soprano">
+              <label>soprano</label>
+            </category>
+            <category xml:id="jims.melody.alto">
+              <label>alto</label>
+            </category>
+            <category xml:id="jims.melody.tenor">
+              <label>tenor</label>
+            </category>
+            <category xml:id="jims.melody.bass">
+              <label>bass</label>
+            </category>
+          </category>
+          <category xml:id="jims.ambiguity">
+            <category xml:id="jims.ambiguity.short-tonicization-vs-brief-modulation">
+              <label>short-tonicization-vs-brief-modulation</label>
+            </category>
+            <category xml:id="jims.ambiguity.pivot-region">
+              <label>pivot-region</label>
+            </category>
+            <category xml:id="jims.ambiguity.conflicting-cadence-evidence">
+              <label>conflicting-cadence-evidence</label>
+            </category>
+            <category xml:id="jims.ambiguity.insufficient-context">
+              <label>insufficient-context</label>
+            </category>
+          </category>
+        </taxonomy>
+      </classDecls>
+    </encodingDesc>
+    <workList>
+      <work>
+        <title>JiMS chord names on a JiMStaff beside conventional harmony</title>
+      </work>
+    </workList>
+    <extMeta>
+      <jm:record version="1">
+        <jm:musicxml>
+          <jx:reference-timeline><jx:initial-pitch step="D" alter="0" octave="4" /></jx:reference-timeline>
+          <jm:part ref="#sd-1" part-id="P1" name="JiMS chord names (JiMStaff)">
+            <jm:state xml:id="jmstate-P1-1" measure="1" off="0/1" annot="#st-P1-1">
+              <jx:staff-state>
+                <jx:scale>
+                  <jx:step>M2</jx:step>
+                  <jx:step>m2</jx:step>
+                  <jx:step>M2</jx:step>
+                  <jx:step>M2</jx:step>
+                  <jx:step>M2</jx:step>
+                  <jx:step>m2</jx:step>
+                  <jx:step>M2</jx:step>
+                </jx:scale>
+                <jx:collection-rotation>0</jx:collection-rotation>
+                <jx:mode-rotation>0</jx:mode-rotation>
+                <jx:generator-cents>700</jx:generator-cents>
+                <jx:period-cents>1200</jx:period-cents>
+                <jx:embedding large-steps="5" small-steps="2"/>
+                <jx:extent lower-n-gen="-2" lower-n-per="1" upper-n-gen="-2" upper-n-per="2"/>
+                <jx:tonic-ambit>tonic-bounded</jx:tonic-ambit>
+                
+              </jx:staff-state>
+            </jm:state>
+            <jm:notes>
+              <jm:note ref="#n-P1-1">
+                <jx:pitch n-per="1" n-gen="-2"/>
+              </jm:note>
+              <jm:note ref="#n-P1-2">
+                <jx:pitch n-per="-1" n-gen="2"/>
+              </jm:note>
+              <jm:note ref="#n-P1-3">
+                <jx:pitch n-per="1" n-gen="-1"/>
+              </jm:note>
+              <jm:note ref="#n-P1-4">
+                <jx:pitch n-per="2" n-gen="-2"/>
+              </jm:note>
+            </jm:notes>
+          </jm:part>
+          <jm:measures>
+            <jm:measure ref="#m-1" len="4/1"/>
+          </jm:measures>
+          <jm:harmony>
+            <jm:event harm="#h-1" measure="1" off="0/1">
+              <jm:chord-evidence origin="generated">{"analysis":{"bass_basis":"source_declared","construction_choice":{"basis":"declared_function","shape_root":"Do"},"declared_additions":[],"declared_members":[-2,2,-1],"duration":"4","id":"fixture:C-major","identity":"Do5","name":"Do5","native_input":{"analytical_root_ngen":-2,"analytical_root_sounded":true,"application_base_ngen":-2,"bass_ngen":-2,"function":{"borrowed_from_mode":null,"shape_root":"Do"},"mode":"Do-mode","notes_ngen":[-2,2,-1],"out_of_scope_reason":null},"offset":"0","result":{"folds":0,"identity":"Do5","kind":"Named","name":"Do5"},"source":{"label":"I","reader":"synthetic-source"},"unrestricted_result":{"folds":0,"identity":"Do5","kind":"Named","name":"Do5"}},"disagreements":{"bass_differs":false,"declared_only_members":[],"observed_only_members":[]},"function_basis":"source_declared","interval":{"duration":"4","offset":"0"},"naming":{"construction_choice":{"basis":"declared_function","shape_root":"Do"},"identity":"Do5","name":"Do5","native_input":{"analytical_root_ngen":-2,"analytical_root_sounded":true,"application_base_ngen":-2,"bass_ngen":-2,"function":{"borrowed_from_mode":null,"shape_root":"Do"},"mode":"Do-mode","notes_ngen":[-2,-1,2],"out_of_scope_reason":null},"result":{"folds":0,"identity":"Do5","kind":"Named","name":"Do5"},"unrestricted_result":{"folds":0,"identity":"Do5","kind":"Named","name":"Do5"}},"observation":{"bass_ngen":-2,"notes":[{"height":60,"n_gen":-2,"n_per":1},{"height":64,"n_gen":2,"n_per":-1},{"height":67,"n_gen":-1,"n_per":1},{"height":72.0,"n_gen":-2,"n_per":2}],"status":"score_observed"},"schema":"melo.chord-evidence.v1"}</jm:chord-evidence>
+            </jm:event>
+          </jm:harmony>
+        </jm:musicxml>
+      </jm:record>
+    </extMeta>
+    <revisionDesc>
+      <change label="jims-mei-generation" resp="#app-jims2mei" xml:id="change-gen">
+        <changeDesc>
+          <p>Generated by melo2mei 1.0.0 from the canonical MeloPresto MusicXML and structured review record.</p>
+        </changeDesc>
+      </change>
+    </revisionDesc>
+  </meiHead>
+  <music>
+    <body>
+      <mdiv>
+        <score>
+          <scoreDef>
+            <meterSig count="4" unit="4"/>
+            <staffGrp symbol="bracket">
+              <staffDef n="1" lines="5" xml:id="sd-1">
+                <label>JiMS chord names (JiMStaff)</label>
+                <ambitus>
+                  <ambNote type="lowest" pname="c" oct="4"/>
+                  <ambNote type="highest" pname="c" oct="5"/>
+                </ambitus>
+              </staffDef>
+            </staffGrp>
+          </scoreDef>
+          <annot type="jims-tonic-ambit" class="#jims.ambit.tonic-bounded" xml:id="amb-1">tonic-bounded</annot>
+          <section>
+            <measure n="1" xml:id="m-1">
+              <staff n="1">
+                <layer n="1">
+                  <chord dur="1" xml:id="c-P1-1">
+                    <note xml:id="n-P1-1" pname="c" oct="4"/>
+                    <note xml:id="n-P1-2" pname="e" oct="4"/>
+                    <note xml:id="n-P1-3" pname="g" oct="4"/>
+                    <note xml:id="n-P1-4" pname="c" oct="5"/>
+                  </chord>
+                </layer>
+              </staff>
+              <harm type="jims-chord-name" xml:id="h-1" staff="1" startid="#n-P1-1">Do5</harm>
+              <annot type="jims-tonal-state" staff="1" xml:id="st-P1-1" tstamp="1" corresp="#jmstate-P1-1"/>
+            </measure>
+          </section>
+        </score>
+      </mdiv>
+    </body>
+  </music>
+</mei>

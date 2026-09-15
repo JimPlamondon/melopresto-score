@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="4.1" xmlns:jims="urn:melopresto:musicxml:5">
+  <work><work-title>Mid-score static tuning change</work-title></work>
+  <identification>
+    <encoding><software>JiMS jims-staff conformance fixtures</software></encoding>
+  </identification>
+  <jims:reference-timeline><jims:initial-pitch step="D" alter="0" octave="4" /></jims:reference-timeline>
+  <part-list>
+    <score-part id="P1"><part-name>JiMStaff</part-name></score-part>
+  </part-list>
+  <part id="P1">
+  <measure number="1">
+    <attributes>
+      <divisions>4</divisions>      <jims:staff-state>
+        <jims:scale>
+          <jims:step>M2</jims:step><jims:step>m2</jims:step><jims:step>M2</jims:step>
+          <jims:step>M2</jims:step><jims:step>M2</jims:step><jims:step>m2</jims:step>
+          <jims:step>M2</jims:step>
+        </jims:scale>
+        <jims:collection-rotation>0</jims:collection-rotation>
+        <jims:mode-rotation>0</jims:mode-rotation>
+        <jims:generator-cents>700.0</jims:generator-cents>
+        <jims:period-cents>1200.0</jims:period-cents>
+        <jims:embedding large-steps="5" small-steps="2"/>
+        <jims:extent lower-n-per="1" lower-n-gen="-2" upper-n-per="2" upper-n-gen="-2"/>
+        <jims:tonic-ambit>tonic-bounded</jims:tonic-ambit>
+      </jims:staff-state>
+    </attributes>
+    <note>
+      <pitch>
+        <step>D</step>
+        <octave>4</octave>
+      </pitch>
+      <jims:pitch n-per="0" n-gen="0"/>
+      <duration>4</duration>
+      <type>whole</type>
+    </note>
+  </measure>
+  <measure number="2">
+    <attributes>
+      <divisions>4</divisions>      <jims:staff-state>
+        <jims:scale>
+          <jims:step>M2</jims:step><jims:step>m2</jims:step><jims:step>M2</jims:step>
+          <jims:step>M2</jims:step><jims:step>M2</jims:step><jims:step>m2</jims:step>
+          <jims:step>M2</jims:step>
+        </jims:scale>
+        <jims:collection-rotation>0</jims:collection-rotation>
+        <jims:mode-rotation>0</jims:mode-rotation>
+        <jims:generator-cents>696.578</jims:generator-cents>
+        <jims:period-cents>1200.0</jims:period-cents>
+        <jims:embedding large-steps="5" small-steps="2"/>
+        <jims:extent lower-n-per="1" lower-n-gen="-2" upper-n-per="2" upper-n-gen="-2"/>
+        <jims:tonic-ambit>tonic-bounded</jims:tonic-ambit>
+      </jims:staff-state>
+    </attributes>
+    <note>
+      <pitch>
+        <step>D</step>
+        <octave>4</octave>
+      </pitch>
+      <jims:pitch n-per="0" n-gen="0"/>
+      <duration>4</duration>
+      <type>whole</type>
+    </note>
+  </measure>
+  </part>
+</score-partwise>

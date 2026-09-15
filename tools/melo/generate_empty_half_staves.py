@@ -13,8 +13,8 @@ from pathlib import Path
 
 
 def generate(bridge, output):
-    def query(op, state, **kwargs):
-        request = dict(abi=2, op=op, state=state, **kwargs)
+    def query(op, **kwargs):
+        request = dict(abi=2, op=op, **kwargs)
         reply = json.loads(subprocess.check_output([bridge, json.dumps(request)], text=True))
         if not reply["ok"]:
             raise ValueError(reply)
@@ -26,8 +26,17 @@ def generate(bridge, output):
             node.text = str(text)
         return node
 
+    reference = json.loads(query("default_reference_timeline"))
+    default_configuration = json.loads(query("default_staff_configuration"))
+    zero = dict(numerator=0, denominator=1)
+
+    def request_for(configuration):
+        return json.loads(query("staff_request", configurations=[dict(at=zero, configuration=configuration)],
+                                reference_timeline=reference, at=zero))
+
     root = ET.Element("museScore", version="4.70")
     score = add(root, "Score")
+    add(score, "metaTag", json.dumps(reference,separators=(",",":")), name="meloReferenceTimelineV1")
     add(score, "Division", 480)
     add(score, "showInvisible", 0)
     add(score, "showUnprintable", 0)
@@ -40,18 +49,14 @@ def generate(bridge, output):
     staff_specs = []
     for mode, rotation in [("Fa",3),("Do",0),("So",4),("Re",1),("La",5),("Mi",2),("Ti",6)]:
         for ambit in ("tonic-centered", "tonic-bounded"):
-            state = dict(scale=["M2","m2","M2","M2","M2","m2","M2"],
-                         collection_rotation=0, mode_rotation=rotation,
-                         generator_cents=700.0, period_cents=1200.0,
-                         embedding=dict(large_steps=5,small_steps=2),
-                         extent=dict(lower=dict(nPer=1,nGen=-2),upper=dict(nPer=2,nGen=-2)),
-                         reference="none", tonic_ambit=ambit)
-            tonic = query("tonic_pitch_label",state)["key_number"]
+            configuration = dict(default_configuration, mode_rotation=rotation, tonic_ambit=ambit)
+            state = request_for(configuration)
+            tonic = query("tonic_pitch_label", state=state)["key_number"]
             # A centered range midpoint is the tonic; a bounded range midpoint
             # is a quarter-period above it. These are declared instrument ranges,
             # not manually derived lattice positions.
             low, high = (tonic-3, tonic+3) if ambit=="tonic-centered" else (tonic,tonic+6)
-            state = json.loads(query("default_instrument_extent",state,low_key=low,high_key=high))
+            state = json.loads(query("default_instrument_extent",state=state,low_key=low,high_key=high))
             number = len(staff_specs)+1
             label = f"{mode}-mode · {ambit}"
             part = add(score,"Part",id=str(number))
@@ -59,7 +64,7 @@ def generate(bridge, output):
             st = add(staff,"StaffType",group="pitched")
             for tag,value in {"name":"melo12tet","lines":13,"clef":0,"keysig":0,
                               "ledgerlines":0,"jims":1,"jimsJiLines":1,
-                              "jimsStateJson":json.dumps(state,separators=(",",":"))}.items():
+                              "jimsStateJson":json.dumps(state["configuration"],separators=(",",":"))}.items():
                 add(st,tag,value)
             add(part,"trackName",label)
             instrument=add(part,"Instrument",id="grand-piano")

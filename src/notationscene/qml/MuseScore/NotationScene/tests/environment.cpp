@@ -29,11 +29,23 @@
 #include "engraving/dom/instrtemplate.h"
 #include "engraving/dom/mscore.h"
 #include "modularity/ioc.h"
+#include "notation/tests/mocks/notationconfigurationmock.h"
 #include "shortcuts/ishortcutsregister.h"
 #include "stubs/shortcuts/shortcutsregisterstub.h"
 #include "ui/internal/navigationcontroller.h"
+#include "ui/internal/uiconfiguration.h"
 
 namespace {
+class NotationConfigurationTestModule : public muse::modularity::IModuleSetup
+{
+public:
+    std::string moduleName() const override { return "lattice_drag_test_configuration"; }
+    void registerExports() override
+    {
+        ioc()->registerExport<mu::notation::INotationConfiguration>(moduleName(),
+                                                                    new testing::NiceMock<mu::notation::NotationConfigurationMock>());
+    }
+};
 class ShortcutRegisterTestModule : public muse::modularity::IModuleSetup
 {
 public:
@@ -53,12 +65,34 @@ public:
         ioc()->registerExport<muse::ui::INavigationController>(moduleName(), new muse::ui::NavigationController(nullptr));
     }
 };
+
+class DialogConfigurationStub : public muse::ui::UiConfiguration
+{
+public:
+    DialogConfigurationStub()
+        : UiConfiguration(nullptr) {}
+    const muse::ui::ThemeInfo& currentTheme() const override { return m_theme; }
+    muse::async::Notification currentThemeChanged() const override { return {}; }
+    muse::io::path_t appIconPath() const override { return {}; }
+private:
+    muse::ui::ThemeInfo m_theme;
+};
+
+class DialogConfigurationTestModule : public muse::modularity::IModuleSetup
+{
+public:
+    std::string moduleName() const override { return "melo_editor_dialog_configuration"; }
+    void registerExports() override
+    {
+        globalIoc()->registerExport<muse::ui::IUiConfiguration>(moduleName(), new DialogConfigurationStub());
+    }
+};
 }
 
 static muse::testing::SuiteEnvironment notation_se
     = muse::testing::SuiteEnvironment()
       .setDependencyModules({ new muse::draw::DrawModule(), new mu::engraving::EngravingModule(), new ShortcutRegisterTestModule(),
-                              new NavigationTestModule() })
+                              new NavigationTestModule(), new NotationConfigurationTestModule(), new DialogConfigurationTestModule() })
       .setPostInit([]() {
     LOGI() << "notationscene_qml tests suite post init";
 
@@ -69,4 +103,6 @@ static muse::testing::SuiteEnvironment notation_se
     mu::engraving::MScore::noGui = true;
 
     mu::engraving::loadInstrumentTemplates(":/engraving/instruments/instruments.xml");
+}).setDeInit([]() {
+    muse::modularity::globalIoc()->unregister<muse::ui::IUiConfiguration>("melo_editor_dialog_configuration");
 });

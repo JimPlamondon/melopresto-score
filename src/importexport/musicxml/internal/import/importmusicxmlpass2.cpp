@@ -2164,8 +2164,22 @@ static void addBarlineToMeasure(Measure* measure, const Fraction tick, std::uniq
 
 void MusicXmlParserPass2::scorePartwise()
 {
+    bool haveReferenceTimeline = false;
     while (m_e.readNextStartElement()) {
-        if (m_e.name() == "part") {
+        if (m_melo.isMeloElement(m_e.name(), "reference-timeline")) {
+            String timeline, error;
+            if (haveReferenceTimeline || m_melo.anyBuffered()) {
+                error = u"Declare exactly one reference timeline before the score parts.";
+                m_e.skipCurrentElement();
+            } else if (m_melo.parseReferenceTimeline(m_e, timeline, error)) {
+                m_score->masterScore()->setMetaTag(melo::REFERENCE_TIMELINE_TAG, timeline);
+                haveReferenceTimeline = true;
+            }
+            if (!error.isEmpty()) {
+                m_logger->logError(error, &m_e);
+                m_meloError = Err::FileBadFormat;
+            }
+        } else if (m_e.name() == "part") {
             part();
         } else if (m_e.name() == "part-list") {
             partList();
@@ -2173,10 +2187,31 @@ void MusicXmlParserPass2::scorePartwise()
             skipLogCurrElem();
         }
     }
+    if (m_melo.version() == 5 && m_melo.anyBuffered() && m_meloError == Err::NoError) {
+        String error;
+        if (!haveReferenceTimeline) {
+            error = u"MusicXML-Melo version 5 requires one spelled initial reference and relative key timeline.";
+        } else if (!melo::rebuildCanonicalReferenceContexts(m_score, error) && error.isEmpty()) {
+            error = u"The canonical reference timeline could not be resolved.";
+        }
+        if (!error.isEmpty()) {
+            m_logger->logError(error, &m_e);
+            m_meloError = Err::FileBadFormat;
+        }
+    }
     // Native JiMS import, owner rule 2026-08-19: every JiMS part shares one
     // state timeline (several JiMS parts and mixed JiMS + stock parts are fine).
-    if (m_melo.anyBuffered() && !m_melo.checkSharedStatesAcrossParts(m_logger)) {
+    if (m_meloError == Err::NoError && m_melo.anyBuffered() && !m_melo.checkSharedStatesAcrossParts(m_score, m_logger)) {
         m_meloError = Err::FileBadFormat;
+    } else if (m_melo.anyBuffered() && m_meloError == Err::NoError) {
+        size_t repairs = 0;
+        String repairError;
+        if (!melo::normalizeStoredPitchesAfterLoad(m_score, repairs, repairError, false)) {
+            m_logger->logError(String(mu::engraving::melo::diagnostic::importNormalizationFailed).arg(repairError), &m_e);
+            m_meloError = Err::FileBadFormat;
+        } else if (repairs > 0) {
+            m_logger->logDebugInfo(String(mu::engraving::melo::diagnostic::importedProjectionsNormalized).arg(repairs), &m_e);
+        }
     }
 
     // set last measure barline to normal or MuseScore will generate light-heavy EndBarline
@@ -2516,15 +2551,6 @@ void MusicXmlParserPass2::part()
         auto staffIndexForNumber = [&meloPart](int number) { return meloPart.staffNumberToIndex(number); };
         if (!m_melo.applyToPart(m_score, part, id, staffIndexForNumber, m_logger)) {
             m_meloError = Err::FileBadFormat;
-        } else {
-            size_t repairs = 0;
-            String repairError;
-            if (!melo::normalizeStoredPitchesAfterLoad(m_score, repairs, repairError, false)) {
-                m_logger->logError(String(mu::engraving::melo::diagnostic::importNormalizationFailed).arg(repairError), &m_e);
-                m_meloError = Err::FileBadFormat;
-            } else if (repairs > 0) {
-                m_logger->logDebugInfo(String(mu::engraving::melo::diagnostic::importedProjectionsNormalized).arg(repairs), &m_e);
-            }
         }
     }
 

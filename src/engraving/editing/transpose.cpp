@@ -21,6 +21,7 @@
  */
 
 #include "transpose.h"
+#include "engraving/melo/melochangecontroller.h"
 
 #include "../dom/harmony.h"
 #include "../dom/part.h"
@@ -102,6 +103,35 @@ bool Transpose::transpose(Score* score, TransposeMode mode, TransposeDirection d
         }
     }
 
+    std::vector<melo::NoteEdit> latticeEdits;
+    std::set<Note*> preparedNotes;
+    for (Note* note : selection.uniqueNotes()) {
+        if (preparedNotes.count(note)) {
+            continue;
+        }
+        NoteVal value;
+        const bool valid = mode == TransposeMode::DIATONICALLY
+                           ? note->prepareDiatonicTranspose(transposeInterval, trKeys, useDoubleSharpsFlats, value)
+                           : note->prepareTranspose(interval, useDoubleSharpsFlats, value);
+        if (!valid) {
+            MScore::setError(MsError::CANNOT_RESOLVE_LATTICE_NOTE);
+            return false;
+        }
+        if (note->staff()->staffTypeForElement(note)->isMelo()) {
+            String error;
+            if (!melo::preparePitchEdit(note, value.meloNPer, value.meloNGen, latticeEdits, error)) {
+                MScore::setError(MsError::CANNOT_RESOLVE_LATTICE_NOTE);
+                return false;
+            }
+            for (const melo::NoteEdit& edit : latticeEdits) {
+                for (EngravingObject* linked : edit.note->linkList()) {
+                    preparedNotes.insert(toNote(linked));
+                }
+            }
+        }
+    }
+    melo::commitPitchEdits(score, latticeEdits);
+
     if (selection.isList()) {
         const std::list<EngravingItem*>& selectionList = selection.uniqueElements();
         for (EngravingItem* e : selectionList) {
@@ -113,7 +143,7 @@ bool Transpose::transpose(Score* score, TransposeMode mode, TransposeDirection d
             }
             if (e->isNote()) {
                 Note* note = toNote(e);
-                if (!transposeNote(note, mode, transposeInterval, trKeys, useDoubleSharpsFlats, interval)) {
+                if (!preparedNotes.count(note) && !transposeNote(note, mode, transposeInterval, trKeys, useDoubleSharpsFlats, interval)) {
                     result = false;
                 }
             } else if (e->isHarmony() && transposeChordNames) {
@@ -220,13 +250,14 @@ bool Transpose::transpose(Score* score, TransposeMode mode, TransposeDirection d
                         continue;
                     }
                     Note* note = nl.at(noteIdx);
-                    if (!transposeNote(note, mode, transposeInterval, trKeys, useDoubleSharpsFlats, interval)) {
+                    if (!preparedNotes.count(note) && !transposeNote(note, mode, transposeInterval, trKeys, useDoubleSharpsFlats,
+                                                                     interval)) {
                         result = false;
                     }
                 }
                 for (Chord* g : chord->graceNotes()) {
                     for (Note* n : g->notes()) {
-                        if (!transposeNote(n, mode, transposeInterval, trKeys, useDoubleSharpsFlats, interval)) {
+                        if (!preparedNotes.count(n) && !transposeNote(n, mode, transposeInterval, trKeys, useDoubleSharpsFlats, interval)) {
                             result = false;
                         }
                     }

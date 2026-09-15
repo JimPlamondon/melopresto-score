@@ -28,6 +28,7 @@
 #include "engraving/dom/utils.h"
 #include "engraving/editing/editexcerpt.h"
 #include "engraving/editing/transpose.h"
+#include "engraving/melo/melochangecontroller.h"
 
 #include "log.h"
 
@@ -72,7 +73,23 @@ void MasterNotationParts::setParts(const PartInstrumentList& partList, const Sco
 
     doSetScoreOrder(order);
     removeMissingParts(partList);
+    const auto previousStaves = score()->staves();
     insertNewParts(partList, keyList);
+    if (score()->firstMeasure()) {
+        std::vector<mu::engraving::Staff*> authored;
+        for (auto* staff : score()->staves()) {
+            if (std::find(previousStaves.begin(), previousStaves.end(), staff) == previousStaves.end()) {
+                authored.push_back(staff);
+            }
+        }
+        String error;
+        if (!mu::engraving::melo::initializeAuthoredMeloStaves(score(), authored, error)) {
+            LOGE() << error;
+            undoStack()->unlock();
+            rollback();
+            return;
+        }
+    }
     updateSoloist(partList);
     sortParts(partList);
     setBracketsAndBarlines();

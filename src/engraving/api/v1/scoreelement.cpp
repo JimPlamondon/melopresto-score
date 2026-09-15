@@ -21,6 +21,9 @@
  */
 
 #include "scoreelement.h"
+#include "engraving/dom/note.h"
+#include "engraving/dom/staff.h"
+#include "engraving/dom/stafftype.h"
 
 #include "engraving/dom/measure.h"
 #include "engraving/dom/range.h"
@@ -159,9 +162,25 @@ static mu::engraving::AlignV alignVFromApiValue(enums::Align apiValue)
 //   ScoreElement::set
 //---------------------------------------------------------
 
+static bool rejectsDerivedLatticeProperty(mu::engraving::EngravingObject* object, Ownership ownership, mu::engraving::Pid pid)
+{
+    if (!object || ownership != Ownership::SCORE || !object->isNote()
+        || (pid != mu::engraving::Pid::PITCH && pid != mu::engraving::Pid::TPC1 && pid != mu::engraving::Pid::TPC2
+            && pid != mu::engraving::Pid::TUNING)) {
+        return false;
+    }
+    const auto* note = toNote(object);
+    const auto* type = note->staff() ? note->staff()->staffTypeForElement(note) : nullptr;
+    if (type && type->isMelo()) {
+        mu::engraving::MScore::setError(mu::engraving::MsError::CANNOT_RESOLVE_LATTICE_NOTE);
+        return true;
+    }
+    return false;
+}
+
 void ScoreElement::set(mu::engraving::Pid pid, const QVariant& val)
 {
-    if (!e) {
+    if (rejectsDerivedLatticeProperty(e, m_ownership, pid) || !e) {
         return;
     }
 
@@ -228,7 +247,7 @@ void ScoreElement::set(mu::engraving::Pid pid, const QVariant& val)
 
 void ScoreElement::reset(mu::engraving::Pid pid)
 {
-    if (!e) {
+    if (rejectsDerivedLatticeProperty(e, m_ownership, pid) || !e) {
         return;
     }
 

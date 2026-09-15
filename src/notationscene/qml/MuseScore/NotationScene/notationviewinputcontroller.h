@@ -42,6 +42,8 @@
 #include "ui/iuiconfiguration.h"
 
 #include "abstractelementpopupmodel.h"
+#include "engraving/melo/melochangecontroller.h"
+#include "accessibility/iaccessibilitycontroller.h"
 
 class QQuickItem;
 
@@ -91,6 +93,7 @@ public:
 class NotationViewInputController : public muse::actions::Actionable, public muse::Contextable, public muse::async::Asyncable
 {
 public:
+    muse::ContextInject<muse::accessibility::IAccessibilityController> accessibilityController = { this };
     muse::GlobalInject<muse::IGlobalConfiguration> globalConfiguration;
     muse::GlobalInject<INotationConfiguration> configuration;
     muse::GlobalInject<muse::ui::IUiConfiguration> uiConfiguration;
@@ -103,6 +106,10 @@ public:
     NotationViewInputController(IControlledView* view, const muse::modularity::ContextPtr& iocCtx);
 
     void init();
+    bool canReceiveAction(const muse::actions::ActionCode& action) const override;
+
+    bool focusMeloHeaderPitch(bool forward);
+    muse::RectF focusedMeloHeaderPitchInk() const;
 
     void initZoom();
     void initCanvasPos();
@@ -248,5 +255,8 @@ private:
     bool m_shouldSelectOnLeftClickRelease = false;
     bool m_shouldStartEditOnLeftClickRelease = false;
     bool m_ignoreNextMouseContextMenuEvent = false;
+    INotationPtr m_headerPitchNotation;
+    std::optional<mu::engraving::melo::HeaderPitchContext> m_headerPitchFocus;
+    muse::String m_headerPitchTimeline;
 };
 }

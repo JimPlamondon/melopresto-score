@@ -52,6 +52,8 @@
 #include "mpe/tests/utils/articulationutils.h"
 
 #include "utils/scorerw.h"
+#include "utils/melocanonical.h"
+#include "engraving/melo/melotuningcontroller.h"
 
 using namespace mu::engraving;
 using namespace muse;
@@ -194,7 +196,7 @@ TEST_F(Engraving_MeloStaffM7PlaybackTests, m7PitchLevelFromMidiMatchesTheMpeScal
 // file's reference-53 section (bar 2 onward): every MeloPresto note plays the
 // Kernel's answer for ITS section — bar 2's notes no longer sound their
 // bar-1 compatibility pitches.
-TEST_F(Engraving_MeloStaffM7PlaybackTests, m7PlaybackUsesKernelPitchForDefaultAndReference53Sections)
+TEST_F(Engraving_MeloStaffM7PlaybackTests, m7PlaybackUsesKernelPitchAcrossRelativeKeySections)
 {
     Score* score = ScoreRW::readScore(M7_GATE);
     ASSERT_TRUE(score);
@@ -205,8 +207,8 @@ TEST_F(Engraving_MeloStaffM7PlaybackTests, m7PlaybackUsesKernelPitchForDefaultAn
     // bar 2+ carries reference 53 (mode La). Both facts come from the file.
     const StaffType* bar1 = notes[0]->staff()->staffTypeForElement(notes[0]);
     const StaffType* bar2 = notes[4]->staff()->staffTypeForElement(notes[4]);
-    ASSERT_TRUE(bar1->meloStateJson().contains(u"\"key_number\":62"));
-    ASSERT_TRUE(bar2->meloStateJson().contains(u"\"key_number\":53"));
+    ASSERT_TRUE(test::referenceNumber(bar1->meloStateJson()) == 62);
+    ASSERT_TRUE(test::referenceNumber(bar2->meloStateJson()) == 71);
     std::vector<pitch_level_t> levels = nominalPitchLevels(score);
     ASSERT_EQ(levels.size(), notes.size());
     for (size_t i = 0; i < notes.size(); ++i) {
@@ -296,11 +298,9 @@ TEST_F(Engraving_MeloStaffM7PlaybackTests, m7PlaybackUsesNonTwelveTetGenerator)
     score->doLayout();
     StaffType* st = score->staff(0)->staffType(Fraction(0, 1));
     ASSERT_TRUE(st && st->isMelo());
-    String s17 = st->meloStateJson();
-    s17.replace(u"\"generator_cents\":700.0", u"\"generator_cents\":705.8823529411765");
-    ASSERT_NE(s17, st->meloStateJson());
-    st->setMeloStateJson(s17);
-    score->setLayoutAll();
+    melo::TuningController tuning(score, 0);
+    ASSERT_TRUE(tuning.beginPreview());
+    ASSERT_TRUE(tuning.commit(1200.0 * 10.0 / 17.0));
     score->doLayout();
     std::vector<Note*> notes = notesOf(score);
     ASSERT_FALSE(notes.empty());
@@ -473,8 +473,12 @@ TEST_F(Engraving_MeloStaffM7PlaybackTests, fullTieAcrossStateChangeHasOneAttackA
     Note* continuation = notes[4];
     start->setMeloPitch(0, 0);
     start->setPitch(62, 16, 16);
-    continuation->setMeloPitch(0, 0);
-    continuation->setPitch(62, 16, 16);
+    melo::SoundingPitch initialSound, initialContinuation;
+    ASSERT_TRUE(melo::noteSoundingPitch(start->staff()->staffTypeForElement(start)->meloStateJson(), 0, 0, initialSound));
+    ASSERT_TRUE(melo::noteContinuation(continuation->staff()->staffTypeForElement(continuation)->meloStateJson(),
+                                       initialSound.frequencyHz, initialContinuation));
+    continuation->setMeloPitch(initialContinuation.nPer, initialContinuation.nGen);
+    ASSERT_TRUE(continuation->setNval(continuation->noteVal()));
     Tie* tie = Factory::createTie(score->dummy());
     tie->setStartNote(start);
     tie->setEndNote(continuation);
@@ -486,7 +490,7 @@ TEST_F(Engraving_MeloStaffM7PlaybackTests, fullTieAcrossStateChangeHasOneAttackA
     score->endCmd();
     Measure* change = score->firstMeasure()->nextMeasure();
     String error;
-    ASSERT_TRUE(melo::applyChange(score, 0, change, u"mode:1", error)) << error.toStdString();
+    ASSERT_TRUE(test::relativeKey(score, 0, change->tick(), -1, 3, error)) << error.toStdString();
 
     melo::SoundingPitch startProjection = kernelSoundingPitch(start);
     melo::SoundingPitch continuationProjection = kernelSoundingPitch(continuation);
@@ -519,6 +523,143 @@ TEST_F(Engraving_MeloStaffM7PlaybackTests, syntheticCommonToneHasOneAttackAtOneE
     ASSERT_TRUE(exact.front().has_value());
     EXPECT_DOUBLE_EQ(exact.front()->frequencyHz, first.frequencyHz);
     delete score;
+}
+
+TEST_F(Engraving_MeloStaffM7PlaybackTests, latticeTieKeyboardUndoHasOneSustainedProductionEvent)
+{
+    Score* score = ScoreRW::readScore(u"jimstaff_data/m5-key-up.mscx");
+    ASSERT_TRUE(score);
+    const auto notes = notesOf(score);
+    ASSERT_GE(notes.size(), 5u);
+    Note* a = notes[3];
+    Note* b = notes[4];
+    NoteVal value = a->noteVal();
+    value.hasMeloPitch = true;
+    value.meloNPer = 0;
+    value.meloNGen = 0;
+    ASSERT_TRUE(a->setNval(value));
+    const auto expected = kernelSoundingPitch(a);
+    melo::SoundingPitch continuation;
+    ASSERT_TRUE(melo::noteContinuation(b->staff()->staffTypeForElement(b)->meloStateJson(), expected.frequencyHz, continuation));
+    value.meloNPer = continuation.nPer;
+    value.meloNGen = continuation.nGen;
+    ASSERT_TRUE(b->setNval(value));
+    Tie* tie = Factory::createTie(score->dummy());
+    tie->setStartNote(a);
+    tie->setEndNote(b);
+    tie->setTrack(a->track());
+    tie->setTick(a->tick());
+    tie->setTick2(b->tick());
+    score->startCmd(TranslatableString::untranslatable("Playback full-tie fixture"));
+    score->undoAddElement(tie);
+    score->endCmd();
+    for (Note* note : notes) {
+        note->setPlay(note == a || note == b);
+    }
+    score->select(a, SelectType::SINGLE);
+    score->startCmd(TranslatableString::untranslatable("Keyboard edit and undo"));
+    score->upDown(true, UpDownMode::OCTAVE);
+    score->endCmd();
+    EXPECT_NEAR(kernelSoundingPitch(a).frequencyHz, expected.frequencyHz * 2, 1e-8);
+    score->undoRedo(true, nullptr);
+    PlaybackModel model(modularity::globalCtx());
+    model.profilesRepository.set(m_repositoryMock);
+    model.load(score);
+    const Part* part = score->parts().front();
+    const auto& events = model.resolveTrackPlaybackData(part->id(), part->instrumentId()).originEvents;
+    size_t attacks = 0;
+    for (const auto& [timestamp, group] : events) {
+        for (const auto& event : group) {
+            if (!std::holds_alternative<muse::mpe::NoteEvent>(event)) {
+                continue;
+            }
+            ++attacks;
+            const auto& note = std::get<muse::mpe::NoteEvent>(event);
+            ASSERT_TRUE(note.pitchCtx().exactPitch);
+            EXPECT_NEAR(note.pitchCtx().exactPitch->frequencyHz, 293.6647679174076, 1e-9);
+            EXPECT_NEAR(note.pitchCtx().exactPitch->frequencyHz, expected.frequencyHz, 1e-9);
+            EXPECT_EQ(note.arrangementCtx().nominalTimestamp, 1500000);
+            EXPECT_EQ(note.arrangementCtx().nominalDuration, 1500000);
+        }
+    }
+    EXPECT_EQ(attacks, 1u);
+    delete score;
+}
+
+TEST_F(Engraving_MeloStaffM7PlaybackTests, coincidentWrittenPositionsRetainExactPlaybackAt701)
+{
+    for (double generator : { 700.0, 701.0 }) {
+        Score* score = ScoreRW::readScore(u"jimstaff_data/m5-key-up.mscx");
+        ASSERT_TRUE(score);
+        melo::TuningController tuning(score, 0);
+        ASSERT_TRUE(tuning.beginPreview());
+        ASSERT_TRUE(tuning.commit(generator));
+        const auto notes = notesOf(score);
+        ASSERT_GE(notes.size(), 2u);
+        for (Note* note : notes) {
+            note->setPlay(note == notes[0] || note == notes[1]);
+        }
+        NoteVal value = notes[0]->noteVal();
+        value.hasMeloPitch = true;
+        value.meloNPer = 0;
+        value.meloNGen = 0;
+        ASSERT_TRUE(notes[0]->setNval(value));
+        value.meloNPer = -7;
+        value.meloNGen = 12;
+        ASSERT_TRUE(notes[1]->setNval(value));
+        const auto exact = exactPitches(score);
+        ASSERT_EQ(exact.size(), 2u);
+        ASSERT_TRUE(exact[0]);
+        ASSERT_TRUE(exact[1]);
+        EXPECT_NEAR(exact[0]->frequencyHz, 293.6647679174076, 1e-9);
+        EXPECT_NEAR(exact[1]->frequencyHz, 293.6647679174076 * std::exp2((generator - 700.0) / 100.0), 1e-9);
+        EXPECT_NEAR(exact[1]->frequencyHz, kernelSoundingPitch(notes[1]).frequencyHz, 1e-9);
+        if (const char* output = std::getenv("MELO_LATTICE_SENSORY_OUT")) {
+            ASSERT_TRUE(ScoreRW::saveScore(score,
+                                           String::fromUtf8(output) + u"/coincident-sequence-" + String::number(int(generator))
+                                           + u".mscx"));
+        }
+        delete score;
+    }
+}
+
+TEST_F(Engraving_MeloStaffM7PlaybackTests, exactTwelveSevenFiveEqualTemperamentPlayback)
+{
+    for (double generator : { 700.0, 1200.0 * 4.0 / 7.0, 720.0 }) {
+        Score* score = ScoreRW::readScore(u"jimstaff_data/m5-key-up.mscx");
+        ASSERT_TRUE(score);
+        melo::TuningController tuning(score, 0);
+        ASSERT_TRUE(tuning.beginPreview());
+        ASSERT_TRUE(tuning.commit(generator));
+        const auto notes = notesOf(score);
+        ASSERT_GE(notes.size(), 2u);
+        for (Note* note : notes) {
+            note->setPlay(note == notes[0] || note == notes[1]);
+        }
+        NoteVal value = notes[0]->noteVal();
+        value.hasMeloPitch = true;
+        value.meloNPer = 0;
+        value.meloNGen = 0;
+        ASSERT_TRUE(notes[0]->setNval(value));
+        value.meloNPer = 0;
+        value.meloNGen = 1;
+        ASSERT_TRUE(notes[1]->setNval(value));
+        const auto exact = exactPitches(score);
+        ASSERT_EQ(exact.size(), 2u);
+        ASSERT_TRUE(exact[0]);
+        ASSERT_TRUE(exact[1]);
+        EXPECT_NEAR(exact[0]->frequencyHz, 293.6647679174076, 1e-9);
+        EXPECT_NEAR(exact[1]->frequencyHz, 293.6647679174076 * std::exp2(generator / 1200.0), 1e-9);
+        EXPECT_NEAR(exact[1]->frequencyHz, kernelSoundingPitch(notes[1]).frequencyHz, 1e-9);
+        if (const char* output = std::getenv("MELO_LATTICE_SENSORY_OUT")) {
+            ASSERT_TRUE(ScoreRW::saveScore(score,
+                                           String::fromUtf8(output) + u"/tempered-sequence-" + String::number(generator
+                                                                                                              == 700.0 ? 12 : generator
+                                                                                                              == 720.0 ? 5 : 7)
+                                           + u".mscx"));
+        }
+        delete score;
+    }
 }
 
 // Negative control: a stock (non-MeloPresto) score's pitch levels are exactly

@@ -16,6 +16,44 @@
 #include "types/translatablestring.h"
 
 namespace mu::engraving::melo {
+inline muse::String canonicalStaffUnavailable()
+{
+    return muse::mtrc("engraving", "The score has no canonical MeloPresto staff to revise.");
+}
+
+inline muse::String createMeasuresBeforeReference()
+{
+    return muse::mtrc("engraving", "Create the score's measures before initializing its MeloPresto reference.");
+}
+
+inline muse::String selectMeloPosition() { return muse::mtrc("engraving", "Select a musical position on a MeloPresto staff."); }
+inline muse::String precedingCanonicalStateUnavailable()
+{
+    return muse::mtrc("engraving", "The selected change has no preceding MeloPresto state.");
+}
+
+inline muse::String canonicalReferenceRequired()
+{
+    return muse::mtrc("engraving",
+                      "MeloPresto notation requires a spelled initial reference and authored relative history. Absolute numeric snapshots do not contain these identities.");
+}
+
+inline muse::String canonicalChangeReferenceRequired()
+{
+    return muse::mtrc("engraving", "A MeloPresto staff change requires its composition's spelled initial reference and relative history.");
+}
+
+inline muse::String canonicalExportReferenceRequired()
+{
+    return muse::mtrc("engraving", "MeloPresto staff export requires a spelled initial reference and authored relative history.");
+}
+
+inline constexpr char synthResourceId[] = "MeloPresto Synth";
+inline constexpr char analysisVocabularyCitation[] = "MeloPresto analysis controlled vocabulary v1";
+inline constexpr char accidentalEditFailed[] = "MeloPresto accidental edit: ";
+inline constexpr char sectionFrameAlignmentFailed[] = "MeloPresto section frame alignment failed for staff ";
+inline constexpr char sectionBandAlignmentFailed[] = "MeloPresto section band alignment failed for staff ";
+inline constexpr char systemFrameUnionFailed[] = "MeloPresto per-system frame union failed for staff ";
 inline muse::TranslatableString changeActionName() { return muse::TranslatableString("action", "MeloPresto change…"); }
 inline muse::String featureName() { return muse::mtrc("engraving", "MeloPresto Staff"); }
 inline muse::String staffUserName() { return muse::mtrc("engraving", "MeloPresto Staff"); }

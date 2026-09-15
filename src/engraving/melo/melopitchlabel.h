@@ -33,6 +33,7 @@ struct PitchLabelLayout {
     muse::RectF bounds;
     double advance = 0.0;
     double accidentalX = 0.0;
+    double accidentalY = 0.0;
     double afterX = 0.0;
     double accidentalMag = 0.0;
 };

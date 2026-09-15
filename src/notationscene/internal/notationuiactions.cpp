@@ -125,6 +125,12 @@ const UiActionList NotationUiActions::s_actions = {
              mu::context::CTX_NOTATION_OPENED,
              TranslatableString("action", "Remove note")
              ),
+    UiAction("melo-next-header-pitch", mu::context::UiCtxProjectOpened, mu::context::CTX_NOTATION_FOCUSED,
+             TranslatableString("action", "Next tonic pitch label"),
+             TranslatableString("action", "Focus the next staff-header tonic pitch; Enter edits the initial key")),
+    UiAction("melo-prev-header-pitch", mu::context::UiCtxProjectOpened, mu::context::CTX_NOTATION_FOCUSED,
+             TranslatableString("action", "Previous tonic pitch label"),
+             TranslatableString("action", "Focus the previous staff-header tonic pitch; Enter edits the initial key")),
     UiAction("next-element",
              mu::context::UiCtxProjectOpened,
              mu::context::CTX_NOTATION_FOCUSED,

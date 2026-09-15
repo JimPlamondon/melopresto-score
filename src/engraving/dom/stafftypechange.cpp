@@ -48,6 +48,7 @@ StaffTypeChange::StaffTypeChange(const StaffTypeChange& lb)
 {
     m_lw = lb.m_lw;
     m_rtick = lb.m_rtick;
+    m_meloReferenceOnly = lb.m_meloReferenceOnly;
     m_ownsStaffType = lb.m_ownsStaffType;
     if (lb.m_ownsStaffType && lb.m_staffType) {
         m_staffType = new StaffType(*lb.m_staffType);

@@ -37,7 +37,18 @@ NotePlaybackModel::NotePlaybackModel(QObject* parent, const muse::modularity::Co
 
 void NotePlaybackModel::createProperties()
 {
-    m_tuning = buildPropertyItem(mu::engraving::Pid::TUNING);
+    m_tuning = buildPropertyItem(mu::engraving::Pid::TUNING,
+                                 [this](const mu::engraving::Pid pid, const QVariant& value) {
+        if (!hasMeloSelection()) {
+            onPropertyValueChanged(pid, value);
+        } else {
+            loadProperties();
+        }
+    }, nullptr, [this](const mu::engraving::Pid pid) {
+        if (!hasMeloSelection()) {
+            onPropertyValueReset(pid);
+        }
+    });
     m_velocity = buildPropertyItem(mu::engraving::Pid::USER_VELOCITY);
 }
 
@@ -49,6 +60,7 @@ void NotePlaybackModel::requestElements()
 void NotePlaybackModel::loadProperties()
 {
     loadPropertyItem(m_tuning, formatDoubleFunc);
+    m_tuning->setIsEnabled(m_tuning->isEnabled() && !hasMeloSelection());
     loadPropertyItem(m_velocity, [](const QVariant& value) {
         //! NOTE: display 64 instead of 0 in the Velocity field to avoid confusing the user
         return value.toInt() == 0 ? 64 : value;

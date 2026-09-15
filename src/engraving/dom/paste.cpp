@@ -437,6 +437,10 @@ static Note* prepareTarget(ChordRest* target, Note* with, const Fraction& durati
     if (!target->segment()->element(target->track())) {
         return nullptr; // target was removed by previous operation, ignore this
     }
+    NoteVal value = with->noteVal();
+    if (!Note::prepareNval(value, target->staff(), target->tick())) {
+        return nullptr;
+    }
     if (target->isChord() && target->ticks() > duration) {
         target = replaceWithRest(target); // prevent unexpected note splitting
     }
@@ -459,8 +463,12 @@ static Note* prepareTarget(ChordRest* target, Note* with, const Fraction& durati
     }
 
     segment = target->score()->setNoteRest(segment, target->track(),
-                                           with->noteVal(), duration, stemDirection, false, {}, false, &target->score()->inputState());
-    return toChord(segment->nextChordRest(target->track()))->upNote();
+                                           value, duration, stemDirection, false, {}, false, &target->score()->inputState());
+    if (!segment) {
+        return nullptr;
+    }
+    ChordRest* result = segment->nextChordRest(target->track());
+    return result && result->isChord() ? toChord(result)->upNote() : nullptr;
 }
 
 static EngravingItem* prepareTarget(EngravingItem* target, Note* with, const Fraction& duration)
@@ -662,11 +670,22 @@ bool Score::cmdPasteSymbol(muse::ByteArray& data, MuseScoreView* view, Fraction 
 
         if (!el->isNote() || (target = prepareTarget(target, toNote(el.get()), duration))) {
             ddata.dropElement = el->clone();
+            if (el->isNote() && target->isNote() && toNote(target)->hasMeloPitch()) {
+                // prepareTarget resolved the source spelling for this exact
+                // destination. Preserve that result on the final dropped copy.
+                const Note* prepared = toNote(target);
+                Note* copy = toNote(ddata.dropElement);
+                copy->setMeloPitch(prepared->meloNPer(), prepared->meloNGen());
+                copy->setPitch(prepared->pitch(), prepared->tpc1(), prepared->tpc2());
+                copy->setTuning(prepared->tuning());
+            }
 
             EngravingItem* dropped = systemObj ? pasteSystemObject(ddata, target) : target->drop(ddata);
             if (dropped) {
                 droppedElements.emplace_back(dropped);
             }
+        } else if (MScore::_error == MsError::CANNOT_RESOLVE_LATTICE_NOTE) {
+            return false;
         }
     }
 

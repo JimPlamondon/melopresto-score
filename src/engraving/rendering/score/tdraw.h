@@ -21,9 +21,13 @@
  */
 #pragma once
 
-#include "dom/engravingitem.h"
+#include "../../dom/engravingitem.h"
 
 namespace mu::engraving {
+namespace melo {
+struct ChangeIndicator;
+}
+class StaffType;
 class Accidental;
 class ActionIcon;
 class Ambitus;
@@ -189,6 +193,15 @@ class TDraw
 public:
 
     static void drawItem(const EngravingItem* item, muse::draw::Painter* painter, const PaintOptions& opt); // factory
+
+    enum class ChangePlacement {
+        START_BAR, END_BAR_COURTESY, MID_BAR
+    };
+    /// Shared production drawing for score indicators and the relative editor preview.
+    /// Pitch annotations in this terrain never register editable header targets.
+    static void drawMeloChangeTerrain(const StaffLines* item, muse::draw::Painter* painter, const PaintOptions& opt,
+                                      const melo::ChangeIndicator& model, const StaffType* changeSt, const StaffType* displayedSt,
+                                      double x0, ChangePlacement placement);
 
 private:
     static void draw(const Accidental* item, muse::draw::Painter* painter, const PaintOptions& opt);

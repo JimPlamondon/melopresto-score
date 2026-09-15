@@ -549,7 +549,8 @@ Note* MnxImporter::createNote(const mnx::sequence::Note& mnxNote, Chord* chord, 
     // calcTransposed accounts for MNX transposeWritten.
     NoteVal nvalTransposed = toMuseScoreNoteVal(pitch.calcTransposed(), baseStaff->key(tick), ottavaDisplacement);
     nval.tpc2 = nvalTransposed.tpc2;
-    note->setNval(nval);
+    // This importer creates conventional staves; no lattice conversion is possible here.
+    (void)note->setNval(nval);
     chord->add(note);
     m_mnxNoteToNote.emplace(mnxNote.pointer().to_string(), note);
     return note;
@@ -714,7 +715,8 @@ ChordRest* MnxImporter::importEvent(const mnx::sequence::Event& event,
                     engraving::Note* note = Factory::createNote(chord);
                     note->setParent(chord);
                     note->setTrack(curTrackIdx);
-                    note->setNval(nval);
+                    // This importer creates conventional staves; no lattice conversion is possible here.
+                    (void)note->setNval(nval);
                     chord->add(note);
                     m_mnxNoteToNote.emplace(kitNote.pointer().to_string(), note);
                 }

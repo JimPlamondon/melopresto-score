@@ -3,6 +3,7 @@
   <programVersion>4.7.4</programVersion>
   <programRevision></programRevision>
   <Score>
+    <metaTag name="meloReferenceTimelineV1">{"schema":"jimstaff-reference-v1","initial":{"step":"D","alter":0,"octave":4},"events":[]}</metaTag>
     <Division>480</Division>
     <showInvisible>1</showInvisible>
     <showUnprintable>1</showUnprintable>
@@ -18,7 +19,7 @@
           <lines>13</lines>
           <clef>0</clef>
           <jims>1</jims>
-          <jimsStateJson>{&quot;scale&quot;:[&quot;M2&quot;,&quot;m2&quot;,&quot;M2&quot;,&quot;M2&quot;,&quot;M2&quot;,&quot;m2&quot;,&quot;M2&quot;],&quot;collection_rotation&quot;:0,&quot;mode_rotation&quot;:0,&quot;generator_cents&quot;:700.0,&quot;period_cents&quot;:1200.0,&quot;embedding&quot;:{&quot;large_steps&quot;:5,&quot;small_steps&quot;:2},&quot;extent&quot;:{&quot;lower&quot;:{&quot;nPer&quot;:1,&quot;nGen&quot;:-2},&quot;upper&quot;:{&quot;nPer&quot;:2,&quot;nGen&quot;:-2}},&quot;reference&quot;:&quot;none&quot;,&quot;tonic_ambit&quot;:&quot;tonic-bounded&quot;}</jimsStateJson>
+          <jimsStateJson>{"scale":["M2","m2","M2","M2","M2","m2","M2"],"collection_rotation":0,"mode_rotation":0,"generator_cents":700.0,"period_cents":1200.0,"embedding":{"large_steps":5,"small_steps":2},"extent":{"lower":{"nPer":1,"nGen":-2},"upper":{"nPer":2,"nGen":-2}},"tonic_ambit":"tonic-bounded","schema":"jimstaff-v3"}</jimsStateJson>
           <jimsJiLines>1</jimsJiLines>
           <keysig>0</keysig>
           <ledgerlines>0</ledgerlines>
@@ -42,7 +43,7 @@
           <lines>13</lines>
           <clef>0</clef>
           <jims>1</jims>
-          <jimsStateJson>{&quot;scale&quot;:[&quot;M2&quot;,&quot;m2&quot;,&quot;M2&quot;,&quot;M2&quot;,&quot;M2&quot;,&quot;m2&quot;,&quot;M2&quot;],&quot;collection_rotation&quot;:0,&quot;mode_rotation&quot;:0,&quot;generator_cents&quot;:700.0,&quot;period_cents&quot;:1200.0,&quot;embedding&quot;:{&quot;large_steps&quot;:5,&quot;small_steps&quot;:2},&quot;extent&quot;:{&quot;lower&quot;:{&quot;nPer&quot;:1,&quot;nGen&quot;:-2},&quot;upper&quot;:{&quot;nPer&quot;:2,&quot;nGen&quot;:-2}},&quot;reference&quot;:&quot;none&quot;,&quot;tonic_ambit&quot;:&quot;tonic-bounded&quot;}</jimsStateJson>
+          <jimsStateJson>{"scale":["M2","m2","M2","M2","M2","m2","M2"],"collection_rotation":0,"mode_rotation":0,"generator_cents":700.0,"period_cents":1200.0,"embedding":{"large_steps":5,"small_steps":2},"extent":{"lower":{"nPer":1,"nGen":-2},"upper":{"nPer":2,"nGen":-2}},"tonic_ambit":"tonic-bounded","schema":"jimstaff-v3"}</jimsStateJson>
           <jimsJiLines>1</jimsJiLines>
           <keysig>0</keysig>
           <ledgerlines>0</ledgerlines>
@@ -65,7 +66,7 @@
           <lines>13</lines>
           <clef>0</clef>
           <jims>1</jims>
-          <jimsStateJson>{&quot;scale&quot;:[&quot;M2&quot;,&quot;m2&quot;,&quot;M2&quot;,&quot;M2&quot;,&quot;M2&quot;,&quot;m2&quot;,&quot;M2&quot;],&quot;collection_rotation&quot;:0,&quot;mode_rotation&quot;:0,&quot;generator_cents&quot;:700.0,&quot;period_cents&quot;:1200.0,&quot;embedding&quot;:{&quot;large_steps&quot;:5,&quot;small_steps&quot;:2},&quot;extent&quot;:{&quot;lower&quot;:{&quot;nPer&quot;:0,&quot;nGen&quot;:-2},&quot;upper&quot;:{&quot;nPer&quot;:1,&quot;nGen&quot;:-2}},&quot;reference&quot;:&quot;none&quot;,&quot;tonic_ambit&quot;:&quot;tonic-bounded&quot;}</jimsStateJson>
+          <jimsStateJson>{"scale":["M2","m2","M2","M2","M2","m2","M2"],"collection_rotation":0,"mode_rotation":0,"generator_cents":700.0,"period_cents":1200.0,"embedding":{"large_steps":5,"small_steps":2},"extent":{"lower":{"nPer":0,"nGen":-2},"upper":{"nPer":1,"nGen":-2}},"tonic_ambit":"tonic-bounded","schema":"jimstaff-v3"}</jimsStateJson>
           <jimsJiLines>1</jimsJiLines>
           <keysig>0</keysig>
           <ledgerlines>0</ledgerlines>
@@ -88,7 +89,7 @@
           <lines>13</lines>
           <clef>0</clef>
           <jims>1</jims>
-          <jimsStateJson>{&quot;scale&quot;:[&quot;M2&quot;,&quot;m2&quot;,&quot;M2&quot;,&quot;M2&quot;,&quot;M2&quot;,&quot;m2&quot;,&quot;M2&quot;],&quot;collection_rotation&quot;:0,&quot;mode_rotation&quot;:0,&quot;generator_cents&quot;:700.0,&quot;period_cents&quot;:1200.0,&quot;embedding&quot;:{&quot;large_steps&quot;:5,&quot;small_steps&quot;:2},&quot;extent&quot;:{&quot;lower&quot;:{&quot;nPer&quot;:0,&quot;nGen&quot;:-2},&quot;upper&quot;:{&quot;nPer&quot;:1,&quot;nGen&quot;:-2}},&quot;reference&quot;:&quot;none&quot;,&quot;tonic_ambit&quot;:&quot;tonic-bounded&quot;}</jimsStateJson>
+          <jimsStateJson>{"scale":["M2","m2","M2","M2","M2","m2","M2"],"collection_rotation":0,"mode_rotation":0,"generator_cents":700.0,"period_cents":1200.0,"embedding":{"large_steps":5,"small_steps":2},"extent":{"lower":{"nPer":0,"nGen":-2},"upper":{"nPer":1,"nGen":-2}},"tonic_ambit":"tonic-bounded","schema":"jimstaff-v3"}</jimsStateJson>
           <jimsJiLines>1</jimsJiLines>
           <keysig>0</keysig>
           <ledgerlines>0</ledgerlines>

@@ -150,6 +150,8 @@ private:
     void resetBeamMode();
 
     void openMeloProperties();
+    void openMeloInitialPitch(const muse::actions::ActionData& args);
+    void openMeloKeyChange(const muse::actions::ActionData& args);
     void openEditStyleDialog(const muse::actions::ActionData& args);
     void openPageSettingsDialog();
     void openStaffProperties();

@@ -25,6 +25,7 @@ set(MODULE_TEST_SRC
 
     ${CMAKE_CURRENT_LIST_DIR}/msczfile_tests.cpp
     ${CMAKE_CURRENT_LIST_DIR}/meloscoreio_tests.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/melolatticeconformance_tests.cpp
 
     ${CMAKE_CURRENT_LIST_DIR}/utils/scorerw.cpp
     ${CMAKE_CURRENT_LIST_DIR}/utils/scorerw.h

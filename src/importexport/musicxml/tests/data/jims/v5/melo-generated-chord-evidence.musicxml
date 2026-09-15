@@ -1,0 +1,53 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise xmlns:jims="urn:melopresto:musicxml:5" version="4.0">
+  <work><work-title>JiMS chord names on a JiMStaff beside conventional harmony</work-title></work>
+  <jims:reference-timeline><jims:initial-pitch step="D" alter="0" octave="4" /></jims:reference-timeline>
+  <part-list>
+    <score-part id="P1"><part-name>JiMS chord names (JiMStaff)</part-name></score-part>
+    </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>4</divisions>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <jims:staff-state>
+          <jims:scale>
+            <jims:step>M2</jims:step><jims:step>m2</jims:step><jims:step>M2</jims:step>
+            <jims:step>M2</jims:step><jims:step>M2</jims:step><jims:step>m2</jims:step>
+            <jims:step>M2</jims:step>
+          </jims:scale>
+          <jims:collection-rotation>0</jims:collection-rotation>
+          <jims:mode-rotation>0</jims:mode-rotation>
+          <jims:generator-cents>700.0</jims:generator-cents>
+          <jims:period-cents>1200.0</jims:period-cents>
+          <jims:embedding large-steps="5" small-steps="2"/>
+          <jims:extent lower-n-per="1" lower-n-gen="-2" upper-n-per="2" upper-n-gen="-2"/>
+          <jims:tonic-ambit>tonic-bounded</jims:tonic-ambit>
+          
+        </jims:staff-state>
+      </attributes>
+      <harmony placement="above"><jims:chord-name>Do5</jims:chord-name><jims:chord-evidence origin="generated">{"analysis":{"bass_basis":"source_declared","construction_choice":{"basis":"declared_function","shape_root":"Do"},"declared_additions":[],"declared_members":[-2,2,-1],"duration":"4","id":"fixture:C-major","identity":"Do5","name":"Do5","native_input":{"analytical_root_ngen":-2,"analytical_root_sounded":true,"application_base_ngen":-2,"bass_ngen":-2,"function":{"borrowed_from_mode":null,"shape_root":"Do"},"mode":"Do-mode","notes_ngen":[-2,2,-1],"out_of_scope_reason":null},"offset":"0","result":{"folds":0,"identity":"Do5","kind":"Named","name":"Do5"},"source":{"label":"I","reader":"synthetic-source"},"unrestricted_result":{"folds":0,"identity":"Do5","kind":"Named","name":"Do5"}},"disagreements":{"bass_differs":false,"declared_only_members":[],"observed_only_members":[]},"function_basis":"source_declared","interval":{"duration":"4","offset":"0"},"naming":{"construction_choice":{"basis":"declared_function","shape_root":"Do"},"identity":"Do5","name":"Do5","native_input":{"analytical_root_ngen":-2,"analytical_root_sounded":true,"application_base_ngen":-2,"bass_ngen":-2,"function":{"borrowed_from_mode":null,"shape_root":"Do"},"mode":"Do-mode","notes_ngen":[-2,-1,2],"out_of_scope_reason":null},"result":{"folds":0,"identity":"Do5","kind":"Named","name":"Do5"},"unrestricted_result":{"folds":0,"identity":"Do5","kind":"Named","name":"Do5"}},"observation":{"bass_ngen":-2,"notes":[{"height":60,"n_gen":-2,"n_per":1},{"height":64,"n_gen":2,"n_per":-1},{"height":67,"n_gen":-1,"n_per":1},{"height":72.0,"n_gen":-2,"n_per":2}],"status":"score_observed"},"schema":"melo.chord-evidence.v1"}</jims:chord-evidence></harmony>
+      <note>
+        <pitch><step>C</step><octave>4</octave></pitch>
+        <jims:pitch n-per="1" n-gen="-2"/>
+        <duration>16</duration><type>whole</type>
+      </note>
+    <note>
+        <chord/><pitch><step>E</step><octave>4</octave></pitch>
+        <jims:pitch n-per="-1" n-gen="2"/>
+        <duration>16</duration><type>whole</type>
+      </note>
+    <note>
+        <chord/><pitch><step>G</step><octave>4</octave></pitch>
+        <jims:pitch n-per="1" n-gen="-1"/>
+        <duration>16</duration><type>whole</type>
+      </note>
+    <note>
+        <chord/><pitch><step>C</step><octave>5</octave></pitch>
+        <jims:pitch n-per="2" n-gen="-2"/>
+        <duration>16</duration><type>whole</type>
+      </note>
+    </measure>
+    </part>
+  </score-partwise>

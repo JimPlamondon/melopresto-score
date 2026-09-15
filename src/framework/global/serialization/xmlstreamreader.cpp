@@ -501,6 +501,18 @@ std::vector<XmlStreamReader::Attribute> XmlStreamReader::attributes() const
     return attrs;
 }
 
+String XmlStreamReader::namespaceUri(const String& prefix) const
+{
+    const std::string name = prefix.empty() ? "xmlns" : (u"xmlns:" + prefix).toStdString();
+    for (pugi::xml_node node = m_xml->node; node; node = node.parent()) {
+        const pugi::xml_attribute declaration = node.attribute(name.c_str());
+        if (declaration) {
+            return String::fromUtf8(declaration.value());
+        }
+    }
+    return {};
+}
+
 bool XmlStreamReader::noChildren() const
 {
     return m_xml->node ? !m_xml->node.first_child() && !m_xml->node.last_child() : false;

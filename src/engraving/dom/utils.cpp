@@ -21,6 +21,7 @@
  */
 
 #include "utils.h"
+#include "../melo/melochangecontroller.h"
 
 #include <cmath>
 #include <map>
@@ -579,6 +580,10 @@ Note* searchTieNote(const Note* note, const Segment* nextSegment, const bool dis
         return nullptr;
     }
 
+    const bool lattice = note->staff() && note->staff()->staffTypeForElement(note)->isMelo();
+    const auto matchingNote = [&](Chord* target) {
+        return lattice ? melo::continuationNote(note, target) : target->findNote(note->pitch());
+    };
     Note* note2  = nullptr;
     Chord* chord = note->chord();
     Segment* seg = chord->segment();
@@ -606,7 +611,7 @@ Note* searchTieNote(const Note* note, const Segment* nextSegment, const bool dis
         size_t index = note->chord()->graceIndex();
         for (Chord* c : chord->graceNotes()) {
             if (c->graceIndex() == index + 1) {
-                note2 = c->findNote(note->pitch());
+                note2 = matchingNote(c);
                 if (note2) {
                     return note2;
                 }
@@ -614,7 +619,7 @@ Note* searchTieNote(const Note* note, const Segment* nextSegment, const bool dis
         }
 
         // try to tie to note in parent chord
-        note2 = chord->findNote(note->pitch());
+        note2 = matchingNote(chord);
         if (note2) {
             return note2;
         }
@@ -629,7 +634,7 @@ Note* searchTieNote(const Note* note, const Segment* nextSegment, const bool dis
         std::vector<Chord*> gna = chord->graceNotesAfter();
         if (!gna.empty()) {
             Chord* gc = gna.front();
-            note2 = gc->findNote(note->pitch());
+            note2 = matchingNote(gc);
             if (note2) {
                 return note2;
             }
@@ -654,10 +659,18 @@ Note* searchTieNote(const Note* note, const Segment* nextSegment, const bool dis
         std::vector<Chord*> gnb = c->graceNotesBefore();
         if (!gnb.empty()) {
             Chord* gc = gnb.front();
-            Note* gn2 = gc->findNote(note->pitch());
+            Note* gn2 = matchingNote(gc);
             if (gn2) {
                 return gn2;
             }
+        }
+        if (lattice) {
+            if (Note* candidate = matchingNote(c)) {
+                if (!note2 || c->track() == chord->track()) {
+                    note2 = candidate;
+                }
+            }
+            continue;
         }
         int idx2 = 0;
         for (Note* n : c->notes()) {

@@ -94,6 +94,7 @@ struct AudioNoteEvent {
     int16_t pitch = 0;
     float tuningCents = 0.f;
     float velocity = 0.f;
+    bool hasExactTuning = false;
 };
 
 using AudioNoteEvents = std::vector<AudioNoteEvent>;

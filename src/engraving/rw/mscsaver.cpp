@@ -19,6 +19,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+#include "engraving/melo/melochangecontroller.h"
 #include "mscsaver.h"
 
 #include "global/io/buffer.h"
@@ -50,6 +51,14 @@ bool MscSaver::writeMscz(MasterScore* score, MscWriter& mscWriter, bool createTh
         return false;
     }
 
+    for (Score* content : score->scoreList()) {
+        String error;
+        if (!melo::validateLatticeContent(content, error)) {
+            LOGE() << error;
+            return false;
+        }
+    }
+
     // Write style of MasterScore
     {
         //! NOTE The style is writing to a separate file only for the master score.
@@ -73,7 +82,9 @@ bool MscSaver::writeMscz(MasterScore* score, MscWriter& mscWriter, bool createTh
         Buffer scoreBuf(&scoreData);
         scoreBuf.open(IODevice::ReadWrite);
 
-        RWRegister::writer(score->iocContext())->writeScore(score, &scoreBuf, &masterWriteOutData);
+        if (!RWRegister::writer(score->iocContext())->writeScore(score, &scoreBuf, &masterWriteOutData)) {
+            return false;
+        }
 
         mscWriter.writeScoreFile(scoreData);
     }
@@ -109,8 +120,10 @@ bool MscSaver::writeMscz(MasterScore* score, MscWriter& mscWriter, bool createTh
                     Buffer excerptBuf(&excerptData);
                     excerptBuf.open(IODevice::ReadWrite);
 
-                    RWRegister::writer(partScore->iocContext())->writeScore(
-                        excerpt->excerptScore(), &excerptBuf, &masterWriteOutData);
+                    if (!RWRegister::writer(partScore->iocContext())->writeScore(
+                            excerpt->excerptScore(), &excerptBuf, &masterWriteOutData)) {
+                        return false;
+                    }
 
                     mscWriter.addExcerptFile(excerpt->fileName(), excerptData);
                 }

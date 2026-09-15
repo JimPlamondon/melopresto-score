@@ -105,6 +105,8 @@ void NotationSceneModule::resolveImports()
         ir->registerQmlUri(Uri("musescore://notation/parts"), "MuseScore.NotationScene", "PartsDialog");
         ir->registerQmlUri(Uri("musescore://notation/selectmeasurescount"), "MuseScore.NotationScene", "SelectMeasuresCountDialog");
         ir->registerQmlUri(Uri("musescore://notation/editgridsize"), "MuseScore.NotationScene", "EditGridSizeDialog");
+        ir->registerQmlUri(Uri("musescore://notation/melo-initial-pitch"), "MuseScore.NotationScene", "MeloInitialPitchDialog");
+        ir->registerQmlUri(Uri("musescore://notation/melo-key-change"), "MuseScore.NotationScene", "MeloKeyChangeDialog");
         ir->registerQmlUri(Uri("musescore://notation/percussionpanelpadswap"), "MuseScore.NotationScene", "PercussionPanelPadSwapDialog");
         ir->registerQmlUri(Uri("musescore://notation/editpercussionshortcut"), "MuseScore.NotationScene", "EditPercussionShortcutDialog");
     }

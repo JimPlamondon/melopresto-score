@@ -334,9 +334,11 @@ Chord::Chord(const Chord& c, bool link)
         score()->undo(new Link(this, const_cast<Chord*>(&c)));
     }
 
+    std::map<const Note*, Note*> copiedNotes;
     for (Note* onote : c.m_notes) {
         Note* nnote = Factory::copyNote(*onote, link);
         add(nnote);
+        copiedNotes.emplace(onote, nnote);
     }
     for (Chord* gn : c.graceNotes()) {
         Chord* nc = new Chord(*gn, link);
@@ -407,7 +409,7 @@ Chord::Chord(const Chord& c, bool link)
             ChordLine* ncl = Factory::copyChordLine(*cl);
             add(ncl);
             if (cl->note()) {
-                ncl->setNote(findNote(cl->note()->pitch()));
+                ncl->setNote(copiedNotes.at(cl->note()));
             }
             if (link) {
                 score()->undo(new Link(ncl, cl));
@@ -438,7 +440,7 @@ Chord::Chord(const Chord& c, bool link)
 
             std::vector<Note*> newNotes;
             for (Note* note : info->notes()) {
-                newNotes.push_back(findNote(note->pitch()));
+                newNotes.push_back(copiedNotes.at(note));
             }
 
             m_noteParens.push_back(new NoteParenthesisInfo(newLeftParen, newRightParen, newNotes));

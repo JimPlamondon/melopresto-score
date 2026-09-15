@@ -508,7 +508,8 @@ void setMusicNotesFromMidi(Score*,
         note->setTrack(chord->track());
 
         NoteVal nval(mn.pitch);
-        note->setNval(nval, chord->tick());
+        // This importer creates conventional staves; no lattice conversion is possible here.
+        (void)note->setNval(nval, chord->tick());
         // TODO - does this need to be key-aware?
         //note->setPitch(mn.pitch);
         //note->setTpcFromPitch();

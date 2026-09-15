@@ -65,6 +65,9 @@
 #include "../dom/measurerepeat.h"
 #include "../dom/navigate.h"
 #include "../dom/note.h"
+#include "../melo/melochange.h"
+#include "../melo/melobridge.h"
+#include "../melo/melochangecontroller.h"
 #include "../dom/noteline.h"
 #include "../dom/ornament.h"
 #include "../dom/ottava.h"
@@ -397,6 +400,16 @@ Chord* Score::addChord(const Fraction& tick, TDuration d, Chord* oc, bool genTie
         return 0;
     }
 
+    std::vector<NoteVal> values;
+    for (Note* note : oc->notes()) {
+        NoteVal value = note->noteVal();
+        if (genTie ? !melo::prepareContinuationValue(note->noteVal(), oc->staff(), oc->tick(), tick, value)
+            : !Note::prepareNval(value, oc->staff(), tick)) {
+            return nullptr;
+        }
+        values.push_back(value);
+    }
+    std::vector<std::pair<Note*, Note*> > copied;
     Chord* chord = Factory::createChord(this->dummy()->segment());
     chord->setTuplet(tuplet);
     chord->setTrack(oc->track());
@@ -404,12 +417,16 @@ Chord* Score::addChord(const Fraction& tick, TDuration d, Chord* oc, bool genTie
     chord->setTicks(d.fraction());
     chord->setStemDirection(oc->stemDirection());
 
-    for (Note* n : oc->notes()) {
-        Note* nn = Factory::createNote(chord);
-        nn->setPitch(n->pitch());
-        nn->setTpc1(n->tpc1());
-        nn->setTpc2(n->tpc2());
-        chord->add(nn);
+    for (size_t i = 0; i < oc->notes().size(); ++i) {
+        Note* note = Factory::createNote(chord);
+        note->setTrack(oc->track());
+        if (!note->setNval(values[i], tick)) {
+            delete note;
+            delete chord;
+            return nullptr;
+        }
+        chord->add(note);
+        copied.emplace_back(oc->notes()[i], note);
     }
     undoAddCR(chord, measure, tick);
 
@@ -418,10 +435,7 @@ Chord* Score::addChord(const Fraction& tick, TDuration d, Chord* oc, bool genTie
     // (have segments as parent) we can add ties:
     //
     if (genTie) {
-        size_t n = oc->notes().size();
-        for (size_t i = 0; i < n; ++i) {
-            Note* n1  = oc->notes()[i];
-            Note* n2 = chord->notes()[i];
+        for (const auto& [n1, n2] : copied) {
             Tie* tie = Factory::createTie(this->dummy());
             tie->setStartNote(n1);
             tie->setEndNote(n2);
@@ -441,6 +455,16 @@ Chord* Score::addChord(const Fraction& tick, TDuration d, Chord* oc, bool genTie
 
 ChordRest* Score::addClone(ChordRest* cr, const Fraction& tick, const TDuration& d)
 {
+    std::vector<NoteVal> values;
+    if (cr->isChord() && cr->staff()->staffType(cr->tick())->isMelo()) {
+        for (Note* source : toChord(cr)->notes()) {
+            NoteVal value;
+            if (!melo::prepareContinuationValue(source->noteVal(), cr->staff(), cr->tick(), tick, value)) {
+                return nullptr;
+            }
+            values.push_back(value);
+        }
+    }
     ChordRest* newcr;
     // change a MeasureRepeat into an Rest
     if (cr->isMeasureRepeat()) {
@@ -457,6 +481,13 @@ ChordRest* Score::addClone(ChordRest* cr, const Fraction& tick, const TDuration&
     if (newcr->isChord()) {
         muse::DeleteAll(toChord(newcr)->graceNotes());
         toChord(newcr)->removeAllGraceNotes();
+        const auto copied = toChord(newcr)->notes();
+        for (size_t i = 0; i < values.size(); ++i) {
+            if (!copied[i]->setNval(values[i], tick)) {
+                delete newcr;
+                return nullptr;
+            }
+        }
     }
 
     undoAddCR(newcr, cr->measure(), tick);
@@ -588,11 +619,19 @@ Note* Score::addNote(Chord* chord, const NoteVal& noteVal, bool forceAccidental,
 {
     InputState& is = externalInputState ? (*externalInputState) : m_is;
 
+    NoteVal prepared = noteVal;
+    if (!melo::prepareLinkedNoteValue(prepared, chord)) {
+        return nullptr;
+    }
     Note* note = Factory::createNote(chord);
     note->setParent(chord);
     note->setTrack(chord->track());
-    note->setNval(noteVal);
+    if (!note->setNval(prepared)) {
+        delete note;
+        return nullptr;
+    }
     undoAddElement(note);
+    melo::widenExtentForNote(note);
     if (forceAccidental) {
         int tpc = style().styleB(Sid::concertPitch) ? noteVal.tpc1 : noteVal.tpc2;
         AccidentalVal alter = tpc2alter(tpc);
@@ -634,6 +673,81 @@ Note* Score::addNoteToTiedChord(Chord* chord, const NoteVal& noteVal, bool force
     IF_ASSERT_FAILED(!chord->notes().empty()) {
         return nullptr;
     };
+    if (chord->staff()->staffType(chord->tick())->isMelo()) {
+        // Prepare the whole chain before insertion can touch notes, extents,
+        // selection or input state. A pitch coincidence is not a duplicate.
+        NoteVal anchor = noteVal;
+        if (!Note::prepareNval(anchor, chord->staff(), chord->tick())) {
+            return nullptr;
+        }
+        melo::SoundingPitch established;
+        if (!melo::noteSoundingPitch(chord->staff()->staffType(chord->tick())->meloStateJson(),
+                                     anchor.meloNPer, anchor.meloNGen, established)) {
+            MScore::setError(MsError::CANNOT_RESOLVE_LATTICE_NOTE);
+            return nullptr;
+        }
+        std::vector<std::pair<Chord*, NoteVal> > prepared;
+        for (Note* reference : chord->notes().front()->tiedNotes()) {
+            if (reference->incomingPartialTie() || reference->outgoingPartialTie()) {
+                MScore::setError(MsError::CANNOT_RESOLVE_LATTICE_NOTE);
+                return nullptr;
+            }
+            Chord* target = reference->chord();
+            const StaffType* type = target->staff()->staffType(target->tick());
+            melo::SoundingPitch projection;
+            if (!type->isMelo()) {
+                MScore::setError(MsError::CANNOT_RESOLVE_LATTICE_NOTE);
+                return nullptr;
+            }
+            if (!melo::noteSoundingPitch(type->meloStateJson(), anchor.meloNPer, anchor.meloNGen, projection)
+                || std::abs(projection.frequencyHz - established.frequencyHz) >= 1e-9) {
+                if (!melo::noteContinuation(type->meloStateJson(), established.frequencyHz, projection)) {
+                    MScore::setError(MsError::CANNOT_RESOLVE_LATTICE_NOTE);
+                    return nullptr;
+                }
+            }
+            NoteVal value = anchor;
+            value.meloNPer = projection.nPer;
+            value.meloNGen = projection.nGen;
+            if (!melo::prepareLinkedNoteValue(value, target)) {
+                return nullptr;
+            }
+            for (EngravingObject* object : target->linkList()) {
+                Chord* linked = toChord(object);
+                NoteVal linkedValue = value;
+                if (!Note::prepareNval(linkedValue, linked->staff(), linked->tick())
+                    || linkedValue.pitch != value.pitch || linkedValue.tpc1 != value.tpc1) {
+                    MScore::setError(MsError::CANNOT_RESOLVE_LATTICE_NOTE);
+                    return nullptr;
+                }
+                for (Note* existing : linked->notes()) {
+                    if (existing->hasMeloPitch() && existing->meloNPer() == value.meloNPer
+                        && existing->meloNGen() == value.meloNGen) {
+                        return nullptr;
+                    }
+                }
+            }
+            prepared.emplace_back(target, value);
+        }
+        Note* previous = nullptr;
+        for (const auto& [target, value] : prepared) {
+            Note* added = addNote(target, value, forceAccidental, articulationIds);
+            if (!added) {
+                return nullptr; // endCmd unwinds any unexpected late refusal.
+            }
+            if (previous) {
+                Tie* connection = Factory::createTie(previous);
+                connection->setStartNote(previous);
+                connection->setEndNote(added);
+                connection->setTrack(previous->track());
+                connection->setTick(previous->tick());
+                connection->setTick2(added->tick());
+                undoAddElement(connection);
+            }
+            previous = added;
+        }
+        return previous;
+    }
     Note* referenceNote = chord->notes().at(0);
 
     while (true) {
@@ -2049,6 +2163,25 @@ std::vector<Note*> Score::cmdTieNoteList(const Selection& selection, bool noteEn
 static Tie* createAndAddTie(Note* startNote, Note* endNote)
 {
     Score* score = startNote->score();
+    if (startNote->staff()->staffTypeForElement(startNote)->isMelo()) {
+        std::vector<Note*> destinations;
+        if (endNote) {
+            destinations.push_back(endNote);
+        }
+        if (startNote->chord()->hasFollowingJumpItem()) {
+            for (Measure* measure : findFollowingRepeatMeasures(startNote->chord()->measure())) {
+                if (Note* destination = searchTieNote(startNote, measure->first(SegmentType::ChordRest), false)) {
+                    destinations.push_back(destination);
+                }
+            }
+        }
+        if (destinations.empty() || std::any_of(destinations.begin(), destinations.end(), [&](Note* destination) {
+            return !melo::validateTieEndpoints(startNote, destination);
+        })) {
+            MScore::setError(MsError::CANNOT_RESOLVE_LATTICE_NOTE);
+            return nullptr;
+        }
+    }
     Tie* tie = endNote ? Factory::createTie(startNote) : Factory::createPartialTie(startNote);
     tie->setStartNote(startNote);
     tie->setTrack(startNote->track());
@@ -2130,8 +2263,9 @@ void Score::cmdAddTie(bool addToChord)
         Note* n = nullptr;
         if (addToChord && cr->isChord()) {
             Chord* chord = toChord(cr);
-            Note* nn = chord->findNote(note->pitch());
-            if (nn && nn->tpc() == note->tpc()) {
+            Note* nn = note->staff()->staffTypeForElement(note)->isMelo()
+                       ? melo::continuationNote(note, chord) : chord->findNote(note->pitch());
+            if (nn && (note->staff()->staffTypeForElement(note)->isMelo() || nn->tpc() == note->tpc())) {
                 n = nn;                     // re-use note
             } else {
                 addFlag = true;             // re-use chord
@@ -2141,7 +2275,15 @@ void Score::cmdAddTie(bool addToChord)
         // if no note to re-use, create one
         NoteVal nval(note->noteVal());
         if (!n) {
+            if (!melo::prepareContinuationValue(note->noteVal(), note->staff(), note->tick(), cr->tick(), nval)) {
+                endCmd(true);
+                return;
+            }
             n = addPitch(nval, addFlag);
+            if (!n) {
+                endCmd(true);
+                return;
+            }
             if (staffMove != 0) {
                 undo(new ChangeChordStaffMove(n->chord(), staffMove));
             }
@@ -2286,8 +2428,10 @@ Tie* Score::cmdToggleTie()
                 continue;
             }
             const bool samePart = note->part() == candidateNote->part();
-            const bool samePitch = note->pitch() == candidateNote->pitch();
-            const bool sameUnisonIdx = note->unisonIndex() == candidateNote->unisonIndex();
+            const bool lattice = note->staff()->staffTypeForElement(note)->isMelo();
+            const bool samePitch = lattice ? melo::continuationNote(note, candidateNote->chord()) == candidateNote
+                                   : note->pitch() == candidateNote->pitch();
+            const bool sameUnisonIdx = lattice || note->unisonIndex() == candidateNote->unisonIndex();
             const bool diffTick = note->tick() != candidateNote->tick();
             if (samePart && samePitch && sameUnisonIdx && diffTick) {
                 note2 = candidateNote;
@@ -2556,15 +2700,15 @@ void Score::cmdFlip()
             flipOnce(artic, [artic]() {
                 ArticulationAnchor articAnchor = artic->anchor();
                 switch (articAnchor) {
-                    case ArticulationAnchor::TOP:
-                        articAnchor = ArticulationAnchor::BOTTOM;
-                        break;
-                    case ArticulationAnchor::BOTTOM:
-                        articAnchor = ArticulationAnchor::TOP;
-                        break;
-                    case ArticulationAnchor::AUTO:
-                        articAnchor = artic->up() ? ArticulationAnchor::BOTTOM : ArticulationAnchor::TOP;
-                        break;
+                case ArticulationAnchor::TOP:
+                    articAnchor = ArticulationAnchor::BOTTOM;
+                    break;
+                case ArticulationAnchor::BOTTOM:
+                    articAnchor = ArticulationAnchor::TOP;
+                    break;
+                case ArticulationAnchor::AUTO:
+                    articAnchor = artic->up() ? ArticulationAnchor::BOTTOM : ArticulationAnchor::TOP;
+                    break;
                 }
                 PropertyFlags pf = artic->propertyFlags(Pid::ARTICULATION_ANCHOR);
                 if (pf == PropertyFlags::STYLED) {
@@ -2603,15 +2747,15 @@ void Score::cmdFlip()
                 ArticulationAnchor articAnchor = ArticulationAnchor(ornament->getProperty(Pid::ARTICULATION_ANCHOR).toInt());
 
                 switch (articAnchor) {
-                    case ArticulationAnchor::TOP:
-                        articAnchor = ArticulationAnchor::BOTTOM;
-                        break;
-                    case ArticulationAnchor::BOTTOM:
-                        articAnchor = ArticulationAnchor::TOP;
-                        break;
-                    case ArticulationAnchor::AUTO:
-                        articAnchor = ornament->up() ? ArticulationAnchor::BOTTOM : ArticulationAnchor::TOP;
-                        break;
+                case ArticulationAnchor::TOP:
+                    articAnchor = ArticulationAnchor::BOTTOM;
+                    break;
+                case ArticulationAnchor::BOTTOM:
+                    articAnchor = ArticulationAnchor::TOP;
+                    break;
+                case ArticulationAnchor::AUTO:
+                    articAnchor = ornament->up() ? ArticulationAnchor::BOTTOM : ArticulationAnchor::TOP;
+                    break;
                 }
                 PropertyFlags pf = ornament->propertyFlags(Pid::ARTICULATION_ANCHOR);
                 if (pf == PropertyFlags::STYLED) {
@@ -7316,8 +7460,30 @@ void Score::undoAddElement(EngravingItem* element, bool addToLinkedStaves, bool 
                 return;
             }
 
-            Note* nn1 = c1->findNote(n1->pitch(), n1->unisonIndex());
-            Note* nn2 = c2 ? c2->findNote(n2->pitch(), n2->unisonIndex()) : 0;
+            const auto corresponding = [](Note* original, Chord* destination) -> Note* {
+                if (!original || !destination) {
+                    return nullptr;
+                }
+                if (!original->staff()->staffTypeForElement(original)->isMelo()) {
+                    return destination->findNote(original->pitch(), original->unisonIndex());
+                }
+                for (EngravingObject* object : original->linkList()) {
+                    Note* linked = toNote(object);
+                    if (linked->chord() == destination) {
+                        return linked;
+                    }
+                }
+                return nullptr;
+            };
+            Note* nn1 = corresponding(n1, c1);
+            Note* nn2 = corresponding(n2, c2);
+            if (!nn1 || (n2 && !nn2)) {
+                MScore::setError(MsError::CANNOT_RESOLVE_LATTICE_NOTE);
+                if (ne != element) {
+                    delete ne;
+                }
+                return;
+            }
 
             const track_idx_t track1 = c1->track();
             const track_idx_t track2 = c2 ? c2->track() : track1;

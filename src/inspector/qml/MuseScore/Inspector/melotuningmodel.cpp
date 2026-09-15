@@ -1,3 +1,4 @@
+#include "engraving/melo/melostrings.h"
 /*
  * SPDX-License-Identifier: GPL-3.0-only
  * MuseScore-Studio-CLA-applies
@@ -16,7 +17,7 @@ using namespace mu::inspector;
 using namespace mu::engraving;
 
 namespace {
-const muse::audio::AudioResourceId MELO_SYNTH_RESOURCE_ID = "MeloPresto Synth";
+const muse::audio::AudioResourceId MELO_SYNTH_RESOURCE_ID = mu::engraving::melo::synthResourceId;
 }
 
 MeloTuningModel::MeloTuningModel(QObject* parent)

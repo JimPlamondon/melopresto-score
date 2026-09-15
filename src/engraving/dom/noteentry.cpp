@@ -187,11 +187,15 @@ NoteVal Score::noteValForPosition(Position pos, AccidentalType at, bool& error)
                     mu::engraving::melo::SoundingPitch projection;
                     if (mu::engraving::melo::noteSoundingPitch(meloSt->meloStateJson(), hit.nPer, hit.nGen, projection)) {
                         const int stepIndex = int(muse::String(u"CDEFGAB").indexOf(muse::Char(projection.step)));
+                        nval.hasMeloPitch = true;
+                        nval.meloNPer = hit.nPer;
+                        nval.meloNGen = hit.nGen;
                         nval.pitch = projection.midiKey;
                         nval.tpc1 = step2tpc(stepIndex, AccidentalVal(projection.alter));
                         nval.tpc2 = nval.tpc1;
                     }
                 }
+                error = !nval.hasMeloPitch;
                 break;
             }
         }
@@ -236,6 +240,9 @@ Note* Score::addPitch(NoteVal& nval, bool addFlag, InputState* externalInputStat
         return addPitchToChord(nval, toChord(c), externalInputState);
     }
 
+    if (!is.segment() || !Note::prepareNval(nval, staff(track2staff(is.track())), is.segment()->tick())) {
+        return nullptr;
+    }
     expandVoice(is.segment(), is.track());
 
     // insert note
@@ -288,6 +295,9 @@ Note* Score::addPitch(NoteVal& nval, bool addFlag, InputState* externalInputStat
         }
     }
 
+    if (!note) {
+        return nullptr;
+    }
     if (is.slur()) {
         //
         // extend slur
@@ -349,13 +359,16 @@ Note* Score::addPitchToChord(NoteVal& nval, Chord* chord, InputState* externalIn
     Note* note = nullptr;
     if (isTied(chord)) {
         note = addNoteToTiedChord(chord, nval, forceAccidental);
-        if (!note) {
+        if (!note && !chord->staff()->staffType(chord->tick())->isMelo()) {
             note = addNote(chord, nval, forceAccidental, /* articulationIds */ {}, externalInputState);
         }
     } else {
         note = addNote(chord, nval, forceAccidental, /* articulationIds */ {}, externalInputState);
     }
 
+    if (!note) {
+        return nullptr;
+    }
     if (is.usingNoteEntryMethod(NoteEntryMethod::REPITCH)) {
         // move cursor to next note
         ChordRest* next = nextChordRest(note->chord());
@@ -415,13 +428,12 @@ Ret Score::putNote(const Position& p, bool replace)
     Staff* st   = staff(p.staffIdx);
     Segment* s  = p.segment;
 
-    m_is.setTrack(p.staffIdx * VOICES + m_is.voice());
-    m_is.setSegment(s);
+    const track_idx_t targetTrack = p.staffIdx * VOICES + m_is.voice();
 
     if (mu::engraving::Excerpt* excerpt = score()->excerpt()) {
         const TracksMap& tracks = excerpt->tracksMapping();
 
-        if (!tracks.empty() && muse::key(tracks, m_is.track(), muse::nidx) == muse::nidx) {
+        if (!tracks.empty() && muse::key(tracks, targetTrack, muse::nidx) == muse::nidx) {
             return make_ret(Ret::Code::UnknownError);
         }
     }
@@ -432,6 +444,9 @@ Ret Score::putNote(const Position& p, bool replace)
     if (error) {
         return make_ret(Ret::Code::UnknownError);
     }
+
+    m_is.setTrack(targetTrack);
+    m_is.setSegment(s);
 
     // warn and delete MeasureRepeat if necessary
     Measure* m = m_is.segment()->measure();
@@ -531,7 +546,18 @@ Ret Score::putNote(const Position& p, bool replace)
             } else {                            // not TAB
                 // if a note with the same pitch already exists in the chord, remove it
                 Chord* chord = toChord(cr);
-                Note* note = chord->findNote(nval.pitch);
+                Note* note = nullptr;
+                if (st->staffType(cr->tick())->isMelo()) {
+                    for (Note* candidate : chord->notes()) {
+                        if (candidate->hasMeloPitch() && nval.hasMeloPitch
+                            && candidate->meloNPer() == nval.meloNPer && candidate->meloNGen() == nval.meloNGen) {
+                            note = candidate;
+                            break;
+                        }
+                    }
+                } else {
+                    note = chord->findNote(nval.pitch);
+                }
                 if (note) {
                     if (chord->notes().size() > 1) {
                         undoRemoveElement(note);
@@ -610,6 +636,9 @@ void Score::handleOverlappingChordRest(InputState& inputState)
             const std::vector<TDuration> durationList = toDurationList(difference, true);
             for (const TDuration& dur : durationList) {
                 prevChord = ms->addChord(startTick, dur, prevChord, /*genTie*/ bool(prevChord), prevChord->tuplet());
+                if (!prevChord) {
+                    return;
+                }
                 startTick += dur.fraction();
             }
         }
@@ -690,6 +719,9 @@ Ret Score::repitchNote(const Position& p, bool replace)
     }
 
     auto [note, lastTiedNote] = repitchReplaceNote(chord, nval, forceAccidental);
+    if (!note) {
+        return make_ret(Ret::Code::UnknownError);
+    }
     setPlayChord(true);
 
     // move to next Chord
@@ -706,10 +738,41 @@ Ret Score::repitchNote(const Position& p, bool replace)
 
 std::pair<Note*, Note*> Score::repitchReplaceNote(Chord* chord, const NoteVal& nval, bool forceAccidental)
 {
+    if (chord->staff()->staffType(chord->tick())->isMelo()) {
+        NoteVal value = nval;
+        if (chord->notes().empty() || !Note::prepareNval(value, chord->staff(), chord->tick())) {
+            return { nullptr, nullptr };
+        }
+        Note* anchor = chord->notes().front();
+        std::vector<melo::NoteEdit> edits;
+        String error;
+        if (!melo::preparePitchEdit(anchor, value.meloNPer, value.meloNGen, edits, error)) {
+            MScore::setError(MsError::CANNOT_RESOLVE_LATTICE_NOTE);
+            return { nullptr, nullptr };
+        }
+        // Repitch reduces these chords to the chosen occurrence, while the
+        // prepared edit preserves the complete sustained sound and its links.
+        for (const melo::NoteEdit& edit : edits) {
+            const auto siblings = edit.note->chord()->notes();
+            for (Note* sibling : siblings) {
+                if (sibling != edit.note) {
+                    undoRemoveElement(sibling);
+                }
+            }
+        }
+        melo::commitPitchEdits(this, edits);
+        Note* last = anchor->lastTiedNote();
+        setPlayNote(true);
+        select(last);
+        return { anchor, last };
+    }
     Note* note = Factory::createNote(chord);
     note->setParent(chord);
     note->setTrack(chord->track());
-    note->setNval(nval);
+    if (!note->setNval(nval)) {
+        delete note;
+        return { nullptr, nullptr };
+    }
 
     Note* firstTiedNote = nullptr;
     Note* lastTiedNote = note;
@@ -903,6 +966,9 @@ Ret Score::insertChordByInsertingTime(const Position& pos)
                         Chord* prototype = prevChord ? prevChord : chord;
                         const bool genTie = bool(prevChord);
                         prevChord = ms->addChord(p, dur, prototype, genTie, /* tuplet */ nullptr);
+                        if (!prevChord) {
+                            return make_ret(Ret::Code::UnknownError);
+                        }
                         p += dur.fraction();
                     }
                     // TODO: reconnect ties if this chord was tied to other

@@ -54,6 +54,7 @@ static constexpr const char* MELO_MEI_NS = "urn:melopresto:mei:1";
 // Retired spellings (before 2026-09-11): still read, never written.
 static constexpr const char* RETIRED_MELO_MEI_NS = "urn:jims:mei:1";
 static constexpr const char* MELO_MUSICXML_NS = "urn:melopresto:musicxml:4";
+static constexpr const char* MELO_MUSICXML_V5_NS = "urn:melopresto:musicxml:5";
 static constexpr const char* RETIRED_MELO_MUSICXML_NS = "urn:jims:musicxml:4";
 
 /// Export-side plan and emission.
@@ -108,6 +109,7 @@ private:
     const engraving::Score* m_score = nullptr;
     std::vector<StaffPlan> m_staves;
     muse::String m_tonicAmbit;
+    muse::String m_referenceXml;
     std::vector<std::pair<const engraving::Measure*, std::string> > m_measures;
     std::map<const engraving::Measure*, size_t> m_measureIndex;
     std::vector<std::pair<std::string, const engraving::Harmony*> > m_harms;
@@ -138,6 +140,7 @@ public:
 
 private:
     bool stateJsonFromXml(pugi::xml_node staffStateNode, muse::String& json);
+    bool m_canonical = false;
 
     pugi::xml_document m_recordDoc;
     pugi::xml_node m_record;

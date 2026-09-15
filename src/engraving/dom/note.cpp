@@ -38,6 +38,7 @@
 #include "iengravingfont.h"
 
 #include "../melo/melobridge.h"
+#include "../melo/melochangecontroller.h"
 #include "../melo/melochange.h"
 
 #include "rendering/score/horizontalspacing.h"
@@ -1935,50 +1936,66 @@ EngravingItem* Note::drop(EditData& data)
         switch (toActionIcon(e)->actionType()) {
         case ActionIconType::ACCIACCATURA:
         {
-            Note* note = score()->setGraceNote(ch, pitch(), NoteType::ACCIACCATURA, Constants::DIVISION / 2);
-            score()->select(note, SelectType::SINGLE, 0);
+            Note* note = score()->setGraceNote(ch, pitch(), NoteType::ACCIACCATURA, Constants::DIVISION / 2, this);
+            if (note) {
+                score()->select(note, SelectType::SINGLE, 0);
+            }
             break;
         }
         case ActionIconType::APPOGGIATURA:
         {
-            Note* note = score()->setGraceNote(ch, pitch(), NoteType::APPOGGIATURA, Constants::DIVISION / 2);
-            score()->select(note, SelectType::SINGLE, 0);
+            Note* note = score()->setGraceNote(ch, pitch(), NoteType::APPOGGIATURA, Constants::DIVISION / 2, this);
+            if (note) {
+                score()->select(note, SelectType::SINGLE, 0);
+            }
             break;
         }
         case ActionIconType::GRACE4:
         {
-            Note* note = score()->setGraceNote(ch, pitch(), NoteType::GRACE4, Constants::DIVISION);
-            score()->select(note, SelectType::SINGLE, 0);
+            Note* note = score()->setGraceNote(ch, pitch(), NoteType::GRACE4, Constants::DIVISION, this);
+            if (note) {
+                score()->select(note, SelectType::SINGLE, 0);
+            }
             break;
         }
         case ActionIconType::GRACE16:
         {
-            Note* note = score()->setGraceNote(ch, pitch(), NoteType::GRACE16,  Constants::DIVISION / 4);
-            score()->select(note, SelectType::SINGLE, 0);
+            Note* note = score()->setGraceNote(ch, pitch(), NoteType::GRACE16,  Constants::DIVISION / 4, this);
+            if (note) {
+                score()->select(note, SelectType::SINGLE, 0);
+            }
             break;
         }
         case ActionIconType::GRACE32:
         {
-            Note* note = score()->setGraceNote(ch, pitch(), NoteType::GRACE32, Constants::DIVISION / 8);
-            score()->select(note, SelectType::SINGLE, 0);
+            Note* note = score()->setGraceNote(ch, pitch(), NoteType::GRACE32, Constants::DIVISION / 8, this);
+            if (note) {
+                score()->select(note, SelectType::SINGLE, 0);
+            }
             break;
         }
         case ActionIconType::GRACE8_AFTER:
         {
-            Note* note = score()->setGraceNote(ch, pitch(), NoteType::GRACE8_AFTER, Constants::DIVISION / 2);
-            score()->select(note, SelectType::SINGLE, 0);
+            Note* note = score()->setGraceNote(ch, pitch(), NoteType::GRACE8_AFTER, Constants::DIVISION / 2, this);
+            if (note) {
+                score()->select(note, SelectType::SINGLE, 0);
+            }
             break;
         }
         case ActionIconType::GRACE16_AFTER:
         {
-            Note* note = score()->setGraceNote(ch, pitch(), NoteType::GRACE16_AFTER, Constants::DIVISION / 4);
-            score()->select(note, SelectType::SINGLE, 0);
+            Note* note = score()->setGraceNote(ch, pitch(), NoteType::GRACE16_AFTER, Constants::DIVISION / 4, this);
+            if (note) {
+                score()->select(note, SelectType::SINGLE, 0);
+            }
             break;
         }
         case ActionIconType::GRACE32_AFTER:
         {
-            Note* note = score()->setGraceNote(ch, pitch(), NoteType::GRACE32_AFTER, Constants::DIVISION / 8);
-            score()->select(note, SelectType::SINGLE, 0);
+            Note* note = score()->setGraceNote(ch, pitch(), NoteType::GRACE32_AFTER, Constants::DIVISION / 8, this);
+            if (note) {
+                score()->select(note, SelectType::SINGLE, 0);
+            }
             break;
         }
 
@@ -2129,9 +2146,7 @@ EngravingItem* Note::drop(EditData& data)
         DirectionV dir = c->stemDirection();
         track_idx_t t = track(); // (staff2track(staffIdx()) + n->voice());
         score()->select(0, SelectType::SINGLE, 0);
-        NoteVal nval;
-        nval.pitch = n->pitch();
-        nval.headGroup = n->headGroup();
+        NoteVal nval = n->noteVal();
         const ChordRest* cr = nullptr;
         if (data.modifiers & ShiftModifier) {
             // add note to chord
@@ -2901,10 +2916,13 @@ void Note::endDrag(EditData& ed)
     IF_ASSERT_FAILED(ned) {
         return;
     }
-    for (Note* nn : tiedNotes()) {
-        for (const auto& [id, data, flags] : ned->propertyData) {
-            setPropertyFlags(id, flags); // reset initial property flags state
-            score()->undoPropertyChanged(nn, id, data);
+    const bool latticeDrag = ned->meloStartValid && ned->mode == NoteEditData::EditMode_ChangePitch;
+    if (!latticeDrag) {
+        for (Note* nn : tiedNotes()) {
+            for (const auto& [id, data, flags] : ned->propertyData) {
+                setPropertyFlags(id, flags); // reset initial property flags state
+                score()->undoPropertyChanged(nn, id, data);
+            }
         }
     }
 
@@ -2915,8 +2933,14 @@ void Note::endDrag(EditData& ed)
         // The drag-start cents use the original lower extent as their
         // origin. Widen only on drop, so later pointer events cannot
         // reinterpret that ordinate against a moving lower endpoint.
+        std::set<Note*> widened;
         for (Note* nn : tiedNotes()) {
-            melo::widenExtentForNote(nn);
+            for (EngravingObject* object : nn->linkList()) {
+                Note* linked = toNote(object);
+                if (widened.insert(linked).second) {
+                    melo::widenExtentForNote(linked);
+                }
+            }
         }
         triggerLayout();
     }
@@ -2978,17 +3002,15 @@ void Note::verticalDrag(EditData& ed)
             if (melo::nearestPitch(meloSt->meloStateJson(), targetCents,
                                    true, ned->meloStartNPer, ned->meloStartNGen, hit)) {
                 if (hit.nPer != m_meloNPer || hit.nGen != m_meloNGen) {
-                    melo::SoundingPitch projection;
-                    if (melo::noteSoundingPitch(meloSt->meloStateJson(), hit.nPer, hit.nGen, projection)) {
-                        const int newTpc = step2tpc(int(muse::String(u"CDEFGAB").indexOf(muse::Char(projection.step))),
-                                                    AccidentalVal(projection.alter));
-                        for (Note* nn : tiedNotes()) {
-                            nn->setMeloPitch(projection.nPer, projection.nGen);
-                            nn->setPitch(projection.midiKey, newTpc, newTpc);
-                            nn->setTuning(projection.centsOffset);
-                            nn->triggerLayout();
-                        }
+                    std::vector<melo::NoteEdit> edits;
+                    String error;
+                    if (!melo::preparePitchEdit(this, hit.nPer, hit.nGen, edits, error)) {
+                        MScore::setError(MsError::CANNOT_RESOLVE_LATTICE_NOTE);
+                        return;
                     }
+                    // Each event is in the existing drag macro. Undo records
+                    // each occurrence's own fields, including derived tuning.
+                    melo::commitPitchEdits(score(), edits, false);
                 }
             }
             return;
@@ -3206,8 +3228,63 @@ void Note::updateLine()
 //    set note properties from NoteVal
 //---------------------------------------------------------
 
-void Note::setNval(const NoteVal& nval, Fraction tick)
+bool Note::prepareNval(NoteVal& nval, const Staff* staff, const Fraction& tick)
 {
+    const StaffType* type = staff ? staff->staffType(tick) : nullptr;
+    if (!type || !type->isMelo() || nval.isRest()) {
+        return true;
+    }
+    melo::SoundingPitch projection;
+    String error;
+    bool valid = false;
+    if (nval.hasMeloPitch) {
+        valid = melo::noteSoundingPitch(type->meloStateJson(), nval.meloNPer, nval.meloNGen, projection, &error);
+    } else {
+        // Conventional spelling is transport only; the Kernel resolves input
+        // that genuinely has no coordinates, and may refuse ambiguity.
+        int tpc = nval.tpc1;
+        if (tpc == Tpc::TPC_INVALID) {
+            const Interval transpose = staff->transpose(tick);
+            if (nval.tpc2 == Tpc::TPC_INVALID) {
+                MScore::setError(MsError::CANNOT_RESOLVE_LATTICE_NOTE);
+                return false;
+            }
+            tpc = transpose.isZero() ? nval.tpc2 : Transpose::transposeTpc(nval.tpc2, transpose, true);
+        }
+        const int alter = int(tpc2alter(tpc));
+        valid = melo::entryFromStandardPitch(type->meloStateJson(), "CDEFGAB"[tpc2step(tpc)], alter,
+                                             (nval.pitch - alter) / 12 - 1, projection, &error);
+    }
+    if (!valid) {
+        LOGE() << error;
+        MScore::setError(MsError::CANNOT_RESOLVE_LATTICE_NOTE);
+        return false;
+    }
+    nval.hasMeloPitch = true;
+    nval.meloNPer = projection.nPer;
+    nval.meloNGen = projection.nGen;
+    nval.pitch = projection.midiKey;
+    nval.tpc1 = nval.tpc2 = step2tpc(int(String(u"CDEFGAB").indexOf(Char(projection.step))), AccidentalVal(projection.alter));
+    return true;
+}
+
+bool Note::setNval(const NoteVal& value, Fraction tick)
+{
+    if (tick == Fraction(-1, 1) && chord()) {
+        tick = chord()->tick();
+    }
+    NoteVal nval = value;
+    if (!prepareNval(nval, staff(), tick)) {
+        return false;
+    }
+    const StaffType* type = staff() ? staff()->staffType(tick) : nullptr;
+    melo::SoundingPitch projection;
+    const bool isMelo = type && type->isMelo();
+    if (isMelo && (!nval.hasMeloPitch
+                   || !melo::noteSoundingPitch(type->meloStateJson(), nval.meloNPer, nval.meloNGen, projection))) {
+        MScore::setError(MsError::CANNOT_RESOLVE_LATTICE_NOTE);
+        return false;
+    }
     setPitch(nval.pitch);
     m_userVelocity = nval.velocityOverride;
     m_fret   = nval.fret;
@@ -3216,9 +3293,6 @@ void Note::setNval(const NoteVal& nval, Fraction tick)
     m_tpc[0] = nval.tpc1;
     m_tpc[1] = nval.tpc2;
 
-    if (tick == Fraction(-1, 1) && chord()) {
-        tick = chord()->tick();
-    }
     Interval v = staff()->transpose(tick);
     if (nval.tpc1 == Tpc::TPC_INVALID) {
         if (nval.tpc2 == Tpc::TPC_INVALID) {
@@ -3243,34 +3317,11 @@ void Note::setNval(const NoteVal& nval, Fraction tick)
 
     m_headGroup = NoteHeadGroup(nval.headGroup);
 
-    // JiMStaff (Milestone 2 Phase 3): a note landing on a JiMS staff
-    // without a lattice identity — interactive entry arrives here — gets
-    // one from the Kernel entry conversion, derived from the spelling
-    // just established above. The spelling-to-letter mapping is
-    // transport; the identity itself comes from the Kernel.
-    if (!hasMeloPitch() && staff() && chord()) {
-        // A newly-created note is not yet in the score tree, so
-        // staffTypeForElement() can resolve the base type. The caller's
-        // insertion tick is the authority for the effective section.
-        const StaffType* meloSt = tick == Fraction(-1, 1) ? staff()->staffTypeForElement(this) : staff()->staffType(tick);
-        if (meloSt && meloSt->isMelo()) {
-            const int tpcNow = m_tpc[0];
-            if (tpcNow != Tpc::TPC_INVALID) {
-                const char letter = "CDEFGAB"[tpc2step(tpcNow)];
-                const int alter = int(tpc2alter(tpcNow));
-                const int octave = (m_pitch - alter) / 12 - 1;
-                melo::SoundingPitch projection;
-                if (melo::entryFromStandardPitch(meloSt->meloStateJson(), letter, alter, octave, projection)) {
-                    const int step = int(String(u"CDEFGAB").indexOf(Char(projection.step)));
-                    const int tpc = step2tpc(step, AccidentalVal(projection.alter));
-                    setMeloPitch(projection.nPer, projection.nGen);
-                    melo::widenExtentForNote(this);
-                    setPitch(projection.midiKey, tpc, tpc);
-                    setTuning(projection.centsOffset);
-                }
-            }
-        }
+    if (isMelo) {
+        setMeloPitch(projection.nPer, projection.nGen);
+        setTuning(projection.centsOffset);
     }
+    return true;
 }
 
 //---------------------------------------------------------
@@ -3780,6 +3831,9 @@ NoteVal Note::noteVal() const
     nval.fret = fret();
     nval.string = string();
     nval.headGroup = headGroup();
+    nval.hasMeloPitch = hasMeloPitch();
+    nval.meloNPer = meloNPer();
+    nval.meloNGen = meloNGen();
 
     return nval;
 }
@@ -4427,7 +4481,7 @@ int Note::stringOrLine() const
 //   Note::transposeDiatonic
 //---------------------------------------------------------
 
-bool Note::transposeDiatonic(int interval, bool keepAlterations, bool useDoubleAccidentals)
+bool Note::prepareDiatonicTranspose(int interval, bool keepAlterations, bool useDoubleAccidentals, NoteVal& result) const
 {
     // compute note current absolute step
     int alter;
@@ -4467,35 +4521,36 @@ bool Note::transposeDiatonic(int interval, bool keepAlterations, bool useDoubleA
     if (hasMeloPitch() && type && type->isMelo()) {
         // Keep the inherited diatonic/key/alteration decision, then let the
         // Kernel apply that interval to the canonical structural note.
-        return transpose(Interval(interval, newPitch - pitch()), useDoubleAccidentals);
+        return prepareTranspose(Interval(interval, newPitch - pitch()), useDoubleAccidentals, result);
     }
 
     // check pitch is in range
     newPitch = clampPitch(newPitch, true);
 
     // store new data
-    score()->undoChangePitch(this, newPitch, newTpc1, newTpc2);
+    result = noteVal();
+    result.pitch = newPitch;
+    result.tpc1 = newTpc1;
+    result.tpc2 = newTpc2;
     return true;
 }
 
-bool Note::transpose(Interval interval, bool useDoubleSharpsFlats)
+bool Note::prepareTranspose(Interval interval, bool useDoubleSharpsFlats, NoteVal& result) const
 {
     const StaffType* type = staff() ? staff()->staffTypeForElement(this) : nullptr;
-    if (hasMeloPitch() && type && type->isMelo()) {
+    if (type && type->isMelo()) {
         melo::SoundingPitch projection;
         String error;
-        if (!melo::transposeNote(type->meloStateJson(), meloNPer(), meloNGen(), interval.diatonic, interval.chromatic, projection,
-                                 &error)) {
+        if (!hasMeloPitch() || !melo::transposeNote(type->meloStateJson(), meloNPer(), meloNGen(), interval.diatonic, interval.chromatic,
+                                                    projection,
+                                                    &error)) {
             return false;
         }
-        const int step = int(String(u"CDEFGAB").indexOf(Char(projection.step)));
-        const int concertTpc = step2tpc(step, AccidentalVal(projection.alter));
-        undoChangeProperty(Pid::MELO_NPER, projection.nPer);
-        undoChangeProperty(Pid::MELO_NGEN, projection.nGen);
-        score()->undoChangePitch(this, projection.midiKey, concertTpc, writtenTpcForConcert(concertTpc));
-        undoChangeProperty(Pid::TUNING, projection.centsOffset);
-        melo::widenExtentForNote(this);
-        return true;
+        result = noteVal();
+        result.hasMeloPitch = true;
+        result.meloNPer = projection.nPer;
+        result.meloNGen = projection.nGen;
+        return prepareNval(result, staff(), tick());
     }
     int npitch = pitch() + interval.chromatic;
     if (!pitchIsValid(npitch)) {
@@ -4512,7 +4567,51 @@ bool Note::transpose(Interval interval, bool useDoubleSharpsFlats)
             ntpc2 = Transpose::transposeTpc(tpc2(), interval, useDoubleSharpsFlats);
         }
     }
-    score()->undoChangePitch(this, npitch, ntpc1, ntpc2);
+    result = noteVal();
+    result.pitch = npitch;
+    result.tpc1 = ntpc1;
+    result.tpc2 = ntpc2;
+    return true;
+}
+
+bool Note::transposeDiatonic(int interval, bool keepAlterations, bool useDoubleAccidentals)
+{
+    NoteVal result;
+    if (!prepareDiatonicTranspose(interval, keepAlterations, useDoubleAccidentals, result)) {
+        MScore::setError(MsError::CANNOT_RESOLVE_LATTICE_NOTE);
+        return false;
+    }
+    if (staff()->staffTypeForElement(this)->isMelo()) {
+        std::vector<melo::NoteEdit> edits;
+        String error;
+        if (!melo::preparePitchEdit(this, result.meloNPer, result.meloNGen, edits, error)) {
+            MScore::setError(MsError::CANNOT_RESOLVE_LATTICE_NOTE);
+            return false;
+        }
+        melo::commitPitchEdits(score(), edits);
+    } else {
+        score()->undoChangePitch(this, result.pitch, result.tpc1, result.tpc2);
+    }
+    return true;
+}
+
+bool Note::transpose(Interval interval, bool useDoubleSharpsFlats)
+{
+    NoteVal result;
+    if (!prepareTranspose(interval, useDoubleSharpsFlats, result)) {
+        return false;
+    }
+    if (staff() && staff()->staffTypeForElement(this)->isMelo()) {
+        std::vector<melo::NoteEdit> edits;
+        String error;
+        if (!melo::preparePitchEdit(this, result.meloNPer, result.meloNGen, edits, error)) {
+            MScore::setError(MsError::CANNOT_RESOLVE_LATTICE_NOTE);
+            return false;
+        }
+        melo::commitPitchEdits(score(), edits);
+    } else {
+        score()->undoChangePitch(this, result.pitch, result.tpc1, result.tpc2);
+    }
     return true;
 }
 }

@@ -33,6 +33,7 @@
 // TODO LVI 2011-10-30: determine how to report export errors.
 // Currently all output (both debug and error reports) are done using LOGD.
 
+#include "engraving/melo/melochangecontroller.h"
 #include "engraving/melo/melostrings.h"
 #include "exportmusicxml.h"
 
@@ -440,6 +441,7 @@ private:
     };
     struct MeloExportPlan {
         bool present = false;
+        String referenceXml;
         std::map<std::pair<int, int>, std::vector<MeloFragment> > byPartTick;   // (partIndex, tick)
         String error;
     };
@@ -7404,7 +7406,8 @@ void ExportMusicXml::identification(XmlWriter& xml, Score const* const score)
 
     if (!MScore::debugMode) {
         // do not write miscellaneous in debug mode
-        metaTagNames.insert({ u"workTitle", u"workNumber", u"movementTitle", u"movementNumber", u"originalFormat" });
+        metaTagNames.insert({ u"workTitle", u"workNumber", u"movementTitle", u"movementNumber", u"originalFormat",
+                              melo::REFERENCE_TIMELINE_TAG });
         xml.startElement("miscellaneous");
         for (const auto& metaTag : score->metaTags()) {
             auto search = metaTagNames.find(metaTag.first);
@@ -9012,6 +9015,18 @@ static std::vector<const Jump*> findJumpElements(const Score* score)
 bool ExportMusicXml::buildMeloExportPlan()
 {
     m_meloPlan = MeloExportPlan();
+    const String root = m_score->masterScore()->metaTag(melo::REFERENCE_TIMELINE_TAG);
+    const bool canonical = !root.isEmpty();
+    if (canonical && !melo::musicxmlReferenceV5Xml(root, m_meloPlan.referenceXml, m_meloPlan.error)) {
+        return false;
+    }
+    const auto stateXml = [canonical](const String& state, int number, bool shared, String& output, String& error) {
+        if (!canonical) {
+            error = mu::engraving::melo::canonicalExportReferenceRequired();
+            return false;
+        }
+        return melo::musicxmlConfigurationV5Xml(state, number, shared, output, error);
+    };
     const auto validateMeloHarmony = [this](const Harmony* harmony, bool insideFretDiagram) {
         if (!harmony || harmony->harmonyType() != HarmonyType::MELO) {
             return true;
@@ -9067,13 +9082,12 @@ bool ExportMusicXml::buildMeloExportPlan()
             const int staffNumber = nstaves > 1 ? int(partStaff) + 1 : 0;   // extension `number`, Kernel-written
             const StaffType* base = staff->staffType(Fraction(0, 1));
             const bool baseMelo = base && base->isMelo();
-            String previousState = baseMelo ? base->meloStateJson() : String();
             if (baseMelo) {
                 m_meloPlan.present = true;
                 MeloFragment f;
                 String err;
-                if (!melo::musicxmlStaffStateV3Xml(base->meloStateJson(), staffNumber, f.stateXml, &err)
-                    || !melo::musicxmlSharedStateV3Xml(base->meloStateJson(), f.sharedStateXml, &err)) {
+                if (!stateXml(base->meloStateJson(), staffNumber, false, f.stateXml, err)
+                    || !stateXml(base->meloStateJson(), 0, true, f.sharedStateXml, err)) {
                     m_meloPlan.error
                         = mu::engraving::melo::exportBaseStateRefused().arg(int(staffIdx) + 1).arg(err);
                     return false;
@@ -9082,6 +9096,9 @@ bool ExportMusicXml::buildMeloExportPlan()
             }
             for (const Measure* m = m_score->firstMeasure(); m; m = m->nextMeasure()) {
                 for (const StaffTypeChange* carrier : melo::changeCarriers(m, staffIdx)) {
+                    if (canonical && carrier->meloReferenceOnly()) {
+                        continue;
+                    }
                     if (!carrier->staffType() || !carrier->staffType()->isMelo()) {
                         continue;
                     }
@@ -9094,18 +9111,12 @@ bool ExportMusicXml::buildMeloExportPlan()
                     const String state = staff->staffType(carrier->tick())->meloStateJson();
                     MeloFragment f;
                     String err;
-                    if (!melo::musicxmlStaffStateV3Xml(state, staffNumber, f.stateXml, &err)
-                        || !melo::musicxmlSharedStateV3Xml(state, f.sharedStateXml, &err)) {
+                    if (!stateXml(state, staffNumber, false, f.stateXml, err)
+                        || !stateXml(state, 0, true, f.sharedStateXml, err)) {
                         m_meloPlan.error = mu::engraving::melo::exportStateRefused()
                                            .arg(carrier->tick().ticks()).arg(int(staffIdx) + 1).arg(err);
                         return false;
                     }
-                    if (!melo::musicxmlChangeEventV3Xml(previousState, state, f.changeXml, &err)) {
-                        m_meloPlan.error = mu::engraving::melo::exportChangeUnclassified()
-                                           .arg(carrier->tick().ticks()).arg(int(staffIdx) + 1).arg(err);
-                        return false;
-                    }
-                    previousState = state;
                     m_meloPlan.byPartTick[{ int(partIndex), carrier->tick().ticks() }].push_back(f);
                 }
             }
@@ -9114,38 +9125,10 @@ bool ExportMusicXml::buildMeloExportPlan()
     if (!m_meloPlan.present) {
         return true;
     }
-    // Owner rule 2026-08-19 (multi-part documents): several JiMS parts and
-    // mixed JiMS + stock parts are allowed, but every JiMS part must carry the
-    // same state timeline; a document that would export differing timelines
-    // is refused (fail closed, like every other JiMS export refusal).
-    //
-    // Narrowed by owner ruling 2026-08-22: parts are compared on the Kernel's
-    // shared projection, not the serialized element. The projection omits the
-    // per-staff fields (frame extent, tonic-ambit) — a four-voice SATB score
-    // legitimately differs in both, since each voice has its own frame and its
-    // own melody, while every piece-level musical fact must still agree. The
-    // Kernel owns which fields those are; the fork compares what it is handed.
-    {
-        std::vector<std::pair<int, String> > referenceTimeline;   // (tick, sharedStateXml)
-        int referencePart = -1;
-        std::map<int, std::vector<std::pair<int, String> > > timelines;   // partIndex -> (tick, sharedStateXml)*
-        for (const auto& entry : m_meloPlan.byPartTick) {
-            for (const MeloFragment& f : entry.second) {
-                timelines[entry.first.first].push_back({ entry.first.second, f.sharedStateXml });
-            }
-        }
-        for (const auto& tl : timelines) {
-            if (referencePart < 0) {
-                referencePart = tl.first;
-                referenceTimeline = tl.second;
-                continue;
-            }
-            if (tl.second != referenceTimeline) {
-                m_meloPlan.error = mu::engraving::melo::exportTimelinesDiffer()
-                                   .arg(referencePart + 1).arg(tl.first + 1);
-                return false;
-            }
-        }
+    // Compare effective states, not the number or placement of redundant
+    // transport carriers. The Kernel still defines all shared musical fields.
+    if (!melo::validateSharedStateTimeline(m_score, m_meloPlan.error)) {
+        return false;
     }
     // Every note on a MeloPresto staff must carry its lattice identity.
     for (const Segment* seg = m_score->firstSegment(SegmentType::ChordRest); seg; seg = seg->next1(SegmentType::ChordRest)) {
@@ -9188,7 +9171,7 @@ bool ExportMusicXml::buildMeloExportPlan()
             }
         }
     }
-    return true;
+    return melo::validateLatticeContent(m_score, m_meloPlan.error);
 }
 
 void ExportMusicXml::writeMeloAttributes(const Measure* const m, const int partIndex)
@@ -9310,14 +9293,17 @@ bool ExportMusicXml::write(muse::io::IODevice* dev)
         u"score-partwise PUBLIC \"-//Recordare//DTD MusicXML 4.0 Partwise//EN\" \"http://www.musicxml.org/dtds/partwise.dtd\"");
 
     if (m_meloPlan.present) {
-        // The V4 namespace is declared when a MeloPresto Staff or MeloPresto chord name is present.
-        m_xml.startElement("score-partwise", { { "version", "4.0" }, { "xmlns:melo", "urn:melopresto:musicxml:4" } });
+        // The V5 namespace is declared for a MeloPresto staff or opaque chord name.
+        m_xml.startElement("score-partwise", { { "version", "4.0" }, { "xmlns:melo", "urn:melopresto:musicxml:5" } });
     } else {
         m_xml.startElement("score-partwise", { { "version", "4.0" } });
     }
 
     work(m_score->measures()->first());
     identification(m_xml, m_score);
+    if (!m_meloPlan.referenceXml.isEmpty()) {
+        m_xml.writeTrustedRawFragment(m_meloPlan.referenceXml);
+    }
 
     if (configuration()->exportLayout()) {
         defaults(m_xml, m_score->style(), m_millimeters, m_tenths);

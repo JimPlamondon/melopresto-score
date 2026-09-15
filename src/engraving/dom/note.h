@@ -359,7 +359,8 @@ public:
     int qmlDotsCount();
     void updateAccidental(AccidentalState*);
     void updateLine();
-    void setNval(const NoteVal&, Fraction = { -1, 1 });
+    static bool prepareNval(NoteVal&, const Staff*, const Fraction&);
+    [[nodiscard]] bool setNval(const NoteVal&, Fraction = { -1, 1 });
     NoteEventList& playEvents() { return m_playEvents; }
     const NoteEventList& playEvents() const { return m_playEvents; }
     NoteEvent* noteEvent(int idx) { return &m_playEvents[idx]; }
@@ -385,6 +386,8 @@ public:
 
     bool removeSpannerFor(Spanner* e) { return muse::remove(m_spannerFor, e); }
 
+    bool prepareDiatonicTranspose(int interval, bool keepAlterations, bool useDoubleAccidentals, NoteVal& result) const;
+    bool prepareTranspose(Interval interval, bool useDoubleSharpsFlats, NoteVal& result) const;
     bool transposeDiatonic(int interval, bool keepAlterations, bool useDoubleAccidentals);
     bool transpose(Interval interval, bool useDoubleSharpsFlats);
 

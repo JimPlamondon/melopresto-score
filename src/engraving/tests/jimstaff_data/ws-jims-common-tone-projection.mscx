@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <museScore version="4.70">
   <Score>
+    <metaTag name="meloReferenceTimelineV1">{"schema":"jimstaff-reference-v1","initial":{"step":"D","alter":0,"octave":4},"events":[{"at":{"numerator":1,"denominator":1},"interval":{"nPer":1,"nGen":-3}}]}</metaTag>
     <eid>890XIiPdbcH_H7u5qfChsgM</eid>
     <Division>480</Division>
     <Style>
@@ -43,7 +44,7 @@
           <lines>13</lines>
           <clef>0</clef>
           <jims>1</jims>
-          <jimsStateJson>{&quot;collection_rotation&quot;:0,&quot;embedding&quot;:{&quot;large_steps&quot;:5,&quot;small_steps&quot;:2},&quot;extent&quot;:{&quot;lower&quot;:{&quot;nPer&quot;:1,&quot;nGen&quot;:-2},&quot;upper&quot;:{&quot;nPer&quot;:2,&quot;nGen&quot;:-2}},&quot;generator_cents&quot;:700.0,&quot;mode_rotation&quot;:0,&quot;period_cents&quot;:1200.0,&quot;reference&quot;:{&quot;reference-pitch&quot;:{&quot;key_number&quot;:62}},&quot;scale&quot;:[&quot;M2&quot;,&quot;m2&quot;,&quot;M2&quot;,&quot;M2&quot;,&quot;M2&quot;,&quot;m2&quot;,&quot;M2&quot;],&quot;tonic_ambit&quot;:&quot;tonic-bounded&quot;}</jimsStateJson>
+          <jimsStateJson>{"collection_rotation":0,"embedding":{"large_steps":5,"small_steps":2},"extent":{"lower":{"nPer":1,"nGen":-2},"upper":{"nPer":2,"nGen":-2}},"generator_cents":700.0,"mode_rotation":0,"period_cents":1200.0,"scale":["M2","m2","M2","M2","M2","m2","M2"],"tonic_ambit":"tonic-bounded","schema":"jimstaff-v3"}</jimsStateJson>
           <jimsJiLines>1</jimsJiLines>
           <keysig>0</keysig>
           <ledgerlines>0</ledgerlines>
@@ -149,7 +150,7 @@
             <lines>13</lines>
             <clef>0</clef>
             <jims>1</jims>
-            <jimsStateJson>{&quot;collection_rotation&quot;:0,&quot;embedding&quot;:{&quot;large_steps&quot;:5,&quot;small_steps&quot;:2},&quot;extent&quot;:{&quot;lower&quot;:{&quot;nPer&quot;:1,&quot;nGen&quot;:-2},&quot;upper&quot;:{&quot;nPer&quot;:2,&quot;nGen&quot;:-2}},&quot;generator_cents&quot;:700.0,&quot;mode_rotation&quot;:0,&quot;period_cents&quot;:1200.0,&quot;reference&quot;:{&quot;reference-pitch&quot;:{&quot;key_number&quot;:53}},&quot;scale&quot;:[&quot;M2&quot;,&quot;m2&quot;,&quot;M2&quot;,&quot;M2&quot;,&quot;M2&quot;,&quot;m2&quot;,&quot;M2&quot;],&quot;tonic_ambit&quot;:&quot;tonic-bounded&quot;}</jimsStateJson>
+            <jimsStateJson>{"collection_rotation":0,"embedding":{"large_steps":5,"small_steps":2},"extent":{"lower":{"nPer":1,"nGen":-2},"upper":{"nPer":2,"nGen":-2}},"generator_cents":700.0,"mode_rotation":0,"period_cents":1200.0,"scale":["M2","m2","M2","M2","M2","m2","M2"],"tonic_ambit":"tonic-bounded","schema":"jimstaff-v3"}</jimsStateJson>
             <jimsJiLines>1</jimsJiLines>
             <keysig>0</keysig>
             <ledgerlines>0</ledgerlines>

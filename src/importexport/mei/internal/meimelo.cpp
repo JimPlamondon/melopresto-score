@@ -19,6 +19,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+#include "engraving/melo/melochangecontroller.h"
 #include "meimelo.h"
 
 #include <algorithm>
@@ -30,12 +31,14 @@
 #include "engraving/dom/note.h"
 #include "engraving/dom/part.h"
 #include "engraving/dom/score.h"
+#include "engraving/dom/masterscore.h"
 #include "engraving/dom/segment.h"
 #include "engraving/dom/staff.h"
 #include "engraving/dom/stafftype.h"
 #include "engraving/dom/keysig.h"
 #include "engraving/dom/stafftypechange.h"
 #include "engraving/melo/melobridge.h"
+#include "engraving/melo/melochangecontroller.h"
 #include "meiconverter.h"
 #include "libmei.h"
 #include "engraving/melo/melochange.h"
@@ -95,7 +98,9 @@ static const char* accidOf(int alter)
 static bool extentBounds(const String& stateJson, int out[4])
 {
     std::string err;
-    muse::JsonDocument doc = muse::JsonDocument::fromJson(stateJson.toUtf8(), &err);
+    String configuration, error;
+    const bool canonical = melo::staffConfiguration(stateJson, configuration, error);
+    muse::JsonDocument doc = muse::JsonDocument::fromJson((canonical ? configuration : stateJson).toUtf8(), &err);
     if (!err.empty() || !doc.isObject()) {
         return false;
     }
@@ -192,6 +197,14 @@ bool MeloMeiExporter::buildPlan(const Score* score)
     m_score = score;
     m_present = false;
     m_error.clear();
+    m_referenceXml.clear();
+    const String root = score->masterScore()->metaTag(melo::REFERENCE_TIMELINE_TAG);
+    if (!root.isEmpty() && !melo::musicxmlReferenceV5Xml(root, m_referenceXml, m_error)) {
+        return false;
+    }
+    if (!melo::validateLatticeContent(score, m_error)) {
+        return false;
+    }
     m_staves.clear();
     m_tonicAmbit.clear();
     m_measures.clear();
@@ -573,7 +586,7 @@ void MeloMeiExporter::writeClassDecls(pugi::xml_node meiHead, pugi::xml_node fil
     }
     pugi::xml_node taxonomy = classDecls.append_child("taxonomy");
     taxonomy.append_attribute("xml:id") = "melo.taxonomy";
-    taxonomy.append_child("bibl").text().set("MeloPresto analysis controlled vocabulary v1");
+    taxonomy.append_child("bibl").text().set(melo::analysisVocabularyCitation);
     static const std::vector<std::pair<const char*, std::vector<const char*> > > groups = {
         { "outcome", { "modulation", "tonicization", "ambiguous", "insufficient-evidence" } },
         { "ambit", { "tonic-bounded", "tonic-centered" } },
@@ -641,9 +654,17 @@ bool MeloMeiExporter::writeExtMeta(pugi::xml_node meiHead)
     pugi::xml_node ext = revision ? meiHead.insert_child_before("extMeta", revision) : meiHead.append_child("extMeta");
     pugi::xml_node rec = ext.append_child("jm:record");
     rec.append_attribute("xmlns:jm") = MELO_MEI_NS;
-    rec.append_attribute("xmlns:melo") = MELO_MUSICXML_NS;
+    rec.append_attribute("xmlns:melo") = m_referenceXml.isEmpty() ? MELO_MUSICXML_NS : MELO_MUSICXML_V5_NS;
     rec.append_attribute("version") = "1";
     pugi::xml_node mx = rec.append_child("jm:musicxml");
+    if (!m_referenceXml.isEmpty()) {
+        pugi::xml_document reference;
+        if (!reference.load_string(m_referenceXml.toStdString().c_str())) {
+            m_error = u"Invalid Kernel reference XML.";
+            return false;
+        }
+        mx.append_copy(reference.document_element());
+    }
 
     for (StaffPlan& plan : m_staves) {
         pugi::xml_node pe = mx.append_child("jm:part");
@@ -688,7 +709,7 @@ bool MeloMeiExporter::writeExtMeta(pugi::xml_node meiHead)
             se.append_attribute("annot") = ("#" + plan.stateAnnotIds.at(si)).c_str();
             String fragment;
             String err;
-            if (!melo::musicxmlStaffStateV3Xml(plan.states.at(si).second, 0, fragment, &err)) {
+            if (m_referenceXml.isEmpty() || !melo::musicxmlConfigurationV5Xml(plan.states.at(si).second, 0, false, fragment, err)) {
                 m_error = String(mu::engraving::melo::diagnostic::meiExportStateSerializationFailed).arg(err);
                 return false;
             }
@@ -965,9 +986,33 @@ bool MeloMeiExporter::writeExtMeta(pugi::xml_node meiHead)
 // MeloMeiImporter
 //---------------------------------------------------------
 
+static void copyInheritedNamespaces(pugi::xml_node source, pugi::xml_node target)
+{
+    for (pugi::xml_node parent = source; parent; parent = parent.parent()) {
+        for (const auto& attribute : parent.attributes()) {
+            const std::string name = attribute.name();
+            if ((name == "xmlns" || name.rfind("xmlns:", 0) == 0) && !target.attribute(name.c_str())) {
+                target.append_attribute(name.c_str()) = attribute.value();
+            }
+        }
+    }
+}
+
+static String standaloneFragment(pugi::xml_node source)
+{
+    pugi::xml_document document;
+    auto target = document.append_copy(source);
+    copyInheritedNamespaces(source, target);
+    std::ostringstream stream;
+    target.print(stream, "", pugi::format_raw);
+    return String::fromStdString(stream.str());
+}
+
 void MeloMeiImporter::capture(pugi::xml_node root)
 {
     m_error.clear();
+    m_canonical = false;
+    m_record = pugi::xml_node();
     m_staffDefN.clear();
     pugi::xml_node record = root.select_node("//extMeta/*").node();
     if (!record || String(record.name()) != u"jm:record") {
@@ -985,6 +1030,29 @@ void MeloMeiImporter::capture(pugi::xml_node root)
         m_recordDoc.reset();
         m_recordDoc.append_copy(record);
         m_record = m_recordDoc.first_child();
+        copyInheritedNamespaces(record, m_record);
+        for (const auto& candidate : m_record.select_nodes(".//*")) {
+            const auto element = candidate.node();
+            const std::string name(element.name());
+            const size_t colon = name.find(':');
+            const std::string local = colon == std::string::npos ? name : name.substr(colon + 1);
+            // A canonical timeline always enters the strict parser, including
+            // a malformed one whose namespace would otherwise hide it.
+            if (local == "reference-timeline") {
+                m_canonical = true;
+            }
+            const std::string declaration = colon == std::string::npos ? "xmlns" : "xmlns:" + name.substr(0, colon);
+            for (auto ancestor = element; ancestor; ancestor = ancestor.parent()) {
+                const auto binding = ancestor.attribute(declaration.c_str());
+                if (!binding) {
+                    continue;
+                }
+                if (std::string(binding.value()) == MELO_MUSICXML_V5_NS) {
+                    m_canonical = true;
+                }
+                break;
+            }
+        }
     }
     for (pugi::xpath_node sd : root.select_nodes("//staffDef[@xml:id]")) {
         m_staffDefN[sd.node().attribute("xml:id").value()] = sd.node().attribute("n").as_int();
@@ -1074,92 +1142,13 @@ static pugi::xml_node childByLocal(pugi::xml_node parent, const char* local)
 
 bool MeloMeiImporter::stateJsonFromXml(pugi::xml_node staffStateNode, String& json)
 {
-    // Mirrors MeloImportContext::parseStaffState's converter byte-shape:
-    // fixed key order, no spaces, tonic_ambit last (the musicxml importer
-    // remains the owning transcription; re-sync on change).
-    auto jsonNumber = [](const std::string& text, bool& ok) -> std::string {
-        ok = false;
-        if (text.empty()) {
-            return text;
-        }
-        char* end = nullptr;
-        std::strtod(text.c_str(), &end);
-        ok = end && *end == '\0';
-        return text;
-    };
-
-    std::vector<std::string> steps;
-    pugi::xml_node scale = childByLocal(staffStateNode, "scale");
-    for (pugi::xml_node step : scale.children()) {
-        if (localName(step) == "step") {
-            steps.push_back(step.text().as_string());
-        }
+    if (m_canonical) {
+        return melo::musicxmlConfigurationV5Json(standaloneFragment(staffStateNode), json, m_error);
     }
-    pugi::xml_node embedding = childByLocal(staffStateNode, "embedding");
-    pugi::xml_node extent = childByLocal(staffStateNode, "extent");
-    pugi::xml_node reference = childByLocal(staffStateNode, "reference");
-    pugi::xml_node ambit = childByLocal(staffStateNode, "tonic-ambit");
-    if (!ambit) {
-        ambit = childByLocal(staffStateNode, "tonic-extent");   // legacy spelling, read only
-    }
-    if (steps.empty() || !embedding || !extent
-        || !childByLocal(staffStateNode, "collection-rotation")
-        || !childByLocal(staffStateNode, "mode-rotation")
-        || !childByLocal(staffStateNode, "generator-cents")
-        || !childByLocal(staffStateNode, "period-cents")) {
-        m_error = u"melo:staff-state in extMeta is missing a required child";
-        return false;
-    }
-    bool okG = false, okP = false;
-    const std::string gen = jsonNumber(childByLocal(staffStateNode, "generator-cents").text().as_string(), okG);
-    const std::string per = jsonNumber(childByLocal(staffStateNode, "period-cents").text().as_string(), okP);
-    if (!okG || !okP) {
-        m_error = u"melo:staff-state cents fields are not numbers";
-        return false;
-    }
-    std::string referenceJson = "\"none\"";
-    if (reference) {
-        pugi::xml_node form = reference.first_child();
-        const std::string kind = localName(form);
-        if (kind == "none") {
-            referenceJson = "\"none\"";
-        } else if (kind == "reference-pitch") {
-            referenceJson = "{\"reference-pitch\":{\"key_number\":" + std::string(form.attribute("key-number").value()) + "}}";
-        } else if (kind == "pitch-class") {
-            referenceJson = "{\"pitch-class\":{\"pitch_class\":" + std::string(form.text().as_string()) + "}}";
-        } else if (kind == "frequency-hz") {
-            referenceJson = "{\"frequency-hz\":{\"hertz\":" + std::string(form.text().as_string()) + "}}";
-        } else {
-            m_error = String(u"unknown jims:reference form '%1'").arg(String::fromStdString(kind));
-            return false;
-        }
-    }
-    std::string scaleJson = "[";
-    for (size_t i = 0; i < steps.size(); ++i) {
-        if (i) {
-            scaleJson += ",";
-        }
-        scaleJson += "\"" + steps.at(i) + "\"";
-    }
-    scaleJson += "]";
-    std::string out = "{\"scale\":" + scaleJson
-                      + ",\"collection_rotation\":" + std::string(childByLocal(staffStateNode, "collection-rotation").text().as_string())
-                      + ",\"mode_rotation\":" + std::string(childByLocal(staffStateNode, "mode-rotation").text().as_string())
-                      + ",\"generator_cents\":" + gen
-                      + ",\"period_cents\":" + per
-                      + ",\"embedding\":{\"large_steps\":" + std::string(embedding.attribute("large-steps").value())
-                      + ",\"small_steps\":" + std::string(embedding.attribute("small-steps").value()) + "}"
-                      + ",\"extent\":{\"lower\":{\"nPer\":" + std::string(extent.attribute("lower-n-per").value())
-                      + ",\"nGen\":" + std::string(extent.attribute("lower-n-gen").value())
-                      + "},\"upper\":{\"nPer\":" + std::string(extent.attribute("upper-n-per").value())
-                      + ",\"nGen\":" + std::string(extent.attribute("upper-n-gen").value()) + "}}"
-                      + ",\"reference\":" + referenceJson;
-    if (ambit) {
-        out += ",\"tonic_ambit\":\"" + std::string(ambit.text().as_string()) + "\"";
-    }
-    out += "}";
-    json = String::fromStdString(out);
-    return true;
+    m_error
+        =
+            u"This legacy staff state lacks the spelled initial reference and authored relative history required by MusicXML-Melo version 5. Import the original spelled source instead.";
+    return false;
 }
 
 bool MeloMeiImporter::apply(Score* score,
@@ -1182,6 +1171,24 @@ bool MeloMeiImporter::apply(Score* score,
     if (!mx) {
         m_error = mu::engraving::melo::diagnostic::meiImportMissingMusicXml;
         return false;
+    }
+
+    if (m_canonical) {
+        int count = 0;
+        String timeline;
+        for (pugi::xml_node child : mx.children()) {
+            if (localName(child) == "reference-timeline") {
+                ++count;
+                if (!melo::musicxmlReferenceV5Json(standaloneFragment(child), timeline, m_error)) {
+                    return false;
+                }
+            }
+        }
+        if (count != 1) {
+            m_error = u"MEI with MusicXML-Melo version 5 requires exactly one canonical reference timeline.";
+            return false;
+        }
+        score->masterScore()->setMetaTag(melo::REFERENCE_TIMELINE_TAG, timeline);
     }
 
     static const StaffType* meloPreset = StaffType::preset(StaffTypes::MELO_12TET);
@@ -1240,7 +1247,8 @@ bool MeloMeiImporter::apply(Score* score,
                     return false;
                 }
                 String kernelError;
-                if (!melo::validateState(json, kernelError)) {
+                String configuration;
+                if (!m_canonical || !melo::storedStaffConfiguration(json, configuration, kernelError)) {
                     m_error = String(mu::engraving::melo::diagnostic::meiImportStateRejected).arg(kernelError);
                     return false;
                 }
@@ -1461,6 +1469,13 @@ bool MeloMeiImporter::apply(Score* score,
         score->setMeloProvenance(prov);
     }
 
+    if (m_canonical && anyState && !melo::rebuildCanonicalReferenceContexts(score, m_error)) {
+        return false;
+    }
+    size_t repairs = 0;
+    if (!melo::normalizeStoredPitchesAfterLoad(score, repairs, m_error, false)) {
+        return false;
+    }
     if (anyState) {
         score->style().set(Sid::musicalSymbolFont, String(u"JiMSMusic"));
         score->style().set(Sid::hideInstrumentNameIfOneInstrument, false);

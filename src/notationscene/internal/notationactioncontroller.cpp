@@ -24,6 +24,7 @@
 #include "io/file.h"
 
 #include "engraving/dom/masterscore.h"
+#include "engraving/melo/melochangecontroller.h"
 #include "engraving/dom/note.h"
 #include "engraving/dom/text.h"
 #include "engraving/dom/sig.h"
@@ -308,6 +309,8 @@ void NotationActionController::init()
     registerAction("append-fretframe", [this]() { addBoxes(BoxType::Fret, 1, AddBoxesTarget::AtEndOfScore); });
 
     registerAction("jims-change", &Controller::openMeloProperties);
+    registerAction("melo-edit-initial-pitch", &Controller::openMeloInitialPitch);
+    registerAction("melo-edit-key-change", &Controller::openMeloKeyChange);
     registerAction("edit-style", &Controller::openEditStyleDialog);
     registerAction("page-settings", &Controller::openPageSettingsDialog);
     registerAction("staff-properties", &Controller::openStaffProperties);
@@ -1804,6 +1807,46 @@ void NotationActionController::resetBeamMode()
 void NotationActionController::openMeloProperties()
 {
     dispatcher()->dispatch("dock-set-open", ActionData::make_arg2<QString, bool>("inspectorPanel", true));
+}
+
+void NotationActionController::openMeloInitialPitch(const ActionData& args)
+{
+    mu::engraving::Score* score = currentNotationElements() ? currentNotationElements()->msScore() : nullptr;
+    mu::engraving::melo::HeaderPitchContext target;
+    if (!score || args.count() != 2
+        || score->masterScore()->metaTag(mu::engraving::melo::REFERENCE_TIMELINE_TAG) != args.arg<String>(1)
+        || !mu::engraving::melo::resolveHeaderPitch(score, args.arg<mu::engraving::melo::HeaderPitchContext>(0), target)) {
+        return;
+    }
+    UriQuery uri("musescore://notation/melo-initial-pitch");
+    uri.addParam("staffIndex", Val(int(target.staffIdx)));
+    uri.addParam("tickNumerator", Val(target.tick.numerator()));
+    uri.addParam("tickDenominator", Val(target.tick.denominator()));
+    uri.addParam("periodIndex", Val(target.periodIndex));
+    uri.addParam("expectedState", Val(target.state.toQString()));
+    uri.addParam("expectedTimeline", Val(score->masterScore()->metaTag(mu::engraving::melo::REFERENCE_TIMELINE_TAG).toQString()));
+    interactive()->open(uri);
+}
+
+void NotationActionController::openMeloKeyChange(const ActionData& args)
+{
+    mu::engraving::Score* score = currentNotationElements() ? currentNotationElements()->msScore() : nullptr;
+    if (!score || args.count() != 3 || args.arg<int>(0) < 0 || args.arg<int>(1) <= 0 || args.arg<int>(2) <= 0) {
+        return;
+    }
+    const int staff = args.arg<int>(0);
+    const mu::engraving::Fraction tick(args.arg<int>(1), args.arg<int>(2));
+    String state;
+    if (!mu::engraving::melo::effectiveState(score, staff, score->tick2measure(tick), tick, state)) {
+        return;
+    }
+    UriQuery uri("musescore://notation/melo-key-change");
+    uri.addParam("staffIndex", Val(staff));
+    uri.addParam("tickNumerator", Val(tick.numerator()));
+    uri.addParam("tickDenominator", Val(tick.denominator()));
+    uri.addParam("expectedState", Val(state.toQString()));
+    uri.addParam("expectedTimeline", Val(score->masterScore()->metaTag(mu::engraving::melo::REFERENCE_TIMELINE_TAG).toQString()));
+    interactive()->open(uri);
 }
 
 void NotationActionController::openEditStyleDialog(const ActionData& args)

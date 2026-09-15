@@ -357,6 +357,9 @@ Note* NotationMidiInput::addNoteToScore(const muse::midi::Event& e)
 
     mu::engraving::Note* note = sc->addMidiPitch(inputEv.pitch, inputEv.chord, configuration()->midiUseWrittenPitch().val);
 
+    if (!note) {
+        return nullptr;
+    }
     sc->activeMidiPitches().push_back(inputEv);
 
     if (is.cr()) {
@@ -387,7 +390,11 @@ Note* NotationMidiInput::makePreviewNote(const muse::midi::Event& e)
     note->setStaffIdx(staffIdx);
 
     engraving::NoteVal nval = score->noteVal(e.note(), staffIdx, configuration()->midiUseWrittenPitch().val);
-    note->setNval(nval);
+    if (!note->setNval(nval)) {
+        delete note;
+        delete chord;
+        return nullptr;
+    }
 
     return note;
 }

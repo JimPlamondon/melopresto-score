@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Shortcuts>
+    <SC><key>melo-next-header-pitch</key><seq>Ctrl+Alt+P</seq></SC>
+    <SC><key>melo-prev-header-pitch</key><seq>Ctrl+Alt+Shift+P</seq></SC>
 <!-- Dev -->
     <SC>
         <key>nav-dev-show-controls</key>

@@ -2958,7 +2958,13 @@ void TWrite::write(const StaffType* item, XmlWriter& xml, WriteContext& ctx)
         // notehead classes, and memberships are derived, never stored.
         xml.tag("jims", item->isMelo());
         if (!item->meloStateJson().isEmpty()) {
-            xml.tag("jimsStateJson", item->meloStateJson());
+            String configuration, error;
+            if (melo::staffConfiguration(item->meloStateJson(), configuration, error)) {
+                xml.tag("jimsStateJson", configuration);
+            } else {
+                // The writer's canonical preflight rejects this before output.
+                LOGE() << error;
+            }
         }
         // V2: the token lives inside the state JSON; the side tag is
         // written only for a legacy token with no V2 home to ride in.
@@ -3027,6 +3033,9 @@ void TWrite::write(const StaffType* item, XmlWriter& xml, WriteContext& ctx)
 
 void TWrite::write(const StaffTypeChange* item, XmlWriter& xml, WriteContext& ctx)
 {
+    if (item->meloReferenceOnly()) {
+        return;
+    }
     xml.startElement(item);
     if (item->rtick().isNotZero()) {
         xml.tag("relativeTick", item->rtick().toString());
