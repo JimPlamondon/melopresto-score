@@ -102,6 +102,7 @@ private:
 
     bool projectPitch(const muse::String& stateJson, int nPer, int nGen, std::string& pname, int& alter, int& octave);
     std::string respIdFor(const muse::String& reviewer);
+    void writeClassDecls(pugi::xml_node meiHead, pugi::xml_node fileDesc);
 
     bool m_present = false;
     muse::String m_error;
@@ -152,6 +153,7 @@ private:
     };
 
     std::map<std::string, muse::String> m_reviewerById;
+    muse::String m_reviewAgent;                 // respStmt/name[@role='melo-review-agent']
     std::map<std::string, ChangeEntry> m_changeById;
     std::vector<muse::String> m_focusedReviewReasons;
     std::map<std::string, pugi::xml_node> m_adjAnnots;

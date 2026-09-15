@@ -104,6 +104,8 @@ static melo::ReviewRecord readMeloReview(XmlReader& e)
             while (e.readNextStartElement()) {
                 review.work = readMeloReviewValue(e);
             }
+        } else if (tag == "reviewAgent") {
+            review.reviewAgent = e.readText();
         } else if (tag == "focusedReviewReason") {
             review.focusedReviewReasons.push_back(e.readText());
         } else if (tag == "audit") {

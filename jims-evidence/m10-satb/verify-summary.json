@@ -23,23 +23,39 @@
   "pages_checked": [
     {
       "page": "empty-template-2-p1.png",
-      "frames_found": 4,
+      "frames_found": 8,
       "staff_frames": [
         [
-          211,
-          310
+          212,
+          268
         ],
         [
-          389,
-          488
+          337,
+          393
         ],
         [
-          567,
-          665
+          462,
+          519
         ],
         [
-          744,
-          843
+          588,
+          637
+        ],
+        [
+          765,
+          822
+        ],
+        [
+          891,
+          947
+        ],
+        [
+          1016,
+          1072
+        ],
+        [
+          1141,
+          1191
         ]
       ],
       "systems": [
@@ -47,53 +63,53 @@
           "system": 1,
           "staff_frames": [
             [
-              211,
-              310
+              212,
+              268
             ],
             [
-              389,
-              488
+              337,
+              393
             ],
             [
-              567,
-              665
+              462,
+              519
             ],
             [
-              744,
-              843
+              588,
+              637
             ]
           ],
           "inter_staff_gaps": [
             [
-              311,
-              388
+              273,
+              332
             ],
             [
-              489,
-              566
+              398,
+              457
             ],
             [
-              666,
-              743
+              524,
+              583
             ]
           ],
           "system_edge_columns": [
-            280,
-            281,
-            282,
-            283,
-            288
+            253,
+            254,
+            255,
+            260,
+            261
           ],
           "system_edge_spans_gaps": true,
           "spanning_barline_columns": [],
           "measure_barline_columns": [
-            429,
-            430,
-            533,
-            637,
-            740,
-            741,
-            844,
+            396,
+            397,
+            507,
+            617,
+            727,
+            837,
+            838,
             948
           ],
           "gap_ink_in_barline_columns": [
@@ -101,8 +117,70 @@
           ],
           "ok": true,
           "staff_span_y": [
-            211,
-            843
+            212,
+            637
+          ]
+        },
+        {
+          "system": 2,
+          "staff_frames": [
+            [
+              765,
+              822
+            ],
+            [
+              891,
+              947
+            ],
+            [
+              1016,
+              1072
+            ],
+            [
+              1141,
+              1191
+            ]
+          ],
+          "inter_staff_gaps": [
+            [
+              827,
+              886
+            ],
+            [
+              952,
+              1011
+            ],
+            [
+              1077,
+              1136
+            ]
+          ],
+          "system_edge_columns": [
+            206,
+            207,
+            208,
+            209,
+            214
+          ],
+          "system_edge_spans_gaps": true,
+          "spanning_barline_columns": [],
+          "measure_barline_columns": [
+            336,
+            458,
+            459,
+            581,
+            703,
+            825,
+            826,
+            948
+          ],
+          "gap_ink_in_barline_columns": [
+            0
+          ],
+          "ok": true,
+          "staff_span_y": [
+            765,
+            1191
           ]
         }
       ],
@@ -111,39 +189,23 @@
     },
     {
       "page": "empty-template-2-p2.png",
-      "frames_found": 8,
+      "frames_found": 4,
       "staff_frames": [
         [
-          128,
-          227
+          129,
+          186
         ],
         [
-          259,
-          358
+          303,
+          360
         ],
         [
-          390,
-          489
+          478,
+          536
         ],
         [
-          521,
-          620
-        ],
-        [
-          699,
-          798
-        ],
-        [
-          830,
-          929
-        ],
-        [
-          961,
-          1060
-        ],
-        [
-          1092,
-          1191
+          654,
+          703
         ]
       ],
       "systems": [
@@ -151,113 +213,51 @@
           "system": 1,
           "staff_frames": [
             [
-              128,
-              227
+              129,
+              186
             ],
             [
-              259,
-              358
+              303,
+              360
             ],
             [
-              390,
-              489
+              478,
+              536
             ],
             [
-              521,
-              620
+              654,
+              703
             ]
           ],
           "inter_staff_gaps": [
             [
-              228,
-              258
+              191,
+              298
             ],
             [
-              359,
-              389
+              365,
+              473
             ],
             [
-              490,
-              520
+              541,
+              649
             ]
           ],
           "system_edge_columns": [
-            234,
-            235,
-            236,
-            241,
-            242
+            206,
+            207,
+            208,
+            209,
+            214
           ],
           "system_edge_spans_gaps": true,
           "spanning_barline_columns": [],
           "measure_barline_columns": [
-            359,
-            477,
-            595,
-            712,
-            713,
-            830,
-            948
-          ],
-          "gap_ink_in_barline_columns": [
-            0
-          ],
-          "ok": true,
-          "staff_span_y": [
-            128,
-            620
-          ]
-        },
-        {
-          "system": 2,
-          "staff_frames": [
-            [
-              699,
-              798
-            ],
-            [
-              830,
-              929
-            ],
-            [
-              961,
-              1060
-            ],
-            [
-              1092,
-              1191
-            ]
-          ],
-          "inter_staff_gaps": [
-            [
-              799,
-              829
-            ],
-            [
-              930,
-              960
-            ],
-            [
-              1061,
-              1091
-            ]
-          ],
-          "system_edge_columns": [
-            234,
-            235,
-            236,
-            241,
-            242
-          ],
-          "system_edge_spans_gaps": true,
-          "spanning_barline_columns": [],
-          "measure_barline_columns": [
-            358,
-            474,
-            475,
-            591,
-            707,
-            824,
+            335,
+            456,
+            577,
+            698,
+            819,
             940,
             945,
             946,
@@ -269,8 +269,8 @@
           ],
           "ok": true,
           "staff_span_y": [
-            699,
-            1191
+            129,
+            703
           ]
         }
       ],
@@ -279,126 +279,38 @@
     },
     {
       "page": "empty-template-p1.png",
-      "frames_found": 4,
-      "staff_frames": [
-        [
-          211,
-          310
-        ],
-        [
-          389,
-          488
-        ],
-        [
-          567,
-          665
-        ],
-        [
-          744,
-          843
-        ]
-      ],
-      "systems": [
-        {
-          "system": 1,
-          "staff_frames": [
-            [
-              211,
-              310
-            ],
-            [
-              389,
-              488
-            ],
-            [
-              567,
-              665
-            ],
-            [
-              744,
-              843
-            ]
-          ],
-          "inter_staff_gaps": [
-            [
-              311,
-              388
-            ],
-            [
-              489,
-              566
-            ],
-            [
-              666,
-              743
-            ]
-          ],
-          "system_edge_columns": [
-            280,
-            281,
-            282,
-            283,
-            288
-          ],
-          "system_edge_spans_gaps": true,
-          "spanning_barline_columns": [],
-          "measure_barline_columns": [
-            429,
-            430,
-            533,
-            637,
-            740,
-            741,
-            844,
-            948
-          ],
-          "gap_ink_in_barline_columns": [
-            0
-          ],
-          "ok": true,
-          "staff_span_y": [
-            211,
-            843
-          ]
-        }
-      ],
-      "failures": [],
-      "ok": true
-    },
-    {
-      "page": "empty-template-p2.png",
       "frames_found": 8,
       "staff_frames": [
         [
-          128,
-          227
+          212,
+          268
         ],
         [
-          259,
-          358
+          337,
+          393
         ],
         [
-          390,
-          489
+          462,
+          519
         ],
         [
-          521,
-          620
+          588,
+          637
         ],
         [
-          699,
-          798
+          765,
+          822
         ],
         [
-          830,
-          929
+          891,
+          947
         ],
         [
-          961,
-          1060
+          1016,
+          1072
         ],
         [
-          1092,
+          1141,
           1191
         ]
       ],
@@ -407,52 +319,53 @@
           "system": 1,
           "staff_frames": [
             [
-              128,
-              227
+              212,
+              268
             ],
             [
-              259,
-              358
+              337,
+              393
             ],
             [
-              390,
-              489
+              462,
+              519
             ],
             [
-              521,
-              620
+              588,
+              637
             ]
           ],
           "inter_staff_gaps": [
             [
-              228,
-              258
+              273,
+              332
             ],
             [
-              359,
-              389
+              398,
+              457
             ],
             [
-              490,
-              520
+              524,
+              583
             ]
           ],
           "system_edge_columns": [
-            234,
-            235,
-            236,
-            241,
-            242
+            253,
+            254,
+            255,
+            260,
+            261
           ],
           "system_edge_spans_gaps": true,
           "spanning_barline_columns": [],
           "measure_barline_columns": [
-            359,
-            477,
-            595,
-            712,
-            713,
-            830,
+            396,
+            397,
+            507,
+            617,
+            727,
+            837,
+            838,
             948
           ],
           "gap_ink_in_barline_columns": [
@@ -460,60 +373,147 @@
           ],
           "ok": true,
           "staff_span_y": [
-            128,
-            620
+            212,
+            637
           ]
         },
         {
           "system": 2,
           "staff_frames": [
             [
-              699,
-              798
+              765,
+              822
             ],
             [
-              830,
-              929
+              891,
+              947
             ],
             [
-              961,
-              1060
+              1016,
+              1072
             ],
             [
-              1092,
+              1141,
               1191
             ]
           ],
           "inter_staff_gaps": [
             [
-              799,
-              829
+              827,
+              886
             ],
             [
-              930,
-              960
+              952,
+              1011
             ],
             [
-              1061,
-              1091
+              1077,
+              1136
             ]
           ],
           "system_edge_columns": [
-            234,
-            235,
-            236,
-            241,
-            242
+            206,
+            207,
+            208,
+            209,
+            214
           ],
           "system_edge_spans_gaps": true,
           "spanning_barline_columns": [],
           "measure_barline_columns": [
-            358,
-            474,
-            475,
-            591,
-            707,
-            824,
+            336,
+            458,
+            459,
+            581,
+            703,
+            825,
+            826,
+            948
+          ],
+          "gap_ink_in_barline_columns": [
+            0
+          ],
+          "ok": true,
+          "staff_span_y": [
+            765,
+            1191
+          ]
+        }
+      ],
+      "failures": [],
+      "ok": true
+    },
+    {
+      "page": "empty-template-p2.png",
+      "frames_found": 4,
+      "staff_frames": [
+        [
+          129,
+          186
+        ],
+        [
+          303,
+          360
+        ],
+        [
+          478,
+          536
+        ],
+        [
+          654,
+          703
+        ]
+      ],
+      "systems": [
+        {
+          "system": 1,
+          "staff_frames": [
+            [
+              129,
+              186
+            ],
+            [
+              303,
+              360
+            ],
+            [
+              478,
+              536
+            ],
+            [
+              654,
+              703
+            ]
+          ],
+          "inter_staff_gaps": [
+            [
+              191,
+              298
+            ],
+            [
+              365,
+              473
+            ],
+            [
+              541,
+              649
+            ]
+          ],
+          "system_edge_columns": [
+            206,
+            207,
+            208,
+            209,
+            214
+          ],
+          "system_edge_spans_gaps": true,
+          "spanning_barline_columns": [],
+          "measure_barline_columns": [
+            335,
+            456,
+            577,
+            698,
+            819,
             940,
             945,
             946,
@@ -525,8 +525,8 @@
           ],
           "ok": true,
           "staff_span_y": [
-            699,
-            1191
+            129,
+            703
           ]
         }
       ],
@@ -542,16 +542,16 @@
           227
         ],
         [
-          348,
-          447
+          344,
+          415
         ],
         [
-          567,
-          666
+          533,
+          607
         ],
         [
-          787,
-          910
+          723,
+          871
         ]
       ],
       "systems": [
@@ -563,45 +563,45 @@
               227
             ],
             [
-              348,
-              447
+              344,
+              415
             ],
             [
-              567,
-              666
+              533,
+              607
             ],
             [
-              787,
-              910
+              723,
+              871
             ]
           ],
           "inter_staff_gaps": [
             [
-              228,
-              347
+              232,
+              339
             ],
             [
-              448,
-              566
+              420,
+              528
             ],
             [
-              667,
-              786
+              612,
+              718
             ]
           ],
           "system_edge_columns": [
-            280,
-            281,
-            282,
-            283,
-            288
+            253,
+            254,
+            255,
+            260,
+            261
           ],
           "system_edge_spans_gaps": true,
           "spanning_barline_columns": [],
           "measure_barline_columns": [
-            490,
-            640,
-            790,
+            450,
+            613,
+            777,
             940,
             945,
             946,
@@ -614,7 +614,7 @@
           "ok": true,
           "staff_span_y": [
             128,
-            910
+            871
           ]
         }
       ],
@@ -630,16 +630,16 @@
           227
         ],
         [
-          348,
-          447
+          344,
+          415
         ],
         [
-          567,
-          666
+          533,
+          607
         ],
         [
-          787,
-          910
+          723,
+          871
         ]
       ],
       "systems": [
@@ -651,45 +651,45 @@
               227
             ],
             [
-              348,
-              447
+              344,
+              415
             ],
             [
-              567,
-              666
+              533,
+              607
             ],
             [
-              787,
-              910
+              723,
+              871
             ]
           ],
           "inter_staff_gaps": [
             [
-              228,
-              347
+              232,
+              339
             ],
             [
-              448,
-              566
+              420,
+              528
             ],
             [
-              667,
-              786
+              612,
+              718
             ]
           ],
           "system_edge_columns": [
-            280,
-            281,
-            282,
-            283,
-            288
+            253,
+            254,
+            255,
+            260,
+            261
           ],
           "system_edge_spans_gaps": true,
           "spanning_barline_columns": [],
           "measure_barline_columns": [
-            490,
-            640,
-            790,
+            450,
+            613,
+            777,
             940,
             945,
             946,
@@ -702,7 +702,7 @@
           "ok": true,
           "staff_span_y": [
             128,
-            910
+            871
           ]
         }
       ],
@@ -719,43 +719,112 @@
           "do_rows": [
             {
               "voice": "soprano",
-              "actual_y": 236,
-              "expected_y": 235.75,
-              "tolerance": 5.9399999999999995,
-              "upper_horn_ink": 46,
-              "lower_horn_ink": 42,
-              "top_closure_run": 16,
-              "bottom_closure_run": 16
+              "actual_y": 211,
+              "expected_y": 209.971646303937,
+              "tolerance": 2,
+              "red_pixels_on_row": 751,
+              "frame_height_px": 57,
+              "expected_frame_height_px": 58.03,
+              "upper_horn_ink": 0,
+              "lower_horn_ink": 45,
+              "top_closure_run": 9,
+              "bottom_closure_run": 18
             },
             {
               "voice": "alto",
-              "actual_y": 471,
-              "expected_y": 471.5,
-              "tolerance": 5.9399999999999995,
-              "upper_horn_ink": 41,
-              "lower_horn_ink": 48,
-              "top_closure_run": 14,
-              "bottom_closure_run": 14
+              "actual_y": 394,
+              "expected_y": 393.0,
+              "tolerance": 2,
+              "red_pixels_on_row": 746,
+              "frame_height_px": 57,
+              "expected_frame_height_px": 58.03,
+              "upper_horn_ink": 47,
+              "lower_horn_ink": 0,
+              "top_closure_run": 18,
+              "bottom_closure_run": 10
             },
             {
               "voice": "tenor",
-              "actual_y": 608,
-              "expected_y": 607.8333333333334,
-              "tolerance": 5.88,
+              "actual_y": 478,
+              "expected_y": 477.828227711811,
+              "tolerance": 2,
+              "red_pixels_on_row": 738,
+              "frame_height_px": 58,
+              "expected_frame_height_px": 58.03,
               "upper_horn_ink": 45,
-              "lower_horn_ink": 45,
-              "top_closure_run": 17,
-              "bottom_closure_run": 17
+              "lower_horn_ink": 46,
+              "top_closure_run": 14,
+              "bottom_closure_run": 18
             },
             {
               "voice": "bass",
-              "actual_y": 810,
-              "expected_y": 810.0,
-              "tolerance": 5.9399999999999995,
-              "upper_horn_ink": 42,
-              "lower_horn_ink": 48,
-              "top_closure_run": 17,
-              "bottom_closure_run": 16
+              "actual_y": 628,
+              "expected_y": 627.763558936378,
+              "tolerance": 2,
+              "red_pixels_on_row": 739,
+              "frame_height_px": 50,
+              "expected_frame_height_px": 50.41,
+              "upper_horn_ink": 47,
+              "lower_horn_ink": 52,
+              "top_closure_run": 18,
+              "bottom_closure_run": 13
+            }
+          ]
+        },
+        {
+          "system": 2,
+          "do_rows": [
+            {
+              "voice": "soprano",
+              "actual_y": 764,
+              "expected_y": 763.971646303937,
+              "tolerance": 2,
+              "red_pixels_on_row": 795,
+              "frame_height_px": 58,
+              "expected_frame_height_px": 58.03,
+              "upper_horn_ink": 0,
+              "lower_horn_ink": 47,
+              "top_closure_run": 10,
+              "bottom_closure_run": 18
+            },
+            {
+              "voice": "alto",
+              "actual_y": 948,
+              "expected_y": 947.0,
+              "tolerance": 2,
+              "red_pixels_on_row": 796,
+              "frame_height_px": 57,
+              "expected_frame_height_px": 58.03,
+              "upper_horn_ink": 46,
+              "lower_horn_ink": 0,
+              "top_closure_run": 18,
+              "bottom_closure_run": 10
+            },
+            {
+              "voice": "tenor",
+              "actual_y": 1032,
+              "expected_y": 1030.828227711811,
+              "tolerance": 2,
+              "red_pixels_on_row": 798,
+              "frame_height_px": 57,
+              "expected_frame_height_px": 58.03,
+              "upper_horn_ink": 49,
+              "lower_horn_ink": 47,
+              "top_closure_run": 14,
+              "bottom_closure_run": 18
+            },
+            {
+              "voice": "bass",
+              "actual_y": 1181,
+              "expected_y": 1181.7635589363779,
+              "tolerance": 2,
+              "red_pixels_on_row": 715,
+              "frame_height_px": 51,
+              "expected_frame_height_px": 50.41,
+              "upper_horn_ink": 46,
+              "lower_horn_ink": 60,
+              "top_closure_run": 18,
+              "bottom_closure_run": 12
             }
           ]
         }
@@ -771,88 +840,55 @@
           "do_rows": [
             {
               "voice": "soprano",
-              "actual_y": 153,
-              "expected_y": 152.75,
-              "tolerance": 5.9399999999999995,
-              "upper_horn_ink": 43,
-              "lower_horn_ink": 49,
-              "top_closure_run": 15,
-              "bottom_closure_run": 16
+              "actual_y": 128,
+              "expected_y": 127.971646303937,
+              "tolerance": 2,
+              "red_pixels_on_row": 798,
+              "frame_height_px": 58,
+              "expected_frame_height_px": 58.03,
+              "upper_horn_ink": 0,
+              "lower_horn_ink": 45,
+              "top_closure_run": 10,
+              "bottom_closure_run": 18
             },
             {
               "voice": "alto",
-              "actual_y": 342,
-              "expected_y": 341.5,
-              "tolerance": 5.9399999999999995,
-              "upper_horn_ink": 49,
-              "lower_horn_ink": 45,
-              "top_closure_run": 14,
-              "bottom_closure_run": 14
-            },
-            {
-              "voice": "tenor",
-              "actual_y": 431,
-              "expected_y": 431.25,
-              "tolerance": 5.9399999999999995,
-              "upper_horn_ink": 46,
-              "lower_horn_ink": 49,
-              "top_closure_run": 17,
-              "bottom_closure_run": 17
-            },
-            {
-              "voice": "bass",
-              "actual_y": 587,
-              "expected_y": 587.0,
-              "tolerance": 5.9399999999999995,
-              "upper_horn_ink": 47,
-              "lower_horn_ink": 43,
-              "top_closure_run": 16,
-              "bottom_closure_run": 17
-            }
-          ]
-        },
-        {
-          "system": 2,
-          "do_rows": [
-            {
-              "voice": "soprano",
-              "actual_y": 724,
-              "expected_y": 723.75,
-              "tolerance": 5.9399999999999995,
-              "upper_horn_ink": 47,
-              "lower_horn_ink": 45,
-              "top_closure_run": 15,
-              "bottom_closure_run": 15
-            },
-            {
-              "voice": "alto",
-              "actual_y": 913,
-              "expected_y": 912.5,
-              "tolerance": 5.9399999999999995,
-              "upper_horn_ink": 46,
-              "lower_horn_ink": 39,
-              "top_closure_run": 14,
-              "bottom_closure_run": 14
-            },
-            {
-              "voice": "tenor",
-              "actual_y": 1002,
-              "expected_y": 1002.25,
-              "tolerance": 5.9399999999999995,
+              "actual_y": 361,
+              "expected_y": 360.0,
+              "tolerance": 2,
+              "red_pixels_on_row": 796,
+              "frame_height_px": 58,
+              "expected_frame_height_px": 58.03,
               "upper_horn_ink": 43,
-              "lower_horn_ink": 49,
-              "top_closure_run": 17,
-              "bottom_closure_run": 17
+              "lower_horn_ink": 0,
+              "top_closure_run": 18,
+              "bottom_closure_run": 9
+            },
+            {
+              "voice": "tenor",
+              "actual_y": 495,
+              "expected_y": 494.828227711811,
+              "tolerance": 2,
+              "red_pixels_on_row": 798,
+              "frame_height_px": 59,
+              "expected_frame_height_px": 58.03,
+              "upper_horn_ink": 49,
+              "lower_horn_ink": 47,
+              "top_closure_run": 14,
+              "bottom_closure_run": 18
             },
             {
               "voice": "bass",
-              "actual_y": 1158,
-              "expected_y": 1158.0,
-              "tolerance": 5.9399999999999995,
-              "upper_horn_ink": 49,
-              "lower_horn_ink": 44,
-              "top_closure_run": 17,
-              "bottom_closure_run": 16
+              "actual_y": 694,
+              "expected_y": 693.763558936378,
+              "tolerance": 2,
+              "red_pixels_on_row": 797,
+              "frame_height_px": 50,
+              "expected_frame_height_px": 50.41,
+              "upper_horn_ink": 45,
+              "lower_horn_ink": 49,
+              "top_closure_run": 18,
+              "bottom_closure_run": 12
             }
           ]
         }
@@ -868,43 +904,112 @@
           "do_rows": [
             {
               "voice": "soprano",
-              "actual_y": 236,
-              "expected_y": 235.75,
-              "tolerance": 5.9399999999999995,
-              "upper_horn_ink": 46,
-              "lower_horn_ink": 42,
-              "top_closure_run": 16,
-              "bottom_closure_run": 16
+              "actual_y": 211,
+              "expected_y": 209.971646303937,
+              "tolerance": 2,
+              "red_pixels_on_row": 751,
+              "frame_height_px": 57,
+              "expected_frame_height_px": 58.03,
+              "upper_horn_ink": 0,
+              "lower_horn_ink": 45,
+              "top_closure_run": 9,
+              "bottom_closure_run": 18
             },
             {
               "voice": "alto",
-              "actual_y": 471,
-              "expected_y": 471.5,
-              "tolerance": 5.9399999999999995,
-              "upper_horn_ink": 41,
-              "lower_horn_ink": 48,
-              "top_closure_run": 14,
-              "bottom_closure_run": 14
+              "actual_y": 394,
+              "expected_y": 393.0,
+              "tolerance": 2,
+              "red_pixels_on_row": 746,
+              "frame_height_px": 57,
+              "expected_frame_height_px": 58.03,
+              "upper_horn_ink": 47,
+              "lower_horn_ink": 0,
+              "top_closure_run": 18,
+              "bottom_closure_run": 10
             },
             {
               "voice": "tenor",
-              "actual_y": 608,
-              "expected_y": 607.8333333333334,
-              "tolerance": 5.88,
+              "actual_y": 478,
+              "expected_y": 477.828227711811,
+              "tolerance": 2,
+              "red_pixels_on_row": 738,
+              "frame_height_px": 58,
+              "expected_frame_height_px": 58.03,
               "upper_horn_ink": 45,
-              "lower_horn_ink": 45,
-              "top_closure_run": 17,
-              "bottom_closure_run": 17
+              "lower_horn_ink": 46,
+              "top_closure_run": 14,
+              "bottom_closure_run": 18
             },
             {
               "voice": "bass",
-              "actual_y": 810,
-              "expected_y": 810.0,
-              "tolerance": 5.9399999999999995,
-              "upper_horn_ink": 42,
-              "lower_horn_ink": 48,
-              "top_closure_run": 17,
-              "bottom_closure_run": 16
+              "actual_y": 628,
+              "expected_y": 627.763558936378,
+              "tolerance": 2,
+              "red_pixels_on_row": 739,
+              "frame_height_px": 50,
+              "expected_frame_height_px": 50.41,
+              "upper_horn_ink": 47,
+              "lower_horn_ink": 52,
+              "top_closure_run": 18,
+              "bottom_closure_run": 13
+            }
+          ]
+        },
+        {
+          "system": 2,
+          "do_rows": [
+            {
+              "voice": "soprano",
+              "actual_y": 764,
+              "expected_y": 763.971646303937,
+              "tolerance": 2,
+              "red_pixels_on_row": 795,
+              "frame_height_px": 58,
+              "expected_frame_height_px": 58.03,
+              "upper_horn_ink": 0,
+              "lower_horn_ink": 47,
+              "top_closure_run": 10,
+              "bottom_closure_run": 18
+            },
+            {
+              "voice": "alto",
+              "actual_y": 948,
+              "expected_y": 947.0,
+              "tolerance": 2,
+              "red_pixels_on_row": 796,
+              "frame_height_px": 57,
+              "expected_frame_height_px": 58.03,
+              "upper_horn_ink": 46,
+              "lower_horn_ink": 0,
+              "top_closure_run": 18,
+              "bottom_closure_run": 10
+            },
+            {
+              "voice": "tenor",
+              "actual_y": 1032,
+              "expected_y": 1030.828227711811,
+              "tolerance": 2,
+              "red_pixels_on_row": 798,
+              "frame_height_px": 57,
+              "expected_frame_height_px": 58.03,
+              "upper_horn_ink": 49,
+              "lower_horn_ink": 47,
+              "top_closure_run": 14,
+              "bottom_closure_run": 18
+            },
+            {
+              "voice": "bass",
+              "actual_y": 1181,
+              "expected_y": 1181.7635589363779,
+              "tolerance": 2,
+              "red_pixels_on_row": 715,
+              "frame_height_px": 51,
+              "expected_frame_height_px": 50.41,
+              "upper_horn_ink": 46,
+              "lower_horn_ink": 60,
+              "top_closure_run": 18,
+              "bottom_closure_run": 12
             }
           ]
         }
@@ -920,88 +1025,55 @@
           "do_rows": [
             {
               "voice": "soprano",
-              "actual_y": 153,
-              "expected_y": 152.75,
-              "tolerance": 5.9399999999999995,
-              "upper_horn_ink": 43,
-              "lower_horn_ink": 49,
-              "top_closure_run": 15,
-              "bottom_closure_run": 16
+              "actual_y": 128,
+              "expected_y": 127.971646303937,
+              "tolerance": 2,
+              "red_pixels_on_row": 798,
+              "frame_height_px": 58,
+              "expected_frame_height_px": 58.03,
+              "upper_horn_ink": 0,
+              "lower_horn_ink": 45,
+              "top_closure_run": 10,
+              "bottom_closure_run": 18
             },
             {
               "voice": "alto",
-              "actual_y": 342,
-              "expected_y": 341.5,
-              "tolerance": 5.9399999999999995,
-              "upper_horn_ink": 49,
-              "lower_horn_ink": 45,
-              "top_closure_run": 14,
-              "bottom_closure_run": 14
-            },
-            {
-              "voice": "tenor",
-              "actual_y": 431,
-              "expected_y": 431.25,
-              "tolerance": 5.9399999999999995,
-              "upper_horn_ink": 46,
-              "lower_horn_ink": 49,
-              "top_closure_run": 17,
-              "bottom_closure_run": 17
-            },
-            {
-              "voice": "bass",
-              "actual_y": 587,
-              "expected_y": 587.0,
-              "tolerance": 5.9399999999999995,
-              "upper_horn_ink": 47,
-              "lower_horn_ink": 43,
-              "top_closure_run": 16,
-              "bottom_closure_run": 17
-            }
-          ]
-        },
-        {
-          "system": 2,
-          "do_rows": [
-            {
-              "voice": "soprano",
-              "actual_y": 724,
-              "expected_y": 723.75,
-              "tolerance": 5.9399999999999995,
-              "upper_horn_ink": 47,
-              "lower_horn_ink": 45,
-              "top_closure_run": 15,
-              "bottom_closure_run": 15
-            },
-            {
-              "voice": "alto",
-              "actual_y": 913,
-              "expected_y": 912.5,
-              "tolerance": 5.9399999999999995,
-              "upper_horn_ink": 46,
-              "lower_horn_ink": 39,
-              "top_closure_run": 14,
-              "bottom_closure_run": 14
-            },
-            {
-              "voice": "tenor",
-              "actual_y": 1002,
-              "expected_y": 1002.25,
-              "tolerance": 5.9399999999999995,
+              "actual_y": 361,
+              "expected_y": 360.0,
+              "tolerance": 2,
+              "red_pixels_on_row": 796,
+              "frame_height_px": 58,
+              "expected_frame_height_px": 58.03,
               "upper_horn_ink": 43,
-              "lower_horn_ink": 49,
-              "top_closure_run": 17,
-              "bottom_closure_run": 17
+              "lower_horn_ink": 0,
+              "top_closure_run": 18,
+              "bottom_closure_run": 9
+            },
+            {
+              "voice": "tenor",
+              "actual_y": 495,
+              "expected_y": 494.828227711811,
+              "tolerance": 2,
+              "red_pixels_on_row": 798,
+              "frame_height_px": 59,
+              "expected_frame_height_px": 58.03,
+              "upper_horn_ink": 49,
+              "lower_horn_ink": 47,
+              "top_closure_run": 14,
+              "bottom_closure_run": 18
             },
             {
               "voice": "bass",
-              "actual_y": 1158,
-              "expected_y": 1158.0,
-              "tolerance": 5.9399999999999995,
-              "upper_horn_ink": 49,
-              "lower_horn_ink": 44,
-              "top_closure_run": 17,
-              "bottom_closure_run": 16
+              "actual_y": 694,
+              "expected_y": 693.763558936378,
+              "tolerance": 2,
+              "red_pixels_on_row": 797,
+              "frame_height_px": 50,
+              "expected_frame_height_px": 50.41,
+              "upper_horn_ink": 45,
+              "lower_horn_ink": 49,
+              "top_closure_run": 18,
+              "bottom_closure_run": 12
             }
           ]
         }
@@ -1011,7 +1083,7 @@
     }
   ],
   "empty_staff_centres": {
-    "source": "share/templates/02-Choral/12-SATB_(JiMStaff)/12-SATB_(JiMStaff).mscx",
+    "source": "share/templates/02-Choral/12-SATB_(MeloPresto_Staff)/12-SATB_(MeloPresto_Staff).mscx",
     "voices": [
       "soprano",
       "alto",

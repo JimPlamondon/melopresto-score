@@ -105,6 +105,7 @@ struct ReviewAudit {
 /// The complete per-work review record.
 struct ReviewRecord {
     muse::String schema;                          // register schema identifier
+    muse::String reviewAgent;                     // the register plan's responsible review agent (names every audit change)
     ReviewValue work;                             // work-level findings
     std::vector<muse::String> focusedReviewReasons;
     std::vector<ReviewAudit> audits;
@@ -112,13 +113,13 @@ struct ReviewRecord {
 
     bool empty() const
     {
-        return schema.isEmpty() && work.children.empty() && focusedReviewReasons.empty()
-               && audits.empty() && adjudications.empty();
+        return schema.isEmpty() && reviewAgent.isEmpty() && work.children.empty()
+               && focusedReviewReasons.empty() && audits.empty() && adjudications.empty();
     }
 
     bool operator==(const ReviewRecord& o) const
     {
-        return schema == o.schema && work == o.work
+        return schema == o.schema && reviewAgent == o.reviewAgent && work == o.work
                && focusedReviewReasons == o.focusedReviewReasons
                && audits == o.audits && adjudications == o.adjudications;
     }

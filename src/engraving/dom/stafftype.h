@@ -546,11 +546,6 @@ private:
     mutable muse::String m_meloFrameKey;
     mutable muse::String m_meloSectionFrameKey;
     mutable std::vector<MeloSegment> m_meloSectionFrameSegments;
-    // The section frame before any change-indicator covering (rule 7b) and
-    // the melody it was derived from: the per-system union charges an
-    // indicator's overflow only to the system that draws it.
-    mutable std::vector<MeloSegment> m_meloSectionBaseFrameSegments;
-    mutable muse::String m_meloSectionMelodyJson;
     void meloEnsureSectionFrame(const Score* score, staff_idx_t staffIdx) const;
     const MeloFrameView& meloSectionFrameView(const Score* score, staff_idx_t staffIdx, const System* system) const;
     // Owner decision 2026-09-12 (1a): with octave elision off, the union of

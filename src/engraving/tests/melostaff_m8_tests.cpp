@@ -1429,13 +1429,17 @@ TEST_F(Engraving_MeloStaffM8BandElisionTests, changeIndicatorAnchorsOnTheDoLineT
     doToLa.arrows = { down };
     // One-period staff [0,1200]: only the UPPER Do-line keeps La (900) on the staff.
     EXPECT_DOUBLE_EQ(melo::changeAnchorPeriodCents(whole(0, 1200), doToLa, P), 1200.0);
-    // Two-period staff [0,2400]: the lowest fitting Do-line is 1200 (La at 900).
-    EXPECT_DOUBLE_EQ(melo::changeAnchorPeriodCents(whole(0, 2400), doToLa, P), 1200.0);
-    // Do -> Re (up, inside the same period): the lowest Do-line already fits.
+    // Two-period staff [0,2400]: both 1200 (La at 900) and 2400 (La at 2100)
+    // fit; with no notes to sit beside, the highest wins (owner decision
+    // 2026-09-14; the former lowest-wins was an implementer's tie-break).
+    EXPECT_DOUBLE_EQ(melo::changeAnchorPeriodCents(whole(0, 2400), doToLa, P), 2400.0);
+    // With notes low on the staff, the placement beside them wins.
+    EXPECT_DOUBLE_EQ(melo::changeAnchorPeriodCents(whole(0, 2400), doToLa, P, 0.0, { 200.0, 400.0 }), 1200.0);
+    // Do -> Re (up, inside the same period): both Do-lines fit; no notes, so the highest.
     melo::ChangeIndicator doToRe;
     doToRe.kinds = { u"mode" };
     doToRe.tonicIndicators = { point(0.0, 0), point(1.0 / 6.0, 0) };
-    EXPECT_DOUBLE_EQ(melo::changeAnchorPeriodCents(whole(0, 2400), doToRe, P), 0.0);
+    EXPECT_DOUBLE_EQ(melo::changeAnchorPeriodCents(whole(0, 2400), doToRe, P), 1200.0);
     // Nothing fits (a partial staff [300, 900] with Do -> La): least overflow wins.
     StaffType::MeloFrameView partial;
     StaffType::MeloFrameBand pb;
@@ -1446,7 +1450,7 @@ TEST_F(Engraving_MeloStaffM8BandElisionTests, changeIndicatorAnchorsOnTheDoLineT
     // No Do-line is inside: the upper anchor minimizes overflow to 300 cents.
     EXPECT_DOUBLE_EQ(melo::changeAnchorPeriodCents(partial, doToLa, P), 1200.0);
     // Banded (M8): [0,1200] and [3600,4800]; Do -> La fits in the low band at 1200
-    // (La 900) — the lowest fitting anchor, not the top band's.
+    // (La 900) and in the top band at 4800 (La 4500); no notes, so the top band's.
     StaffType::MeloFrameView banded = whole(0, 1200);
     StaffType::MeloFrameBand top;
     top.segments.push_back({ 3600.0, 4800.0, true });
@@ -1454,7 +1458,7 @@ TEST_F(Engraving_MeloStaffM8BandElisionTests, changeIndicatorAnchorsOnTheDoLineT
     top.upperCents = 4800.0;
     banded.bands.push_back(top);
     banded.banded = true;
-    EXPECT_DOUBLE_EQ(melo::changeAnchorPeriodCents(banded, doToLa, P), 1200.0);
+    EXPECT_DOUBLE_EQ(melo::changeAnchorPeriodCents(banded, doToLa, P), 4800.0);
 
     // Paint check on the accepted M5 piece: Do-mode -> La-mode at bar 2 on a
     // one-period staff. The new tonic's label must be the UPPER register
@@ -1933,20 +1937,28 @@ TEST_F(Engraving_MeloStaffM8BandElisionTests, emptyHalfStaffFixtureCoversEveryMo
             EXPECT_EQ(type->meloTonicAmbit(), i % 2 ? String(u"tonic-bounded") : String(u"tonic-centered"));
             const auto& view = viewOn(score, system, i);
             ASSERT_FALSE(view.empty());
-            EXPECT_GE(view.topCents() - view.bottomCents(), 600.0 - 1e-6);
+            // Owner rulings 2026-09-08 and 2026-09-15 (1a): every empty staff
+            // is centred on its declared range (half a period on the centre)
+            // and expanded outward to the nearest ratio lines, an edge within
+            // the Kernel's tempering snap (25 cents) of a line counting as on
+            // it. At a 700-cent generator a tonic-bounded range that sits on
+            // its tonic therefore starts on the tonic's ratio line, the
+            // picture accepted on 2026-09-08; at other generators the range
+            // centre, not the tonic, decides.
+            const double snap = 25.0;
+            EXPECT_GE(view.topCents() - view.bottomCents(), 600.0 - snap - 1e-6);
             melo::PeriodicOrigins origins;
             ASSERT_TRUE(melo::periodicOrigins(type->meloStateJson(), origins));
-            double minimumLower = -300.0;
-            double minimumUpper = 300.0;
-            if (i % 2) {
+            const double minimumLower = -300.0;
+            const double minimumUpper = 300.0;
+            if (i % 2 && generator == 700.0) {
                 const double tonicRatios[] = { 4.0 / 3.0, 1.0, 3.0 / 2.0, 9.0 / 8.0, 5.0 / 3.0, 5.0 / 4.0, 15.0 / 8.0 };
                 const double origin = origins.doCentsAboveExtentLower + 1200.0 * std::log2(tonicRatios[i / 2]);
-                minimumLower = origin + std::round((-300.0 - origin) / 1200.0) * 1200.0;
-                minimumUpper = minimumLower + 600.0;
-                EXPECT_NEAR(view.bottomCents(), minimumLower, 1e-6) << "tonic must bound staff " << i;
+                const double tonicRow = origin + std::round((-300.0 - origin) / 1200.0) * 1200.0;
+                EXPECT_NEAR(view.bottomCents(), tonicRow, 1e-6) << "tonic must bound staff " << i;
             }
-            EXPECT_LE(view.bottomCents(), minimumLower + 1e-6);
-            EXPECT_GE(view.topCents(), minimumUpper - 1e-6);
+            EXPECT_LE(view.bottomCents(), minimumLower + snap + 1e-6);
+            EXPECT_GE(view.topCents(), minimumUpper - snap - 1e-6);
             std::vector<melo::JiLine> ratios;
             ASSERT_TRUE(melo::jiLines(type->meloStateJson(), ratios));
             std::vector<double> candidates;
@@ -1969,8 +1981,8 @@ TEST_F(Engraving_MeloStaffM8BandElisionTests, emptyHalfStaffFixtureCoversEveryMo
                 })) << "staff " << i << " edge " << edge;
             }
             for (double c : candidates) {
-                EXPECT_FALSE(c > view.bottomCents() + 1e-6 && c <= minimumLower + 1e-6);
-                EXPECT_FALSE(c < view.topCents() - 1e-6 && c >= minimumUpper - 1e-6);
+                EXPECT_FALSE(c > view.bottomCents() + 1e-6 && c <= minimumLower + snap + 1e-6);
+                EXPECT_FALSE(c < view.topCents() - 1e-6 && c >= minimumUpper - snap - 1e-6);
             }
             for (const Segment* segment = score->firstSegment(SegmentType::ChordRest); segment;
                  segment = segment->next1(SegmentType::ChordRest)) {
@@ -1988,8 +2000,15 @@ TEST_F(Engraving_MeloStaffM8BandElisionTests, emptyHalfStaffHeadersUseTonicSpeci
                                             + u"/jimstaff_data/empty-half-staves-14.mscx", true);
     ASSERT_TRUE(score);
     System* system = measureSystems(score).front();
-    const String lowerLabels[] = { u"Do", u"Fa", u"La", u"Do", u"Mi", u"So", u"Ti", u"Re", u"Fa", u"La", u"Do", u"Mi", u"So", u"Ti" };
-    const String upperLabels[] = { u"La", u"Do", u"Mi", u"So", u"Ti", u"Re", u"So", u"La", u"Do", u"Mi", u"So", u"Ti", u"Re", u"Fa" };
+    // Owner 2026-09-15 (1a) with the Kernel's 25-cent tempering snap: a
+    // window edge that the tempering puts a few cents past a ratio line now
+    // sits on that line instead of expanding a whole row further. Three
+    // fixture edges move by one row against the 2026-09-08 render: staff 0's
+    // lower edge Do -> Re (tempered Re at 200 against the 204 line), staff
+    // 1's upper edge Do -> Ti (1100 against 1088), staff 6's upper edge
+    // So -> Fa (500 against 498). Every tonic edge is unchanged.
+    const String lowerLabels[] = { u"Re", u"Fa", u"La", u"Do", u"Mi", u"So", u"Ti", u"Re", u"Fa", u"La", u"Do", u"Mi", u"So", u"Ti" };
+    const String upperLabels[] = { u"La", u"Ti", u"Mi", u"So", u"Ti", u"Re", u"Fa", u"La", u"Do", u"Mi", u"So", u"Ti", u"Re", u"Fa" };
     int labelsSeen = 0;
     for (staff_idx_t i = 0; i < score->nstaves(); ++i) {
         const StaffType* type = st(score, i);

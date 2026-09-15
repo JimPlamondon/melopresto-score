@@ -28,6 +28,10 @@ Two things are deliberately NOT counted as measure barlines.
 
 Also asserted: repeated renders of one fixture are byte-identical, every
 render matches SHA256SUMS, and each rendered system draws four JiMStaff frames.
+A system is what its leading edge spans (system_spans): since the staff-edge
+fix accepted on 2026-09-08 an empty tonic-bounded staff is a Do-to-So frame,
+shorter than the space between staves, so systems can no longer be told apart
+by an outsized gap alone.
 
 Usage:
     .venv/bin/python jims-evidence/m9-satb/verify_satb_layout.py \\
@@ -52,6 +56,12 @@ INK_MAX = 100
 # Vertical ink runs shorter than this are note heads, stems, text — not a
 # barline stroke through a staff. A JiMStaff frame at 120 dpi is ~100 px.
 MIN_STROKE = 40
+# A staff frame's edge, measured by consensus, can sit a pixel or two off the
+# end of any one barline stroke (anti-aliasing), and since the staff-edge fix
+# accepted on 2026-09-08 an empty tonic-bounded staff's lower edge IS its red
+# Do line, over which the stroke ends. Rows this close to a frame edge are
+# therefore not part of the inter-staff gap.
+EDGE_SLACK = 4
 # Runs this close together are one stroke. A JiMStaff draws its coloured staff
 # lines OVER the barline, so a barline is interrupted wherever a line crosses
 # it: measured at 2 replaced pixels (the red Do line, RGB 195,41,41, at
@@ -132,8 +142,49 @@ def staff_frames(ink):
     return (len(kept), kept)
 
 
-def group_systems(frames):
-    """Split staff frames into systems on the outsized between-system gap."""
+def system_spans(ink, frames):
+    """The vertical extent of every system on the page, from its leading edge.
+
+    MuseScore draws a bracketed system's leading vertical (the bracket and the
+    initial barline beside it) as one run through every staff of the system and
+    through the gaps between them. Such a run is the one vertical on the page
+    that CONTAINS two or more staff frames, so it names the system's staves
+    directly, whatever the frames' heights and however the page spaces its
+    systems. Overlapping or abutting runs are merged.
+    """
+    spans = []
+    for x in range(ink.shape[1]):
+        for top, bottom in runs_in_column(ink, x, 2 * MIN_STROKE):
+            inside = [f for f in frames if top - FRAME_TOL <= f[0] and f[1] <= bottom + FRAME_TOL]
+            if len(inside) >= 2:
+                spans.append((top, bottom))
+    merged = []
+    for top, bottom in sorted(spans):
+        if merged and top <= merged[-1][1] + FRAME_TOL:
+            merged[-1][1] = max(merged[-1][1], bottom)
+        else:
+            merged.append([top, bottom])
+    return [(a, b) for a, b in merged]
+
+
+def group_systems(frames, spans=None):
+    """Split staff frames into systems.
+
+    With the system spans from the page's leading edges (system_spans), each
+    frame belongs to the span that contains it. Without them, or for frames no
+    span contains, fall back to splitting on the outsized between-system gap —
+    which only works while frames are taller than the space between them.
+    """
+    if spans:
+        systems, rest = [], list(frames)
+        for top, bottom in spans:
+            inside = [f for f in rest if top - FRAME_TOL <= f[0] and f[1] <= bottom + FRAME_TOL]
+            if inside:
+                systems.append(inside)
+                rest = [f for f in rest if f not in inside]
+        if rest:
+            systems.extend(group_systems(rest))
+        return sorted(systems)
     if len(frames) <= VOICES_PER_SYSTEM:
         return [frames]
     gaps = [frames[i + 1][0] - frames[i][1] for i in range(len(frames) - 1)]
@@ -149,17 +200,23 @@ def group_systems(frames):
     return systems
 
 
+def page_systems(ink):
+    """(frames, systems) for one page: every staff frame, grouped by system."""
+    _, frames = staff_frames(ink)
+    return frames, group_systems(frames, system_spans(ink, frames))
+
+
 def check_page(path):
     ink = ink_of(path)
-    frame_count, frames = staff_frames(ink)
-    result = {"page": path.name, "frames_found": frame_count,
+    frames, systems = page_systems(ink)
+    result = {"page": path.name, "frames_found": len(frames),
               "staff_frames": [list(f) for f in frames], "systems": [], "failures": []}
     if not frames:
         result["ok"] = False
         result["failures"].append("no barline strokes found at all")
         return result
 
-    for si, system in enumerate(group_systems(frames)):
+    for si, system in enumerate(systems):
         entry = {"system": si + 1, "staff_frames": [list(f) for f in system]}
         if len(system) != VOICES_PER_SYSTEM:
             entry["ok"] = False
@@ -168,7 +225,12 @@ def check_page(path):
             result["systems"].append(entry)
             continue
 
-        gaps = [(system[i][1] + 1, system[i + 1][0] - 1) for i in range(len(system) - 1)]
+        # The inter-staff gap starts EDGE_SLACK rows below one frame and ends
+        # EDGE_SLACK rows above the next; the gaps are tens of pixels tall, so
+        # the assertion loses nothing and stops reading a stroke's own end as
+        # ink between staves.
+        gaps = [(system[i][1] + 1 + EDGE_SLACK, system[i + 1][0] - 1 - EDGE_SLACK)
+                for i in range(len(system) - 1)]
         entry["inter_staff_gaps"] = [list(g) for g in gaps]
         heights = [b - a + 1 for a, b in system]
         top, bottom = system[0][0], system[-1][1]

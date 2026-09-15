@@ -2778,7 +2778,8 @@ void TDraw::drawMeloChangeTerrain(const StaffLines* item, Painter* painter, cons
             // of the stave stack that keeps the whole indicator inside the
             // staff (owner ruling 2026-08-19; melo::changeAnchorPeriodCents).
             const double basePeriod = melo::changeAnchorPeriodCents(
-                view, model, periodCents, origins.doCentsAboveExtentLower);
+                view, model, periodCents, origins.doCentsAboveExtentLower,
+                melo::systemNoteCents(item->measure()->system(), item->staffIdx(), displayedSt));
             auto centsOf = [&](const melo::ChangePoint& p) {
                 return basePeriod + (p.periodOffset + p.ordinate) * periodCents;
             };

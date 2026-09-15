@@ -27,7 +27,7 @@ mkdir -p "$renders"
 # fixture-of-record name -> source score
 declare -a NAMES=(template hymn)
 declare -a SOURCES=(
-    "$root/share/templates/02-Choral/12-SATB_(JiMStaff)/12-SATB_(JiMStaff).mscx"
+    "$root/share/templates/02-Choral/12-SATB_(MeloPresto_Staff)/12-SATB_(MeloPresto_Staff).mscx"
     "$root/src/engraving/tests/jimstaff_data/m9-satb-hymn.mscx"
 )
 

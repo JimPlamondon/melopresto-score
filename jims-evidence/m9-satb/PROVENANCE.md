@@ -79,4 +79,16 @@ Three things changed as a result. The hymn was rewritten with correct identities
 
 The renders in this folder are the corrected ones. Any earlier copy should be discarded.
 
+## Update, 2026-09-14: the empty template's frames changed by owner decision; the verifier follows
+
+The 2026-08-24 verifier stopped passing on the empty template without any barline having changed. The cause is the staff-edge fix the owner accepted on 2026-09-08 (workstream `ws_staff_edges_20260908`; Kernel commit `0dac1fb`, "pin empty tonic-bounded frames to tonic ratios"; fork PR 44, merged 2026-09-09): an empty tonic-bounded staff's frame now starts on its tonic ratio row, so each of the template's four empty staves is a Do-to-So frame (700 cents, 57 px at 120 dpi) with the red Do line as its lower edge, instead of the 2026-08-24 range-centred octave (99 px). Two systems now fit on page 1 and one on page 2. Fork PRs 51, 52, 53 and 55 do not touch the one-section whole-piece frame path and are not involved.
+
+Two of the verifier's assumptions were tied to octave-tall frames and are replaced. Systems were told apart by an outsized between-system gap, which no longer exists when frames are shorter than the space between staves; a system is now what its leading edge spans (`system_spans`), the one vertical run on the page that contains two or more staff frames, with the gap heuristic kept only as a fallback. And the inter-staff gap now starts `EDGE_SLACK` (4) rows below one frame and ends 4 rows above the next, because a barline stroke's anti-aliased end overruns the consensus frame edge by a pixel and the Do line now lies on that edge; the gaps are over sixty pixels tall, so the broken-barline assertion loses nothing.
+
+Negative checks run at the change: a barline painted through the three inter-staff gaps at x=455 of `template-p2.png` is rejected as a spanning barline column. Renderer, results and the regenerated renders are recorded in the M9 verify summary and in the final report of workstream `ws_satb_template_verifiers_20260914`.
+
+## Correction, 2026-09-15
+
+The 2026-09-14 update's account of the empty template (every voice a Do-to-So frame starting on Do) described a Kernel defect that Jim rejected on 2026-09-15: empty staves are centred on their own vocal ranges and expanded outward to the nearest ratio lines (see `../m10-satb/PROVENANCE.md`, correction of 2026-09-15). The M9 verifier changes of 2026-09-14 (systems grouped by their leading edge; edge slack on the gap check) stand, because they depend on neither frame height nor Do placement. The frames stay about the same height as on 2026-09-14 (a half period plus a row), so the template still renders two systems on page 1 and one on page 2.
+
 **Manual acceptance: pending Jim.**

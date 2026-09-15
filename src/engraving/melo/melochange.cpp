@@ -8,6 +8,8 @@
 #include "melopitchlabel.h"
 #include "draw/fontmetrics.h"
 
+#include <map>
+
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -305,7 +307,7 @@ double courtesyTerrainWidth(const Measure* measure)
 }
 
 double changeAnchorPeriodCents(const StaffType::MeloFrameView& view, const ChangeIndicator& model, double periodCents,
-                               double doCentsAboveExtentLower)
+                               double doCentsAboveExtentLower, const std::vector<double>& noteCents)
 {
     const double eps = 1e-6;
     const double fallback = doCentsAboveExtentLower
@@ -359,20 +361,40 @@ double changeAnchorPeriodCents(const StaffType::MeloFrameView& view, const Chang
         }
         return best <= eps ? 0.0 : best;
     };
+    // Owner decision 2026-09-14 (S3): least overflow first; among equals the
+    // placement whose rows lie nearest the staff's notes on this system
+    // (zero gap when they share rows); among equals again, the highest.
+    double noteLow = std::numeric_limits<double>::infinity();
+    double noteHigh = -std::numeric_limits<double>::infinity();
+    for (double cents : noteCents) {
+        noteLow = std::min(noteLow, cents);
+        noteHigh = std::max(noteHigh, cents);
+    }
+    auto gapToNotes = [&](double anchor) {
+        if (noteCents.empty()) {
+            return 0.0;
+        }
+        const double low = anchor + *offsetRange.first * periodCents;
+        const double high = anchor + *offsetRange.second * periodCents;
+        return std::max({ 0.0, noteLow - high, low - noteHigh });
+    };
     double bestAnchor = candidates.front();
     double bestOverflow = std::numeric_limits<double>::infinity();
+    double bestGap = std::numeric_limits<double>::infinity();
     for (double anchor : candidates) {
         double overflow = 0.0;
         for (double off : offsets) {
             overflow += overflowOf(anchor + off * periodCents);
         }
-        // Strictly better only: ties keep the lowest candidate.
-        if (overflow < bestOverflow - eps) {
+        const double gap = gapToNotes(anchor);
+        const bool lessOverflow = overflow < bestOverflow - eps;
+        const bool sameOverflow = std::abs(overflow - bestOverflow) <= eps;
+        const bool nearerNotes = gap < bestGap - eps;
+        const bool sameGap = std::abs(gap - bestGap) <= eps;
+        if (lessOverflow || (sameOverflow && (nearerNotes || (sameGap && anchor > bestAnchor)))) {
             bestOverflow = overflow;
+            bestGap = gap;
             bestAnchor = anchor;
-        }
-        if (bestOverflow == 0.0) {
-            break;   // the lowest fully fitting Do-line wins
         }
     }
     return bestAnchor;
@@ -448,15 +470,64 @@ bool changeIndicatorsTouchingStaffType(const Score* score, staff_idx_t staffIdx,
     return !out.empty();
 }
 
+std::vector<double> systemNoteCents(const System* system, staff_idx_t staffIdx, const StaffType* displayed)
+{
+    std::vector<double> out;
+    if (!system || !displayed || !displayed->isMelo()) {
+        return out;
+    }
+    const Score* score = system->score();
+    const Staff* staff = score ? score->staff(staffIdx) : nullptr;
+    double displayedDo0 = 0.0;
+    if (!staff || !noteCentsAboveExtentLower(displayed->meloStateJson(), 1, -2, displayedDo0)) {
+        return out;
+    }
+    std::map<const StaffType*, double> do0;
+    for (const MeasureBase* mb : system->measures()) {
+        if (!mb->isMeasure()) {
+            continue;
+        }
+        for (const Segment* seg = toMeasure(mb)->first(SegmentType::ChordRest); seg; seg = seg->next(SegmentType::ChordRest)) {
+            const StaffType* type = staff->staffType(seg->tick());
+            if (!type || !type->isMelo()) {
+                continue;
+            }
+            auto origin = do0.find(type);
+            if (origin == do0.end()) {
+                double d = 0.0;
+                if (!noteCentsAboveExtentLower(type->meloStateJson(), 1, -2, d)) {
+                    continue;
+                }
+                origin = do0.emplace(type, d).first;
+            }
+            for (track_idx_t track = staffIdx * VOICES; track < (staffIdx + 1) * VOICES; ++track) {
+                const EngravingItem* el = seg->element(track);
+                if (!el || !el->isChord()) {
+                    continue;
+                }
+                for (const Note* note : toChord(el)->notes()) {
+                    double cents = 0.0;
+                    if (note->hasMeloPitch()
+                        && noteCentsAboveExtentLower(type->meloStateJson(), note->meloNPer(), note->meloNGen(), cents)) {
+                        out.push_back(cents - origin->second + displayedDo0);
+                    }
+                }
+            }
+        }
+    }
+    return out;
+}
+
 std::vector<double> changeIndicatorOverflowCents(const StaffType::MeloFrameView& view, const ChangeIndicator& model,
-                                                 double periodCents, double doCentsAboveExtentLower)
+                                                 double periodCents, double doCentsAboveExtentLower,
+                                                 const std::vector<double>& noteCents)
 {
     std::vector<double> out;
     if (view.empty() || periodCents <= 0.0) {
         return out;
     }
     const double eps = 1e-6;
-    const double anchor = changeAnchorPeriodCents(view, model, periodCents, doCentsAboveExtentLower);
+    const double anchor = changeAnchorPeriodCents(view, model, periodCents, doCentsAboveExtentLower, noteCents);
     auto inside = [&](double cents) {
         for (const StaffType::MeloFrameBand& band : view.bands) {
             for (const StaffType::MeloSegment& seg : band.segments) {
