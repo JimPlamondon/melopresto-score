@@ -1141,13 +1141,6 @@ TEST_F(MeloUiModelTests, PaintedKeyChangePitchMatchingHeaderRejectsDoubleClickAn
         alto->renderer()->drawItem(alto, &headerPainter, options);
         headerPainter.endDraw();
         ASSERT_FALSE(header->meloHeaderPitchTargets().empty());
-        const auto matchingHeader = std::find_if(header->meloHeaderPitchTargets().begin(), header->meloHeaderPitchTargets().end(),
-                                                 [](const auto& candidate) { return candidate.label == u"C4"; });
-        ASSERT_NE(matchingHeader, header->meloHeaderPitchTargets().end());
-        const auto target = *matchingHeader;
-        melo::HeaderPitchContext hit;
-        ASSERT_TRUE(melo::findHeaderPitch(score.get(), target.ink.center() + header->canvasPos(), hit));
-
         const auto carriers = melo::changeCarriers(score->firstMeasure(), 1);
         ASSERT_EQ(carriers.size(), 1);
         melo::ChangeIndicator indicator;
@@ -1168,13 +1161,37 @@ TEST_F(MeloUiModelTests, PaintedKeyChangePitchMatchingHeaderRejectsDoubleClickAn
                                                                   engraving::rendering::score::TDraw::ChangePlacement::MID_BAR);
         painter.endDraw();
         const auto drawing = provider->drawData();
-        std::vector<muse::PointF> annotationPoints;
         QStringList paintedTexts;
+        std::function<void(const muse::draw::DrawData::Item&)> collectTexts = [&](const muse::draw::DrawData::Item& item) {
+            for (const auto& data : item.datas) {
+                for (const auto& text : data.texts) {
+                    paintedTexts << text.text.toQString();
+                }
+            }
+            for (const auto& child : item.chilren) {
+                collectTexts(child);
+            }
+        };
+        collectTexts(drawing->item);
+        // The system-local frame and note-aware indicator placement determine
+        // the visible octave. Require a real shared spelling without assuming
+        // that every tuning puts C4 in both the soprano header and alto change.
+        const auto matchingHeader = std::find_if(header->meloHeaderPitchTargets().begin(), header->meloHeaderPitchTargets().end(),
+                                                 [&](const auto& candidate) {
+            return std::any_of(paintedTexts.begin(), paintedTexts.end(), [&](const QString& text) {
+                return text.startsWith((candidate.label + u":").toQString());
+            });
+        });
+        ASSERT_NE(matchingHeader, header->meloHeaderPitchTargets().end())
+            << "The fixture must share an actual header and change pitch: " << paintedTexts.join("|").toStdString();
+        const auto target = *matchingHeader;
+        melo::HeaderPitchContext hit;
+        ASSERT_TRUE(melo::findHeaderPitch(score.get(), target.ink.center() + header->canvasPos(), hit));
+        std::vector<muse::PointF> annotationPoints;
         std::function<void(const muse::draw::DrawData::Item&)> inspect = [&](const muse::draw::DrawData::Item& item) {
             for (const auto& data : item.datas) {
                 const auto& state = drawing->states.at(data.state);
                 for (const auto& text : data.texts) {
-                    paintedTexts << text.text.toQString();
                     if (!text.text.startsWith(target.label + u":")) {
                         continue;
                     }
