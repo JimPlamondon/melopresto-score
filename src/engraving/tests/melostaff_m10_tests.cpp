@@ -338,8 +338,8 @@ TEST(Engraving_MeloStaffM10SATBTests, aSystemPaysOnlyForTheNotesItShows)
             m->add(lineBreak);
         }
         String error;
-        EXPECT_TRUE(melo::applyChange(score, 0, first, u"bind:reference-pitch:62", error)) << error.toStdString();
-        EXPECT_TRUE(melo::applyChange(score, 0, second, u"key:-1:1", error)) << error.toStdString();
+        EXPECT_TRUE(melo::validateState(score->staff(0)->staffType(Fraction(0, 1))->meloStateJson(), error)) << error.toStdString();
+        EXPECT_TRUE(test::relativeKey(score, 0, second->tick(), -1, 1, error)) << error.toStdString();
         if (raise) {
             for (Note* note : notesOn(score, 0)) {
                 if (note->tick() >= third->tick()) {
