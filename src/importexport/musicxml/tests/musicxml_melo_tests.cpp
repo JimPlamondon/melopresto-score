@@ -33,6 +33,7 @@
 #include <QFile>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QJsonArray>
 
 #include "engraving/dom/masterscore.h"
 #include "engraving/dom/factory.h"
@@ -41,6 +42,7 @@
 #include "engraving/rendering/paintoptions.h"
 #include "engraving/dom/measure.h"
 #include "engraving/dom/note.h"
+#include "engraving/dom/lyrics.h"
 #include "engraving/dom/part.h"
 #include "engraving/dom/segment.h"
 #include "engraving/dom/staff.h"
@@ -1949,6 +1951,33 @@ TEST_F(MusicXml_Melo_Tests, ContinuousTuningChangesNotePlacementAndPlaybackAtThe
     EXPECT_FALSE(readAll(exportToScratch(score.get(), "continuous-tuning.musicxml")).empty());
 }
 
+TEST_F(MusicXml_Melo_Tests, StaffCopyKeepsSelectedContinuousTuning)
+{
+    std::unique_ptr<MasterScore> score(readMelo("v5/melo-continuous-tuning.musicxml"));
+    ASSERT_TRUE(score);
+    const Staff* source = score->staff(0);
+    ASSERT_FALSE(source->meloTuningTrajectories().empty());
+    std::unique_ptr<Staff> copy(Factory::createStaff(source->part()));
+    copy->init(source);
+    EXPECT_EQ(copy->meloTuningTrajectories().size(), source->meloTuningTrajectories().size());
+    EXPECT_EQ(copy->meloStateAt(Fraction(1, 4)), source->meloStateAt(Fraction(1, 4)));
+}
+
+TEST_F(MusicXml_Melo_Tests, HeldNoteDefinesExtentAfterReferenceChange)
+{
+    std::unique_ptr<MasterScore> score(readMelo("v5/melo-held-note-reference.musicxml"));
+    ASSERT_TRUE(score);
+    const Note* note = notesInOrder(score.get(), 0).front();
+    const String state = score->staff(0)->meloStateAt(Fraction(1, 4));
+    melo::SoundingPitch reframed;
+    ASSERT_TRUE(melo::reframeNote(score->staff(0)->meloStateAt(note->tick()), state,
+                                  note->meloNPer(), note->meloNGen(), reframed));
+    String expected;
+    ASSERT_TRUE(melo::fitExtent(state, String(u"{\"notes\":[{\"nPer\":%1,\"nGen\":%2}]}")
+                                .arg(reframed.nPer).arg(reframed.nGen), expected));
+    EXPECT_EQ(state, expected) << "A held note remains part of the next section's extent";
+}
+
 TEST_F(MusicXml_Melo_Tests, HeldNoteEvidenceSurvivesReferenceChange)
 {
     std::unique_ptr<MasterScore> score(readMelo("v5/melo-held-note-reference.musicxml"));
@@ -1974,6 +2003,174 @@ TEST_F(MusicXml_Melo_Tests, HeldNoteEvidenceSurvivesReferenceChange)
     for (Harmony* harmony : harmonies) {
         EXPECT_FALSE(harmony->meloEvidenceError().empty());
     }
+}
+
+static void verifySourceNotationOracle(MasterScore* score, const QJsonObject& oracle)
+{
+    ASSERT_EQ(oracle["schema"].toString(), "melopresto.score-notation-oracle.v1");
+    score->doLayout();
+    EXPECT_EQ(QJsonDocument::fromJson(score->metaTag(melo::REFERENCE_TIMELINE_TAG).toUtf8().constChar()).object(),
+              oracle["reference_timeline"].toObject());
+    ASSERT_EQ(score->nstaves(), oracle["staves"].toArray().size());
+    auto expectPaint = [](const EngravingItem* item) {
+        ASSERT_TRUE(item->visible());
+        auto provider = std::make_shared<BufferedPaintProvider>();
+        Painter painter(provider, "source-notation-oracle");
+        painter.setViewport(RectF(0, 0, 4000, 4000));
+        item->renderer()->drawItem(item, &painter, PaintOptions());
+        painter.endDraw();
+        size_t marks = 0;
+        std::function<void(const DrawData::Item&)> visit = [&](const DrawData::Item& entry) {
+            for (const auto& data : entry.datas) {
+                marks += data.paths.size() + data.polygons.size() + data.texts.size() + data.pixmaps.size();
+            }
+            for (const auto& child : entry.chilren) {
+                visit(child);
+            }
+        };
+        visit(provider->drawData()->item);
+        EXPECT_GT(marks, 0u) << "visible source object produced no paint commands";
+        EXPECT_TRUE(std::isfinite(item->pos().x()) && std::isfinite(item->pos().y()));
+    };
+    std::vector<const Note*> actual;
+    std::set<const Chord*> chords;
+    for (staff_idx_t staff = 0; staff < score->nstaves(); ++staff) {
+        for (const Note* note : MusicXml_Melo_Tests::notesInOrder(score, staff)) {
+            if (note->hasMeloPitch()) {
+                actual.push_back(note);
+            }
+            chords.insert(note->chord());
+        }
+    }
+    for (const Chord* chord : chords) {
+        for (const Chord* grace : chord->graceNotes()) {
+            for (const Note* note : grace->notes()) {
+                if (note->hasMeloPitch()) {
+                    actual.push_back(note);
+                }
+            }
+        }
+    }
+    ASSERT_EQ(actual.size(), oracle["notes"].toArray().size());
+    std::set<const Note*> used;
+    std::map<QString, track_idx_t> sourceTracks;
+    std::map<track_idx_t, QString> trackSources;
+    for (const auto& entry : oracle["notes"].toArray()) {
+        const auto expected = entry.toObject();
+        SCOPED_TRACE(expected["id"].toString().toStdString());
+        const Fraction at = Fraction::fromString(String::fromQString(expected["at"].toString()));
+        const QString voiceGroup = expected["voice_group"].toString();
+        ASSERT_FALSE(voiceGroup.isEmpty());
+        auto found = std::find_if(actual.begin(), actual.end(), [&](const Note* note) {
+            const auto mappedTrack = sourceTracks.find(voiceGroup);
+            const auto mappedSource = trackSources.find(note->track());
+            return !used.count(note) && int(note->chord()->vStaffIdx()) == expected["staff"].toInt()
+                   && (mappedTrack == sourceTracks.end() || mappedTrack->second == note->track())
+                   && (mappedSource == trackSources.end() || mappedSource->second == voiceGroup) && note->tick() == at
+                   && note->chord()->isGrace() == expected["grace"].toBool()
+                   && note->meloNPer() == expected["n_per"].toInt() && note->meloNGen() == expected["n_gen"].toInt();
+        });
+        ASSERT_NE(found, actual.end()) << "source occurrence has no matching Score note";
+        const Note* note = *found;
+        used.insert(note);
+        sourceTracks[voiceGroup] = note->track();
+        trackSources[note->track()] = voiceGroup;
+        if (!expected["grace"].toBool()) {
+            EXPECT_EQ(note->chord()->actualTicks(), Fraction::fromString(String::fromQString(expected["duration"].toString())));
+        }
+        ASSERT_TRUE(note->meloCentsValid());
+        EXPECT_NEAR(note->meloCentsAboveDo(), expected["cents_above_extent_lower"].toDouble(), 1e-6);
+        const StaffType* type = score->staff(note->chord()->vStaffIdx())->staffTypeForElement(note);
+        EXPECT_NEAR(note->pos().y(), note->meloPosY(type), 1e-6);
+        const QString shape = expected["notehead"].toString();
+        const NoteHeadGroup group = shape == "triangle-vertex-up" ? NoteHeadGroup::HEAD_TRIANGLE_UP
+                                    : shape == "triangle-vertex-down" ? NoteHeadGroup::HEAD_TRIANGLE_DOWN
+                                    : shape == "square-vertex-up" ? NoteHeadGroup::HEAD_DIAMOND
+                                    : shape == "square-edge-up" ? NoteHeadGroup::HEAD_LA : NoteHeadGroup::HEAD_NORMAL;
+        const auto durationHead = note->headType() == NoteHeadType::HEAD_AUTO ? note->chord()->durationType().headType() : note->headType();
+        EXPECT_EQ(note->noteHead(), Note::noteHead(note->chord()->up(), group, durationHead));
+        std::optional<muse::mpe::ExactPitch> sounding;
+        NominalNoteCtx::nominalPitchLevelOf(note, &sounding);
+        ASSERT_TRUE(sounding.has_value());
+        EXPECT_NEAR(sounding->frequencyHz, expected["frequency_hz"].toDouble(), 1e-6);
+        expectPaint(note);
+    }
+    for (const auto& entry : oracle["staves"].toArray()) {
+        const auto expected = entry.toObject();
+        const Staff* staff = score->staff(expected["staff"].toInt());
+        for (const auto& stateEntry : expected["states"].toArray()) {
+            const auto state = stateEntry.toObject();
+            const Fraction at = Fraction::fromString(String::fromQString(state["at"].toString()));
+            String configuration, error;
+            ASSERT_TRUE(melo::staffConfiguration(staff->meloStateAt(at), configuration, error)) << error.toStdString();
+            EXPECT_EQ(QJsonDocument::fromJson(configuration.toUtf8().constChar()).object(), state["configuration"].toObject())
+                << "staff " << expected["staff"].toInt() << " at " << state["at"].toString().toStdString()
+                << " actual " << configuration.toStdString() << " expected "
+                << QJsonDocument(state["configuration"].toObject()).toJson(QJsonDocument::Compact).toStdString();
+        }
+    }
+    std::vector<Harmony*> harmonies;
+    for (Harmony* harmony : MusicXml_Melo_Tests::harmoniesInOrder(score)) {
+        if (harmony->harmonyType() == HarmonyType::MELO) {
+            harmonies.push_back(harmony);
+        }
+    }
+    ASSERT_EQ(harmonies.size(), oracle["harmonies"].toArray().size());
+    for (const auto& entry : oracle["harmonies"].toArray()) {
+        const auto expected = entry.toObject();
+        auto found = std::find_if(harmonies.begin(), harmonies.end(), [&](const Harmony* harmony) {
+            return int(harmony->staffIdx()) == expected["staff"].toInt()
+                   && harmony->tick() == Fraction::fromString(String::fromQString(expected["at"].toString()))
+                   && harmony->harmonyName().toQString() == expected["name"].toString();
+        });
+        ASSERT_NE(found, harmonies.end()) << expected["name"].toString().toStdString();
+        EXPECT_TRUE((*found)->meloEvidenceError().empty()) << (*found)->meloEvidenceError().toStdString();
+        expectPaint(*found);
+        harmonies.erase(found);
+    }
+    QStringList actualLyrics, expectedLyrics;
+    for (const Chord* chord : chords) {
+        for (const Lyrics* lyric : chord->lyrics()) {
+            actualLyrics.push_back(lyric->plainText().toQString());
+            expectPaint(lyric);
+        }
+    }
+    for (const auto& lyric : oracle["source_lyric_texts"].toArray()) {
+        expectedLyrics.push_back(lyric.toString());
+    }
+    actualLyrics.sort();
+    expectedLyrics.sort();
+    EXPECT_EQ(actualLyrics, expectedLyrics);
+}
+
+TEST_F(MusicXml_Melo_Tests, CompleteSourceNotationOracle)
+{
+    std::unique_ptr<MasterScore> score(readMelo("v5/melo-continuous-tuning.musicxml"));
+    ASSERT_TRUE(score);
+    verifySourceNotationOracle(score.get(), QJsonDocument::fromJson(
+                                   readAll(ScoreRW::rootPath() + u"/" + MELO_DATA_DIR
+                                           + u"v5/continuous-tuning/notation-oracle.json").toUtf8().constChar()).object());
+}
+
+TEST_F(MusicXml_Melo_Tests, CrossStaffSourceNotationOracle)
+{
+    std::unique_ptr<MasterScore> score(readMelo("v5/melo-cross-staff-voice.musicxml"));
+    ASSERT_TRUE(score);
+    verifySourceNotationOracle(score.get(), QJsonDocument::fromJson(
+                                   readAll(ScoreRW::rootPath() + u"/" + MELO_DATA_DIR
+                                           + u"v5/cross-staff-voice/notation-oracle.json").toUtf8().constChar()).object());
+}
+
+TEST_F(MusicXml_Melo_Tests, CompleteSourceNotationOptionalPrivateCorpus)
+{
+    const char* scorePath = std::getenv("MELO_NOTATION_SCORE");
+    const char* oraclePath = std::getenv("MELO_NOTATION_ORACLE");
+    if (!scorePath || !oraclePath) {
+        GTEST_SKIP() << "Supply one explicitly selected source-derived oracle and native Score";
+    }
+    std::unique_ptr<MasterScore> score(ScoreRW::readScore(String::fromUtf8(scorePath), true));
+    ASSERT_TRUE(score);
+    verifySourceNotationOracle(score.get(), QJsonDocument::fromJson(readAll(String::fromUtf8(oraclePath)).toUtf8().constChar()).object());
 }
 
 TEST_F(MusicXml_Melo_Tests, GeneratedEvidenceOptionalPrivateCorpus)

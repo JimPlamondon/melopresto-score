@@ -1,0 +1,147 @@
+{
+  "schema": "melopresto.score-notation-oracle.v1",
+  "package_sha256": "8d1215778d82688a9607af6f1244c6c29bace28e9873d723e0a832f2a1579c64",
+  "source_sha256": "42e53a6608c0eb719029fbfb97c8e74b4868293483a72731ba2d2061d7dc69b9",
+  "work_id": "cross-staff-voice",
+  "reference_timeline": {
+    "schema": "jimstaff-reference-v1",
+    "initial": {
+      "step": "D",
+      "alter": 0,
+      "octave": 4
+    },
+    "events": []
+  },
+  "notes": [
+    {
+      "id": "c",
+      "staff": 0,
+      "voice_group": "[\"P1\",\"1\",null]",
+      "at": "0",
+      "duration": "1/4",
+      "grace": false,
+      "n_per": 1,
+      "n_gen": -2,
+      "frequency_hz": 261.6255653005986,
+      "cents_above_extent_lower": 0.0,
+      "notehead": "conventional"
+    },
+    {
+      "id": "e",
+      "staff": 1,
+      "voice_group": "[\"P1\",\"1\",null]",
+      "at": "1/4",
+      "duration": "1/4",
+      "grace": false,
+      "n_per": -1,
+      "n_gen": 2,
+      "frequency_hz": 329.62755691287,
+      "cents_above_extent_lower": 1600.0,
+      "notehead": "conventional"
+    },
+    {
+      "id": "lower",
+      "staff": 1,
+      "voice_group": "[\"P1\",\"5\",null]",
+      "at": "0",
+      "duration": "1/2",
+      "grace": false,
+      "n_per": 0,
+      "n_gen": -2,
+      "frequency_hz": 130.8127826502993,
+      "cents_above_extent_lower": 0.0,
+      "notehead": "conventional"
+    }
+  ],
+  "staves": [
+    {
+      "staff": 0,
+      "states": [
+        {
+          "at": "0",
+          "configuration": {
+            "collection_rotation": 0,
+            "embedding": {
+              "large_steps": 5,
+              "small_steps": 2
+            },
+            "extent": {
+              "lower": {
+                "nGen": -2,
+                "nPer": 1
+              },
+              "upper": {
+                "nGen": -2,
+                "nPer": 1
+              }
+            },
+            "generator_cents": 700.0,
+            "mode_rotation": 0,
+            "period_cents": 1200.0,
+            "scale": [
+              "M2",
+              "m2",
+              "M2",
+              "M2",
+              "M2",
+              "m2",
+              "M2"
+            ],
+            "schema": "jimstaff-v3",
+            "tonic_ambit": "tonic-bounded"
+          }
+        }
+      ]
+    },
+    {
+      "staff": 1,
+      "states": [
+        {
+          "at": "0",
+          "configuration": {
+            "collection_rotation": 0,
+            "embedding": {
+              "large_steps": 5,
+              "small_steps": 2
+            },
+            "extent": {
+              "lower": {
+                "nGen": -2,
+                "nPer": 0
+              },
+              "upper": {
+                "nGen": 2,
+                "nPer": -1
+              }
+            },
+            "generator_cents": 700.0,
+            "mode_rotation": 0,
+            "period_cents": 1200.0,
+            "scale": [
+              "M2",
+              "m2",
+              "M2",
+              "M2",
+              "M2",
+              "m2",
+              "M2"
+            ],
+            "schema": "jimstaff-v3",
+            "tonic_ambit": "tonic-bounded"
+          }
+        }
+      ]
+    }
+  ],
+  "harmonies": [
+    {
+      "staff": 0,
+      "at": "0",
+      "name": "Do5"
+    }
+  ],
+  "source_lyric_texts": [
+    "Keep",
+    "words"
+  ]
+}

@@ -1442,6 +1442,7 @@ void Staff::init(const Staff* s)
     m_userDist          = s->m_userDist;
     m_visibilityVoices = s->m_visibilityVoices;
     m_capoMap          = s->m_capoMap;
+    m_meloTuningTrajectories = s->m_meloTuningTrajectories;
 }
 
 const ID& Staff::id() const

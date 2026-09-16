@@ -800,29 +800,52 @@ int reconcileExtents(Score* score)
             const Fraction end = bounded ? starts[i + 1] : Fraction(0, 1);
             String melody = u"{\"notes\":[";
             bool first = true;
-            for (const Segment* seg = score->firstSegment(SegmentType::ChordRest); seg; seg = seg->next1(SegmentType::ChordRest)) {
-                if (seg->tick() < starts[i]) {
-                    continue;
+            bool complete = true;
+            auto addChord = [&](const Chord* chord) {
+                if (chord->vStaffIdx() != staffIdx
+                    || (chord->tick() < starts[i] && chord->tick() + chord->actualTicks() <= starts[i])) {
+                    return;
                 }
+                for (const Note* note : chord->notes()) {
+                    if (!note->hasMeloPitch()) {
+                        continue;
+                    }
+                    // A held note keeps its onset identity. Ask the Kernel to
+                    // express that identity in the section's reference before
+                    // fitting; displayed staff and owning voice can differ.
+                    SoundingPitch point;
+                    if (!reframeNote(staff->meloStateAt(note->tick()), st->meloStateJson(),
+                                     note->meloNPer(), note->meloNGen(), point)) {
+                        complete = false;
+                        return;
+                    }
+                    if (!first) {
+                        melody += u",";
+                    }
+                    melody += String(u"{\"nPer\":%1,\"nGen\":%2}").arg(point.nPer).arg(point.nGen);
+                    first = false;
+                }
+            };
+            for (const Segment* seg = score->firstSegment(SegmentType::ChordRest); seg; seg = seg->next1(SegmentType::ChordRest)) {
                 if (bounded && seg->tick() >= end) {
                     break;
                 }
-                for (track_idx_t track = staffIdx * VOICES; track < (staffIdx + 1) * VOICES; ++track) {
+                for (track_idx_t track = 0; track < score->nstaves() * VOICES; ++track) {
                     const EngravingItem* el = seg->element(track);
                     if (!el || !el->isChord()) {
                         continue;
                     }
-                    for (const Note* note : toChord(el)->notes()) {
-                        if (!note->hasMeloPitch()) {
-                            continue;
+                    const Chord* chord = toChord(el);
+                    addChord(chord);
+                    if (seg->tick() >= starts[i]) {
+                        for (const Chord* grace : chord->graceNotes()) {
+                            addChord(grace);
                         }
-                        if (!first) {
-                            melody += u",";
-                        }
-                        melody += String(u"{\"nPer\":%1,\"nGen\":%2}").arg(note->meloNPer()).arg(note->meloNGen());
-                        first = false;
                     }
                 }
+            }
+            if (!complete) {
+                continue;
             }
             melody += u"]}";
             String updated;
