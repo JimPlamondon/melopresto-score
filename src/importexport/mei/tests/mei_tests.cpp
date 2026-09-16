@@ -179,6 +179,50 @@ TEST_F(Mei_Tests, meloSourceRangesSurviveMeiRoundTrip)
     EXPECT_EQ(restored->parts().front()->instrument()->maxPitchA(), 60);
 }
 
+TEST_F(Mei_Tests, hiddenHarmonySurvivesMeiRoundTrip)
+{
+    auto importFunc = [](MasterScore* score, const muse::io::path_t& path) -> Err {
+        MeiReader reader(nullptr);
+        return reader.import(score, path);
+    };
+    auto exportFunc = [](Score* score, const muse::io::path_t& path) -> Err {
+        MeiWriter writer;
+        return writer.writeScore(score, path);
+    };
+    for (HarmonyType type : { HarmonyType::STANDARD, HarmonyType::ROMAN, HarmonyType::MELO }) {
+        std::unique_ptr<MasterScore> source(ScoreRW::readScore(MEI_DIR + u"jims/v5/jims-synthetic.mei", false, importFunc));
+        ASSERT_TRUE(source);
+        size_t expected = 0;
+        for (Segment* segment = source->firstSegment(SegmentType::All); segment; segment = segment->next1()) {
+            for (EngravingItem* item : segment->annotations()) {
+                if (item->isHarmony()) {
+                    toHarmony(item)->setHarmonyType(type);
+                    item->setVisible(false);
+                    ++expected;
+                }
+            }
+        }
+        ASSERT_GT(expected, 0);
+        source->rebuildMidiMapping();
+        QTemporaryDir directory;
+        const String path = String::fromQString(directory.filePath("hidden-harmony.mei"));
+        ASSERT_TRUE(ScoreRW::saveScore(source.get(), path, exportFunc));
+        std::unique_ptr<MasterScore> restored(ScoreRW::readScore(path, true, importFunc));
+        ASSERT_TRUE(restored);
+        size_t actual = 0;
+        for (Segment* segment = restored->firstSegment(SegmentType::All); segment; segment = segment->next1()) {
+            for (EngravingItem* item : segment->annotations()) {
+                if (item->isHarmony()) {
+                    EXPECT_FALSE(item->visible());
+                    EXPECT_EQ(toHarmony(item)->harmonyType(), type);
+                    ++actual;
+                }
+            }
+        }
+        EXPECT_EQ(actual, expected);
+    }
+}
+
 // MeloPresto MEI (MeloPresto MEI profile) focused round trip: typed state import,
 // native carriers, and extMeta regeneration on export.
 TEST_F(Mei_Tests, mei_melo_roundtrip_01) {

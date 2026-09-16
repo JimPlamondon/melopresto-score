@@ -31,6 +31,15 @@ class NotationComparison(unittest.TestCase):
         c = '<path class="Note" d="M0,0 L4,4"/>'
         self.assertFalse(self.compare(a + c, c + a))
 
+    def test_identical_opaque_harmony_fill_can_change_emission_order(self):
+        a = '<path class="Harmony" d="M0,0 L4,4 L4,0 Z"/>'
+        b = a.replace('4,4', '5,5')
+        self.assertTrue(self.compare(a + b, b + a))
+        self.assertFalse(self.compare(a + b, a + b.replace('5,5', '6,6')))
+        for attributes in ('fill="#ffffff"', 'opacity="0.5"', 'style="fill:red"', 'filter="url(#shadow)"'):
+            c = b.replace('class="Harmony"', 'class="Harmony" ' + attributes)
+            self.assertFalse(self.compare(a + c, c + a))
+
 
 if __name__ == '__main__':
     unittest.main()

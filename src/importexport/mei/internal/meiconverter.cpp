@@ -1816,6 +1816,7 @@ void Convert::harmFromMEI(engraving::Harmony* harmony, const StringList& meiLine
 
     // text content
     harmony->setHarmonyType(harmonyType);
+    harmony->setVisible(!Convert::hasTypeValue(meiHarm.GetType(), "mscore-harmony-hidden"));
     if (harmonyType == engraving::HarmonyType::MELO) {
         // One opaque canonical MeloPresto chord name; never run the conventional
         // chord parser on it (mirrors the MusicXML importer).
@@ -1860,6 +1861,11 @@ libmei::Harm Convert::harmToMEI(const engraving::Harmony* harmony, StringList& m
         default: break;
         }
         meiHarm.SetType(harmonyType);
+    }
+    // MEI harm has no @visible attribute. Preserve hidden source analysis using
+    // the existing MuseScore @type vocabulary alongside the harmony subtype.
+    if (!harmony->visible()) {
+        meiHarm.SetType(meiHarm.HasType() ? meiHarm.GetType() + " mscore-harmony-hidden" : "mscore-harmony-hidden");
     }
 
     // content

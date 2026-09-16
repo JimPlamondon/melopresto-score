@@ -2272,6 +2272,8 @@ static void verifySourceNotationOracle(MasterScore* score, const QJsonObject& or
     for (Harmony* harmony : MusicXml_Melo_Tests::harmoniesInOrder(score)) {
         if (harmony->harmonyType() == HarmonyType::MELO) {
             harmonies.push_back(harmony);
+        } else {
+            EXPECT_FALSE(harmony->visible()) << "A source analytical label remains visible beside selected MeloPresto harmony";
         }
     }
     ASSERT_EQ(harmonies.size(), oracle["harmonies"].toArray().size());

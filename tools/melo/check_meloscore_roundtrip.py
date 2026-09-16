@@ -11,30 +11,34 @@ import zipfile
 
 
 def notation(path):
-    """Compare drawing content; opaque equal-style lyric strokes commute."""
+    """Compare drawing content; equal-color opaque lyrics/harmony commute."""
     svg = ET.parse(path).getroot()
     for title in svg.findall('{http://www.w3.org/2000/svg}title'):
         svg.remove(title)
-    # Layout can enumerate lyric continuation strokes in a different order.
-    # Only consecutive, opaque, unfilled polylines with identical styling can
-    # commute. Notes, differing colors, transparency and other layers retain
-    # their original draw order, and changed stroke coordinates still fail.
+    # Layout can enumerate lyrics and harmony in a different order. Consecutive
+    # same-style opaque lyric strokes or black harmony fills commute, even where
+    # the identical color overlaps. Coordinates and all other layers stay exact.
     children = list(svg)
     start = 0
     while start < len(children):
         first = children[start]
-        style = {k: v for k, v in first.attrib.items() if k != 'points'}
-        sortable = (first.tag == '{http://www.w3.org/2000/svg}polyline'
+        geometry = 'd' if first.tag == '{http://www.w3.org/2000/svg}path' else 'points'
+        style = {k: v for k, v in first.attrib.items() if k != geometry}
+        lyric = (first.tag == '{http://www.w3.org/2000/svg}polyline'
                     and style.get('class') == 'LyricsLineSegment'
-                    and style.get('fill') == 'none' and style.get('stroke', 'none') != 'none'
-                    and not any(k in style for k in ('opacity', 'stroke-opacity', 'filter', 'mask', 'style')))
+                    and style.get('fill') == 'none' and style.get('stroke', 'none') != 'none')
+        harmony = (first.tag == '{http://www.w3.org/2000/svg}path'
+                   and style.get('class') == 'Harmony'
+                   and style.get('fill', '#000000') == '#000000' and style.get('stroke', 'none') == 'none')
+        sortable = ((lyric or harmony)
+                    and not any(k in style for k in ('opacity', 'fill-opacity', 'stroke-opacity', 'filter', 'mask', 'style')))
         end = start + 1
         if sortable:
             while end < len(children) and children[end].tag == first.tag and {
-                k: v for k, v in children[end].attrib.items() if k != 'points'
+                k: v for k, v in children[end].attrib.items() if k != geometry
             } == style:
                 end += 1
-            children[start:end] = sorted(children[start:end], key=lambda e: e.get('points', ''))
+            children[start:end] = sorted(children[start:end], key=lambda e: e.get(geometry, ''))
         start = end
     svg[:] = children
     return ET.tostring(svg)
