@@ -39,6 +39,7 @@
 #include "engraving/dom/masterscore.h"
 #include "engraving/dom/excerpt.h"
 #include "engraving/dom/note.h"
+#include "engraving/dom/chord.h"
 #include "engraving/dom/harmony.h"
 #include "engraving/dom/segment.h"
 #include "engraving/dom/staff.h"
@@ -221,6 +222,120 @@ TEST_F(Mei_Tests, hiddenHarmonySurvivesMeiRoundTrip)
         }
         EXPECT_EQ(actual, expected);
     }
+}
+
+TEST_F(Mei_Tests, sparseLayerNumbersKeepVoiceIdentityAcrossMeasures)
+{
+    QTemporaryDir directory;
+    const QString path = directory.filePath("sparse-layers.mei");
+    QFile file(path);
+    ASSERT_TRUE(file.open(QIODevice::WriteOnly));
+    file.write(
+        R"(<mei xmlns="http://www.music-encoding.org/ns/mei" meiversion="5.1"><meiHead><fileDesc><titleStmt><title>Voice identity</title></titleStmt><pubStmt/></fileDesc></meiHead><music><body><mdiv><score><scoreDef meter.count="1" meter.unit="4"><staffGrp><staffDef n="1" lines="5" clef.shape="G" clef.line="2"/></staffGrp></scoreDef><section><measure n="1"><staff n="1"><layer n="4"><note pname="c" oct="4" dur="4"/></layer></staff></measure><measure n="2"><staff n="1"><layer n="2"><note pname="d" oct="4" dur="4"/></layer><layer n="4"><note pname="c" oct="4" dur="4"/></layer></staff></measure></section></score></mdiv></body></music></mei>)");
+    file.close();
+    auto importFunc = [](MasterScore* score, const muse::io::path_t& source) -> Err {
+        MeiReader reader(nullptr);
+        return reader.import(score, source);
+    };
+    std::unique_ptr<MasterScore> score(ScoreRW::readScore(String::fromQString(path), true, importFunc));
+    ASSERT_TRUE(score);
+    Segment* first = score->firstMeasure()->first(SegmentType::ChordRest);
+    Segment* second = score->firstMeasure()->nextMeasure()->first(SegmentType::ChordRest);
+    ASSERT_TRUE(first);
+    ASSERT_TRUE(second);
+    ASSERT_TRUE(first->element(1) && first->element(1)->isChord());
+    ASSERT_TRUE(second->element(1) && second->element(1)->isChord());
+    EXPECT_EQ(toChord(first->element(1))->notes().front()->pitch(), 60);
+    EXPECT_EQ(toChord(second->element(1))->notes().front()->pitch(), 60);
+    ASSERT_TRUE(second->element(0) && second->element(0)->isChord());
+    EXPECT_EQ(toChord(second->element(0))->notes().front()->pitch(), 62);
+}
+
+TEST_F(Mei_Tests, beamCrossingTupletBoundaryKeepsRhythmAndGrouping)
+{
+    QTemporaryDir directory;
+    const QString path = directory.filePath("crossing-beam.mei");
+    QFile file(path);
+    ASSERT_TRUE(file.open(QIODevice::WriteOnly));
+    file.write(
+        R"(<mei xmlns="http://www.music-encoding.org/ns/mei" meiversion="5.1"><meiHead><fileDesc><titleStmt><title>Crossing beam</title></titleStmt><pubStmt/></fileDesc></meiHead><music><body><mdiv><score><scoreDef meter.count="2" meter.unit="4"><staffGrp><staffDef n="1" lines="5" clef.shape="G" clef.line="2"/></staffGrp></scoreDef><section><measure n="1"><staff n="1"><layer n="1"><rest dur="4"/><tuplet num="3" numbase="2"><rest dur="8"/><note pname="g" oct="4" dur="16"/></tuplet><note pname="g" oct="4" dur="8"/></layer></staff></measure></section></score></mdiv></body></music></mei>)");
+    file.close();
+    auto importFunc = [](MasterScore* score, const muse::io::path_t& source) -> Err {
+        MeiReader reader(nullptr);
+        return reader.import(score, source);
+    };
+    auto exportFunc = [](Score* score, const muse::io::path_t& target) -> Err {
+        MeiWriter writer;
+        return writer.writeScore(score, target);
+    };
+    auto chords = [](Score* score) {
+        std::vector<Chord*> result;
+        for (Segment* s = score->firstSegment(SegmentType::ChordRest); s; s = s->next1(SegmentType::ChordRest)) {
+            if (s->element(0) && s->element(0)->isChord()) {
+                result.push_back(toChord(s->element(0)));
+            }
+        }
+        return result;
+    };
+    std::unique_ptr<MasterScore> source(ScoreRW::readScore(String::fromQString(path), true, importFunc));
+    ASSERT_TRUE(source);
+    auto before = chords(source.get());
+    ASSERT_EQ(before.size(), 2);
+    before[0]->setBeamMode(BeamMode::BEGIN);
+    before[1]->setBeamMode(BeamMode::END);
+    source->doLayout();
+    ASSERT_TRUE(before[0]->beam());
+    ASSERT_EQ(before[0]->beam(), before[1]->beam());
+    source->rebuildMidiMapping();
+    const String output = String::fromQString(directory.filePath("returned.mei"));
+    ASSERT_TRUE(ScoreRW::saveScore(source.get(), output, exportFunc));
+    std::unique_ptr<MasterScore> restored(ScoreRW::readScore(output, true, importFunc));
+    ASSERT_TRUE(restored);
+    auto after = chords(restored.get());
+    ASSERT_EQ(after.size(), 2);
+    EXPECT_EQ(after[0]->tick(), Fraction(1, 3));
+    EXPECT_EQ(after[1]->tick(), Fraction(3, 8));
+    EXPECT_EQ(restored->firstMeasure()->ticks(), Fraction(1, 2));
+    ASSERT_TRUE(after[0]->beam());
+    EXPECT_EQ(after[0]->beam(), after[1]->beam());
+}
+
+TEST_F(Mei_Tests, harmonyReferencesAttackInAnotherVoiceOnTheSameStaff)
+{
+    QTemporaryDir directory;
+    const QString path = directory.filePath("harmony-other-voice.mei");
+    QFile file(path);
+    ASSERT_TRUE(file.open(QIODevice::WriteOnly));
+    file.write(
+        R"(<mei xmlns="http://www.music-encoding.org/ns/mei" meiversion="5.1"><meiHead><fileDesc><titleStmt><title>Harmony anchor</title></titleStmt><pubStmt/></fileDesc></meiHead><music><body><mdiv><score><scoreDef meter.count="2" meter.unit="4"><staffGrp><staffDef n="1" lines="5" clef.shape="G" clef.line="2"/></staffGrp></scoreDef><section><measure n="1"><staff n="1"><layer n="1"><note pname="c" oct="4" dur="2"/></layer><layer n="2"><rest dur="4"/><note pname="d" oct="4" dur="4"/></layer></staff><harm tstamp="2" staff="1">C</harm></measure></section></score></mdiv></body></music></mei>)");
+    file.close();
+    auto importFunc = [](MasterScore* score, const muse::io::path_t& source) -> Err {
+        MeiReader reader(nullptr);
+        return reader.import(score, source);
+    };
+    auto exportFunc = [](Score* score, const muse::io::path_t& target) -> Err {
+        MeiWriter writer;
+        return writer.writeScore(score, target);
+    };
+    std::unique_ptr<MasterScore> score(ScoreRW::readScore(String::fromQString(path), true, importFunc));
+    ASSERT_TRUE(score);
+    score->rebuildMidiMapping();
+    const QString output = directory.filePath("returned.mei");
+    ASSERT_TRUE(ScoreRW::saveScore(score.get(), String::fromQString(output), exportFunc));
+    QFile saved(output);
+    ASSERT_TRUE(saved.open(QIODevice::ReadOnly));
+    QXmlStreamReader xml(saved.readAll());
+    int count = 0;
+    while (!xml.atEnd()) {
+        xml.readNext();
+        if (xml.isStartElement() && xml.name() == u"harm") {
+            ++count;
+            EXPECT_FALSE(xml.attributes().value("startid").isEmpty());
+            EXPECT_FALSE(xml.attributes().hasAttribute("tstamp"));
+        }
+    }
+    ASSERT_FALSE(xml.hasError());
+    EXPECT_EQ(count, 1);
 }
 
 // MeloPresto MEI (MeloPresto MEI profile) focused round trip: typed state import,

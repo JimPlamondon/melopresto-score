@@ -2203,7 +2203,7 @@ static void verifySourceNotationOracle(MasterScore* score, const QJsonObject& or
             }
         }
     }
-    ASSERT_EQ(actual.size(), oracle["notes"].toArray().size());
+    EXPECT_EQ(actual.size(), oracle["notes"].toArray().size());
     std::set<const Note*> used;
     std::map<QString, track_idx_t> sourceTracks;
     std::map<track_idx_t, QString> trackSources;

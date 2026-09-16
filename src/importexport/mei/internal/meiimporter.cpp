@@ -1693,23 +1693,21 @@ bool MeiImporter::readLayers(pugi::xml_node parentNode, Measure* measure, int st
         success = false;
     }
 
-    size_t i = 0;
+    std::set<int> usedVoices;
     for (pugi::xpath_node xpathNode : layers) {
-        // We cannot have more than 4 voices in MuseScore
-        if (i >= VOICES) {
-            Convert::logs.push_back(String("More than %1 layers in a staff in not supported. Their content will not be imported.").arg(
-                                        VOICES));
-            break;
-        }
         libmei::Layer meiLayer;
         meiLayer.Read(xpathNode.node());
+        const int voice = this->getVoiceIndex(staffN, meiLayer.HasN() ? meiLayer.GetN() : 1);
+        if (voice < 0 || voice >= static_cast<int>(VOICES) || !usedVoices.insert(voice).second) {
+            Convert::logs.push_back(u"MEI layer identities must map to distinct supported voices throughout the staff.");
+            return false;
+        }
 
         m_lastChord = nullptr;
         Fraction ticks;
-        int track = staffN * VOICES + static_cast<int>(i);
+        int track = staffN * VOICES + voice;
         success = success && this->readElements(xpathNode.node(), measure, track, ticks);
         measureTicks = std::max(measureTicks, ticks);
-        i++;
         this->clearGraceNotes();
     }
 

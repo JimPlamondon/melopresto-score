@@ -634,6 +634,12 @@ engraving::BeamMode Convert::beamFromMEI(const std::string& typeAtt, const std::
         beamMode = engraving::BeamMode::MID;
     } else if (Convert::hasTypeValue(typeAtt, prefix + "-none")) {
         beamMode = engraving::BeamMode::NONE;
+    } else if (Convert::hasTypeValue(typeAtt, prefix + "-end")) {
+        beamMode = engraving::BeamMode::END;
+    } else if (Convert::hasTypeValue(typeAtt, prefix + "-begin16")) {
+        beamMode = engraving::BeamMode::BEGIN16;
+    } else if (Convert::hasTypeValue(typeAtt, prefix + "-begin32")) {
+        beamMode = engraving::BeamMode::BEGIN32;
     }
 
     return beamMode;
@@ -652,6 +658,15 @@ std::string Convert::beamToMEI(engraving::BeamMode beamMode, const std::string& 
         break;
     case (engraving::BeamMode::NONE):
         beamType = prefix + "-none";
+        break;
+    case (engraving::BeamMode::END):
+        beamType = prefix + "-end";
+        break;
+    case (engraving::BeamMode::BEGIN16):
+        beamType = prefix + "-begin16";
+        break;
+    case (engraving::BeamMode::BEGIN32):
+        beamType = prefix + "-begin32";
         break;
     default: break;
     }
