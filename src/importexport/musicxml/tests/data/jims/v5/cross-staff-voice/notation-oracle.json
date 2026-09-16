@@ -89,7 +89,8 @@
             ],
             "schema": "jimstaff-v3",
             "tonic_ambit": "tonic-bounded"
-          }
+          },
+          "indicator": null
         }
       ]
     },
@@ -128,7 +129,8 @@
             ],
             "schema": "jimstaff-v3",
             "tonic_ambit": "tonic-bounded"
-          }
+          },
+          "indicator": null
         }
       ]
     }

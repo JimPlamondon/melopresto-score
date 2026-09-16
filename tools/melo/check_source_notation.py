@@ -41,6 +41,16 @@ def main():
         if vgroups := [n['voice_group'] for n in oracle['notes']]:
             if vgroups.count(vgroups[0]) > 1:
                 changed('split-source-voice', lambda v: v['notes'][0].update(voice_group='corrupted-source-voice'))
+        transitions = [(i, j) for i, staff in enumerate(oracle['staves']) for j, state in enumerate(staff['states'])
+                       if state.get('indicator') and state['indicator']['kinds']]
+        if transitions:
+            si, sj = transitions[0]
+            changed('missing-modulation-indicator', lambda v: v['staves'][si]['states'][sj]['indicator'].update(kinds=[]))
+            changed('wrong-modulation-kind', lambda v: v['staves'][si]['states'][sj]['indicator'].update(kinds=['CORRUPTION CONTROL']))
+            tonic_changes = [(i, j) for i, j in transitions if oracle['staves'][i]['states'][j]['indicator']['terrain']['tonic_indicators']]
+            if tonic_changes:
+                ti, tj = tonic_changes[0]
+                changed('wrong-indicator-position', lambda v: v['staves'][ti]['states'][tj]['indicator']['terrain']['tonic_indicators'][0].update(ordinate=0.123456789))
         if oracle['harmonies']:
             changed('wrong-chord-name', lambda v: v['harmonies'][0].update(name='CORRUPTION CONTROL'))
     receipt = dict(schema='melopresto.source-notation-check.v1', score=str(args.score.resolve()),

@@ -88,7 +88,9 @@ static const char* accidOf(int alter)
     switch (alter) {
     case 1: return "s";
     case -1: return "f";
-    case 2: return "xs";
+    case 2: return "ss";
+    case 3: return "ts";
+    case -3: return "tf";
     case -2: return "ff";
     default: return nullptr;
     }

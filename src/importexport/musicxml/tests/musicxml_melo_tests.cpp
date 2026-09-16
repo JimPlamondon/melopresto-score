@@ -2005,6 +2005,158 @@ TEST_F(MusicXml_Melo_Tests, HeldNoteEvidenceSurvivesReferenceChange)
     }
 }
 
+static void verifySourceIndicator(MasterScore* score, int staffIndex, const Fraction& at, const QJsonObject& expected)
+{
+    const Staff* staff = score->staff(staffIndex);
+    Measure* measure = score->tick2measure(at);
+    if (expected["kinds"].toArray().isEmpty()) {
+        const StaffTypeChange* carrier = melo::changeCarrierAt(measure, staffIndex, at);
+        if (carrier) {
+            melo::ChangeIndicator actual;
+            EXPECT_FALSE(melo::changeIndicatorIntoStaffType(score, staffIndex, staff->staffType(at), actual));
+        }
+        return;
+    }
+    ASSERT_TRUE(measure);
+    const StaffTypeChange* carrier = melo::changeCarrierAt(measure, staffIndex, at);
+    ASSERT_TRUE(carrier) << "selected change has no exact-time carrier";
+    const StaffType* incoming = staff->staffType(at);
+    const StaffType* displayed = nullptr;
+    melo::ChangeIndicator model;
+    double x0 = 0.0;
+    if (!carrier->rtick().isZero()) {
+        ASSERT_TRUE(melo::midBarChangeIndicator(carrier, model));
+        displayed = staff->staffType(measure->tick());
+        const Segment* anchor = measure->findSegmentR(Segment::CHORD_REST_OR_TIME_TICK_TYPE, carrier->rtick());
+        ASSERT_TRUE(anchor);
+        const StaffLines* lines = measure->staffLines(staffIndex);
+        ASSERT_TRUE(lines);
+        x0 = anchor->x() - melo::changeTerrainGeometry(incoming, lines->spatium(), score->style().defaultSpatium(),
+                                                       model).changeTerrainWidth
+             - score->style().styleMM(Sid::barNoteDistance);
+    } else if (measure->system()->firstMeasure() != measure) {
+        ASSERT_TRUE(melo::midSystemChangeIndicator(measure, staffIndex, model));
+        displayed = incoming;
+        x0 = measure->staffLines(staffIndex)->pos().x();
+    } else {
+        measure = measure->prevMeasure();
+        ASSERT_TRUE(measure);
+        ASSERT_TRUE(melo::courtesyChangeIndicator(measure, staffIndex, model, &displayed));
+        const Segment* end = measure->findSegmentR(SegmentType::EndBarLine, measure->ticks());
+        ASSERT_TRUE(end);
+        const StaffLines* lines = measure->staffLines(staffIndex);
+        ASSERT_TRUE(lines);
+        x0 = end->x() - melo::changeTerrainGeometry(incoming, lines->spatium(), score->style().defaultSpatium(), model).changeTerrainWidth;
+    }
+    QStringList actualKinds, expectedKinds;
+    for (const auto& kind : model.kinds) {
+        actualKinds.push_back(kind.toQString());
+    }
+    for (const auto& kind : expected["kinds"].toArray()) {
+        expectedKinds.push_back(kind.toString());
+    }
+    EXPECT_EQ(actualKinds, expectedKinds);
+    auto point = [](const melo::ChangePoint& actual, const QJsonObject& wanted) {
+        EXPECT_EQ(actual.nGen, wanted["nGen"].toInt());
+        EXPECT_EQ(actual.label.toQString(), wanted["label"].toString());
+        EXPECT_NEAR(actual.ordinate, wanted["ordinate"].toDouble(), 1e-9);
+        EXPECT_EQ(actual.periodOffset, wanted["period_offset"].toInt());
+    };
+    const QJsonObject terrain = expected["terrain"].toObject();
+    const auto tonics = terrain["tonic_indicators"].toArray();
+    ASSERT_EQ(model.tonicIndicators.size(), size_t(tonics.size()));
+    for (size_t i = 0; i < model.tonicIndicators.size(); ++i) {
+        point(model.tonicIndicators[i], tonics[int(i)].toObject());
+    }
+    const auto arrows = terrain["arrows"].toArray();
+    ASSERT_EQ(model.arrows.size(), size_t(arrows.size()));
+    for (size_t i = 0; i < model.arrows.size(); ++i) {
+        const auto wanted = arrows[int(i)].toObject();
+        EXPECT_EQ(model.arrows[i].kind.toQString(), wanted["kind"].toString());
+        EXPECT_EQ(model.arrows[i].up, wanted["direction"].toString() == "up");
+        EXPECT_EQ(model.arrows[i].trumps.toQString(), wanted["trumps"].toString());
+        point(model.arrows[i].from, wanted["from"].toObject());
+        point(model.arrows[i].to, wanted["to"].toObject());
+    }
+    const auto stacks = terrain["dot_stacks"].toArray();
+    ASSERT_EQ(model.dotStacks.size(), size_t(stacks.size()));
+    for (size_t i = 0; i < model.dotStacks.size(); ++i) {
+        const auto wanted = stacks[int(i)].toObject();
+        EXPECT_NEAR(model.dotStacks[i].ordinate, wanted["ordinate"].toDouble(), 1e-9);
+        EXPECT_EQ(model.dotStacks[i].periodOffset, wanted["period_offset"].toInt());
+        const auto members = wanted["members"].toArray();
+        ASSERT_EQ(model.dotStacks[i].members.size(), size_t(members.size()));
+        for (size_t j = 0; j < model.dotStacks[i].members.size(); ++j) {
+            point(model.dotStacks[i].members[j], members[int(j)].toObject());
+        }
+    }
+    ASSERT_TRUE(displayed);
+    const StaffLines* lines = measure->staffLines(staffIndex);
+    ASSERT_TRUE(lines);
+    const auto& view = displayed->meloFrameView(score, staffIndex, measure->system());
+    ASSERT_FALSE(view.empty());
+    melo::PeriodicOrigins origins;
+    ASSERT_TRUE(melo::periodicOrigins(displayed->meloStateJson(), origins));
+    const double period = displayed->meloPeriodCents();
+    const double base = melo::changeAnchorPeriodCents(view, model, period, origins.doCentsAboveExtentLower,
+                                                      melo::systemNoteCents(measure->system(), staffIndex, displayed));
+    const auto geometry = melo::changeTerrainGeometry(incoming, lines->spatium(), score->style().defaultSpatium(), model);
+    const double dotX = x0 + 0.3 * lines->spatium() + geometry.changeLabelBand + geometry.changeLeftArrowLane + geometry.indicatorW;
+    std::vector<double> expectedYs;
+    const bool scale = expectedKinds.contains("scale");
+    for (const auto& value : tonics) {
+        const auto p = value.toObject();
+        std::vector<double> cents;
+        if (scale) {
+            for (const auto& band : view.bands) {
+                for (const auto& segment : band.segments) {
+                    const double first = origins.doCentsAboveExtentLower
+                                         + std::floor((segment.lowerCents - origins.doCentsAboveExtentLower) / period + 1e-6) * period;
+                    for (double origin = first; origin <= segment.upperCents + 1e-6; origin += period) {
+                        const double valueCents = origin + p["ordinate"].toDouble() * period;
+                        if (valueCents >= segment.lowerCents - 1e-6 && valueCents <= segment.upperCents + 1e-6) {
+                            cents.push_back(valueCents);
+                        }
+                    }
+                }
+            }
+        } else {
+            cents.push_back(base + (p["period_offset"].toInt() + p["ordinate"].toDouble()) * period);
+        }
+        for (double c : cents) {
+            expectedYs.push_back(lines->pos().y() + displayed->meloYFromCents(c, view) * lines->spatium());
+        }
+    }
+    auto provider = std::make_shared<BufferedPaintProvider>();
+    Painter painter(provider, "source-indicator-oracle");
+    painter.setViewport(RectF(0, 0, 4000, 4000));
+    lines->renderer()->drawItem(lines, &painter, PaintOptions());
+    painter.endDraw();
+    std::vector<double> actualYs;
+    const double diameter = 2 * (1.15 + 0.025) * displayed->lineDistance().val() * lines->spatium();
+    std::function<void(const DrawData::Item&)> visit = [&](const DrawData::Item& item) {
+        for (const auto& data : item.datas) {
+            for (const auto& path : data.paths) {
+                const auto box = path.path.boundingRect();
+                if (std::abs(box.center().x() - dotX) < 1e-6 && std::abs(box.width() - diameter) < 1e-6
+                    && std::abs(box.height() - diameter) < 1e-6) {
+                    actualYs.push_back(box.center().y());
+                }
+            }
+        }
+        for (const auto& child : item.chilren) {
+            visit(child);
+        }
+    };
+    visit(provider->drawData()->item);
+    std::sort(actualYs.begin(), actualYs.end());
+    std::sort(expectedYs.begin(), expectedYs.end());
+    ASSERT_EQ(actualYs.size(), expectedYs.size()) << "Every selected tonic indicator must draw at its actual change location";
+    for (size_t i = 0; i < actualYs.size(); ++i) {
+        EXPECT_NEAR(actualYs[i], expectedYs[i], 1e-6);
+    }
+}
+
 static void verifySourceNotationOracle(MasterScore* score, const QJsonObject& oracle)
 {
     ASSERT_EQ(oracle["schema"].toString(), "melopresto.score-notation-oracle.v1");
@@ -2100,6 +2252,7 @@ static void verifySourceNotationOracle(MasterScore* score, const QJsonObject& or
         const Staff* staff = score->staff(expected["staff"].toInt());
         for (const auto& stateEntry : expected["states"].toArray()) {
             const auto state = stateEntry.toObject();
+            ASSERT_TRUE(state.contains("indicator"));
             const Fraction at = Fraction::fromString(String::fromQString(state["at"].toString()));
             String configuration, error;
             ASSERT_TRUE(melo::staffConfiguration(staff->meloStateAt(at), configuration, error)) << error.toStdString();
@@ -2107,6 +2260,12 @@ static void verifySourceNotationOracle(MasterScore* score, const QJsonObject& or
                 << "staff " << expected["staff"].toInt() << " at " << state["at"].toString().toStdString()
                 << " actual " << configuration.toStdString() << " expected "
                 << QJsonDocument(state["configuration"].toObject()).toJson(QJsonDocument::Compact).toStdString();
+            ASSERT_EQ(state["indicator"].isNull(), at.isZero());
+            if (!state["indicator"].isNull()) {
+                SCOPED_TRACE(std::string("indicator staff ") + std::to_string(expected["staff"].toInt()) + " at "
+                             + state["at"].toString().toStdString());
+                verifySourceIndicator(score, expected["staff"].toInt(), at, state["indicator"].toObject());
+            }
         }
     }
     std::vector<Harmony*> harmonies;
