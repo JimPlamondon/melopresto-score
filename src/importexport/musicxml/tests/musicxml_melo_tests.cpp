@@ -1505,6 +1505,29 @@ TEST_F(MusicXml_Melo_Tests, severalMeloPartsSharingOneTimelineImportAndRoundTrip
     delete again;
 }
 
+TEST_F(MusicXml_Melo_Tests, unequalStaffCountsShareOneMusicalTimeline)
+{
+    MasterScore* score = readMelo("v5/melo-unequal-staff-counts.musicxml");
+    ASSERT_TRUE(score);
+    ASSERT_EQ(score->parts().size(), 2u);
+    ASSERT_EQ(score->nstaves(), 3u);
+    String error;
+    EXPECT_TRUE(melo::validateSharedStateTimeline(score, error)) << error.toStdString();
+    const MeloSnapshot before = snapshotOf(score);
+    const String out = exportToScratch(score, "unequal-staff-counts.musicxml");
+    auto importXml = [](MasterScore* s, const muse::io::path_t& path) -> engraving::Err {
+        return importMusicXml(s, path.toQString(), false);
+    };
+    MasterScore* again = ScoreRW::readScore(out, true, importXml);
+    ASSERT_TRUE(again);
+    const MeloSnapshot after = snapshotOf(again);
+    EXPECT_EQ(before.identities, after.identities);
+    EXPECT_EQ(before.baseStates, after.baseStates);
+    EXPECT_EQ(before.carriers, after.carriers);
+    delete again;
+    delete score;
+}
+
 // Owner ruling 2026-08-22 (M8.9): parts of one document are compared on the
 // Kernel's shared projection, which omits the per-staff extent. Four SATB
 // voices legitimately differ in frame extent, while tonic-ambit is one

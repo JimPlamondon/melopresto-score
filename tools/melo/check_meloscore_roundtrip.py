@@ -10,6 +10,36 @@ import xml.etree.ElementTree as ET
 import zipfile
 
 
+def notation(path):
+    """Compare drawing content; opaque equal-style lyric strokes commute."""
+    svg = ET.parse(path).getroot()
+    for title in svg.findall('{http://www.w3.org/2000/svg}title'):
+        svg.remove(title)
+    # Layout can enumerate lyric continuation strokes in a different order.
+    # Only consecutive, opaque, unfilled polylines with identical styling can
+    # commute. Notes, differing colors, transparency and other layers retain
+    # their original draw order, and changed stroke coordinates still fail.
+    children = list(svg)
+    start = 0
+    while start < len(children):
+        first = children[start]
+        style = {k: v for k, v in first.attrib.items() if k != 'points'}
+        sortable = (first.tag == '{http://www.w3.org/2000/svg}polyline'
+                    and style.get('class') == 'LyricsLineSegment'
+                    and style.get('fill') == 'none' and style.get('stroke', 'none') != 'none'
+                    and not any(k in style for k in ('opacity', 'stroke-opacity', 'filter', 'mask', 'style')))
+        end = start + 1
+        if sortable:
+            while end < len(children) and children[end].tag == first.tag and {
+                k: v for k, v in children[end].attrib.items() if k != 'points'
+            } == style:
+                end += 1
+            children[start:end] = sorted(children[start:end], key=lambda e: e.get('points', ''))
+        start = end
+    svg[:] = children
+    return ET.tostring(svg)
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--executable', type=Path, required=True)
@@ -57,12 +87,6 @@ def main():
     convert(native, 'native.svg')
     left, right = sorted(a.output.glob('control*.svg')), sorted(a.output.glob('native*.svg'))
     assert left and len(left) == len(right)
-    def notation(path):
-        svg = ET.parse(path).getroot()
-        # Export title is the enclosing filename, not visible score content.
-        for title in svg.findall('{http://www.w3.org/2000/svg}title'):
-            svg.remove(title)
-        return ET.tostring(svg)
     for lhs, rhs in zip(left, right):
         assert notation(lhs) == notation(rhs), (lhs.name, rhs.name, 'notation changed')
     midi = convert(control, 'control.mid')
