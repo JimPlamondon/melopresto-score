@@ -249,6 +249,8 @@ TEST_F(Mei_Tests, sparseLayerNumbersKeepVoiceIdentityAcrossMeasures)
     EXPECT_EQ(toChord(second->element(1))->notes().front()->pitch(), 60);
     ASSERT_TRUE(second->element(0) && second->element(0)->isChord());
     EXPECT_EQ(toChord(second->element(0))->notes().front()->pitch(), 62);
+    const auto sanity = score->sanityCheckLocal();
+    EXPECT_TRUE(sanity) << sanity.text();
 }
 
 TEST_F(Mei_Tests, beamCrossingTupletBoundaryKeepsRhythmAndGrouping)

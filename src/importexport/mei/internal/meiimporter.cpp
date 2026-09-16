@@ -1074,6 +1074,17 @@ bool MeiImporter::readScore(pugi::xml_node root)
         success = success && this->readSectionElements(xpathNode.node());
     }
 
+    // Stable layer identities may leave a primary voice absent or partial in
+    // individual measures. Use the standard score gap repair; renumbering each
+    // measure would silently move the source notes to different voices.
+    if (success) {
+        for (Measure* measure = m_score->firstMeasure(); measure; measure = measure->nextMeasure()) {
+            for (staff_idx_t staff = 0; staff < m_score->nstaves(); ++staff) {
+                measure->checkMeasure(staff);
+            }
+        }
+    }
+
     this->addSpannerEnds();
     this->extendLyrics();
 
