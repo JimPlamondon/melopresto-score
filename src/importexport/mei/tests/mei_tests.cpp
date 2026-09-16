@@ -155,6 +155,30 @@ TEST_F(Mei_Tests, timedConventionalInstrumentControlsWrittenOctave)
     EXPECT_EQ(actual, expected);
 }
 
+TEST_F(Mei_Tests, meloSourceRangesSurviveMeiRoundTrip)
+{
+    auto importFunc = [](MasterScore* score, const muse::io::path_t& path) -> Err {
+        MeiReader reader(nullptr);
+        return reader.import(score, path);
+    };
+    auto exportFunc = [](Score* score, const muse::io::path_t& path) -> Err {
+        MeiWriter writer;
+        return writer.writeScore(score, path);
+    };
+    std::unique_ptr<MasterScore> source(ScoreRW::readScore(MEI_DIR + u"jims/v5/jims-synthetic.mei", false, importFunc));
+    ASSERT_TRUE(source);
+    source->parts().front()->instrument()->setMinPitchA(41);
+    source->parts().front()->instrument()->setMaxPitchA(60);
+    source->masterScore()->rebuildMidiMapping();
+    QTemporaryDir directory;
+    const String path = String::fromQString(directory.filePath("source-ranges.mei"));
+    ASSERT_TRUE(ScoreRW::saveScore(source.get(), path, exportFunc));
+    std::unique_ptr<MasterScore> restored(ScoreRW::readScore(path, true, importFunc));
+    ASSERT_TRUE(restored);
+    EXPECT_EQ(restored->parts().front()->instrument()->minPitchA(), 41);
+    EXPECT_EQ(restored->parts().front()->instrument()->maxPitchA(), 60);
+}
+
 // MeloPresto MEI (MeloPresto MEI profile) focused round trip: typed state import,
 // native carriers, and extMeta regeneration on export.
 TEST_F(Mei_Tests, mei_melo_roundtrip_01) {
