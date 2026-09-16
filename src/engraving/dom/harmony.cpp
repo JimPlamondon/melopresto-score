@@ -1377,6 +1377,10 @@ String Harmony::meloEvidenceError(bool live) const
     const auto interval = proof.value("interval").toObject();
     const Fraction start = Fraction::fromString(interval.value("offset").toString()) / 4;
     const Fraction end = start + Fraction::fromString(interval.value("duration").toString()) / 4;
+    const StaffType* harmonyState = staff() ? staff()->staffType(tick()) : nullptr;
+    if (!harmonyState || !harmonyState->isMelo()) {
+        return u"Generated chord evidence needs its governing Melo state";
+    }
     muse::JsonArray notes;
     for (const Segment* seg = score()->firstSegment(SegmentType::ChordRest); seg && seg->tick() < end;
          seg = seg->next1(SegmentType::ChordRest)) {
@@ -1401,10 +1405,15 @@ String Harmony::meloEvidenceError(bool live) const
                     return u"Generated chord evidence cannot resolve the current sounding notes";
                 }
                 muse::JsonObject point;
+                melo::SoundingPitch observation;
+                if (!melo::reframeNote(st->meloStateJson(), harmonyState->meloStateJson(),
+                                       note->meloNPer(), note->meloNGen(), observation, &error)) {
+                    return error;
+                }
                 point.set("offset", (chord->tick() * 4).toString());
                 point.set("duration", (chord->actualTicks() * 4).toString());
-                point.set("n_per", note->meloNPer());
-                point.set("n_gen", note->meloNGen());
+                point.set("n_per", observation.nPer);
+                point.set("n_gen", observation.nGen);
                 point.set("height", pitch.frequencyHz);
                 notes.append(point);
             }

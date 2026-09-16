@@ -191,6 +191,10 @@ struct SoundingPitch {
 };
 bool noteSoundingPitch(const muse::String& stateJson, int nPer, int nGen, SoundingPitch& out, muse::String* error = nullptr);
 
+/// Express a held note in the harmony's reference without changing the note.
+bool reframeNote(const muse::String& sourceState, const muse::String& targetState, int nPer, int nGen, SoundingPitch& out,
+                 muse::String* error = nullptr);
+
 /// The Kernel's complete VST3 Dynamic Tonality profile transaction. Slot,
 /// generation, and offset are host transport choices; all musical values and
 /// their digest are authored by the Kernel.

@@ -1007,6 +1007,14 @@ bool entryFromStandardPitch(const String& stateJson, char step, int alter, int o
     return readSoundingPitch(callBridge(envelope), out, error);
 }
 
+bool reframeNote(const String& sourceState, const String& targetState, int nPer, int nGen,
+                 SoundingPitch& out, String* error)
+{
+    String envelope = String(u"{\"abi\":2,\"op\":\"reframe_note\",\"state\":%1,\"target_state\":%2,\"nPer\":%3,\"nGen\":%4}")
+                      .arg(sourceState).arg(targetState).arg(nPer).arg(nGen);
+    return readSoundingPitch(callBridge(envelope), out, error);
+}
+
 bool noteContinuation(const String& stateJson, double frequencyHz, SoundingPitch& out, String* error)
 {
     String envelope = String(u"{\"abi\":2,\"op\":\"note_continuation\",\"state\":%1,\"frequency_hz\":%2}")

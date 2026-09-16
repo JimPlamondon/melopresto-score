@@ -1922,6 +1922,33 @@ TEST_F(MusicXml_Melo_Tests, GeneratedChordEvidenceSurvivesNativeAndXmlAndDetects
     delete score;
 }
 
+TEST_F(MusicXml_Melo_Tests, HeldNoteEvidenceSurvivesReferenceChange)
+{
+    std::unique_ptr<MasterScore> score(readMelo("v5/melo-held-note-reference.musicxml"));
+    ASSERT_TRUE(score);
+    ASSERT_EQ(notesInOrder(score.get(), 0).size(), 1u);
+    auto harmonies = harmoniesInOrder(score.get());
+    ASSERT_EQ(harmonies.size(), 2u);
+    for (Harmony* harmony : harmonies) {
+        EXPECT_TRUE(harmony->meloEvidenceError().empty()) << harmony->meloEvidenceError().toStdString();
+    }
+    const String output = exportToScratch(score.get(), "held-note-reference.musicxml");
+    auto importXml = [](MasterScore* s, const muse::io::path_t& path) -> engraving::Err {
+        return importMusicXml(s, path.toQString(), false);
+    };
+    std::unique_ptr<MasterScore> again(ScoreRW::readScore(output, true, importXml));
+    ASSERT_TRUE(again);
+    EXPECT_EQ(notesInOrder(again.get(), 0).size(), 1u);
+    for (Harmony* harmony : harmoniesInOrder(again.get())) {
+        EXPECT_TRUE(harmony->meloEvidenceError().empty()) << harmony->meloEvidenceError().toStdString();
+    }
+    Note* held = const_cast<Note*>(notesInOrder(score.get(), 0).front());
+    held->setMeloPitch(held->meloNPer() + 1, held->meloNGen());
+    for (Harmony* harmony : harmonies) {
+        EXPECT_FALSE(harmony->meloEvidenceError().empty());
+    }
+}
+
 TEST_F(MusicXml_Melo_Tests, GeneratedEvidenceOptionalPrivateCorpus)
 {
     const char* path = std::getenv("MELO_CHORD_EVIDENCE_SCORE");
