@@ -146,6 +146,12 @@ bool staffConfiguration(const String& request, String& configuration, String& er
     return canonicalResult(String(u"{\"abi\":2,\"op\":\"staff_configuration\",\"state\":%1}").arg(request), configuration, error);
 }
 
+bool staffRequestAt(const String& source, const String& curves, const String& at, String& request, String& error)
+{
+    return canonicalResult(String(u"{\"abi\":2,\"op\":\"staff_request_at\",\"state\":%1,\"curves\":%2,\"at\":%3}")
+                           .arg(source).arg(curves).arg(at), request, error);
+}
+
 bool validateStaffContext(const String& request, const String& expected, String& error)
 {
     const String envelope = String(u"{\"abi\":2,\"op\":\"validate_staff_context\",\"state\":%1,\"expected\":%2}")

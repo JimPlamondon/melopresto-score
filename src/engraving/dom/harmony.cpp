@@ -1381,6 +1381,7 @@ String Harmony::meloEvidenceError(bool live) const
     if (!harmonyState || !harmonyState->isMelo()) {
         return u"Generated chord evidence needs its governing Melo state";
     }
+    const String harmonyContext = staff()->meloStateAt(tick());
     muse::JsonArray notes;
     for (const Segment* seg = score()->firstSegment(SegmentType::ChordRest); seg && seg->tick() < end;
          seg = seg->next1(SegmentType::ChordRest)) {
@@ -1399,14 +1400,15 @@ String Harmony::meloEvidenceError(bool live) const
                     return u"Generated chord name is stale: a supporting note has no Melo pitch";
                 }
                 const StaffType* st = note->staff()->staffTypeForElement(note);
+                const String noteContext = note->staff()->meloStateAt(note->tick());
                 melo::SoundingPitch pitch;
                 if (!st || !st->isMelo()
-                    || !melo::noteSoundingPitch(st->meloStateJson(), note->meloNPer(), note->meloNGen(), pitch, &error)) {
+                    || !melo::noteSoundingPitch(noteContext, note->meloNPer(), note->meloNGen(), pitch, &error)) {
                     return u"Generated chord evidence cannot resolve the current sounding notes";
                 }
                 muse::JsonObject point;
                 melo::SoundingPitch observation;
-                if (!melo::reframeNote(st->meloStateJson(), harmonyState->meloStateJson(),
+                if (!melo::reframeNote(noteContext, harmonyContext,
                                        note->meloNPer(), note->meloNGen(), observation, &error)) {
                     return error;
                 }

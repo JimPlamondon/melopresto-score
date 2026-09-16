@@ -44,6 +44,7 @@
 #include "segment.h"
 #include "staff.h"
 #include "stafftype.h"
+#include "engraving/melo/melobridge.h"
 #include "timesig.h"
 #include "editing/transpose.h"
 #include "utils.h"
@@ -1267,6 +1268,58 @@ const StaffType* Staff::staffTypeForElement(const EngravingItem* e) const
         tick = Fraction::fromTicks(std::max(0, tick.ticks() - 1));
     }
     return &m_staffTypeList.staffType(tick);
+}
+
+String Staff::meloStateAt(const Fraction& tick) const
+{
+    const StaffType* type = staffType(tick);
+    if (!type || !type->isMelo()) {
+        return {};
+    }
+    if (m_meloTuningTrajectories.empty()) {
+        return type->meloStateJson();
+    }
+    auto timeJson = [](const Fraction& at) {
+        return String(u"{\"numerator\":%1,\"denominator\":%2}").arg(at.numerator()).arg(at.denominator());
+    };
+    String curves = u"[";
+    for (const auto& trajectory : m_meloTuningTrajectories) {
+        Fraction at = trajectory.tick;
+        for (const auto& segment : trajectory.segments) {
+            if (curves != u"[") {
+                curves += u",";
+            }
+            String interpolation = u"\"linear\"";
+            if (segment.interpolation == u"cubic-bezier") {
+                interpolation = u"{\"cubic-bezier\":{\"controls\":[";
+                for (size_t index = 0; index < segment.controls.size(); ++index) {
+                    if (index) {
+                        interpolation += u",";
+                    }
+                    const auto& control = segment.controls[index];
+                    interpolation += String(u"{\"time\":%1,\"value_cents\":%2}")
+                                     .arg(String::number(control.time.toDouble(), 17))
+                                     .arg(String::number(control.valueCents.toDouble(), 17));
+                }
+                interpolation += u"]}}";
+            } else if (segment.interpolation != u"linear") {
+                LOGE() << "Unknown MeloPresto tuning interpolation";
+                return {};
+            }
+            curves += String(u"{\"start\":%1,\"end\":%2,\"generator_start_cents\":%3,\"generator_end_cents\":%4,\"interpolation\":%5}")
+                      .arg(timeJson(at)).arg(timeJson(at + segment.duration))
+                      .arg(String::number(segment.startCents.toDouble(), 17))
+                      .arg(String::number(segment.endCents.toDouble(), 17)).arg(interpolation);
+            at += segment.duration;
+        }
+    }
+    curves += u"]";
+    String state, error;
+    if (!melo::staffRequestAt(type->meloStateJson(), curves, timeJson(tick), state, error)) {
+        LOGE() << "MeloPresto tuning context: " << error;
+        return {};
+    }
+    return state;
 }
 
 bool Staff::isStaffTypeStartFrom(const Fraction& tick) const

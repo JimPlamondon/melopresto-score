@@ -62,6 +62,7 @@
 #include "engraving/rw/mscsaver.h"
 #include "engraving/infrastructure/mscwriter.h"
 #include "engraving/melo/melointerchange.h"
+#include "engraving/playback/renderingcontext.h"
 #include "io/buffer.h"
 #include "io/file.h"
 #include "io/fileinfo.h"
@@ -1920,6 +1921,32 @@ TEST_F(MusicXml_Melo_Tests, GeneratedChordEvidenceSurvivesNativeAndXmlAndDetects
     delete again;
     delete native;
     delete score;
+}
+
+TEST_F(MusicXml_Melo_Tests, ContinuousTuningChangesNotePlacementAndPlaybackAtTheActualOnset)
+{
+    std::unique_ptr<MasterScore> score(readMelo("v5/melo-continuous-tuning.musicxml"));
+    ASSERT_TRUE(score);
+    score->doLayout();
+    const auto notes = notesInOrder(score.get(), 0);
+    ASSERT_EQ(notes.size(), 2u);
+    const Note* note = notes[1];
+    String expected, error;
+    ASSERT_TRUE(melo::retuneGenerator(score->staff(0)->staffType(Fraction(0, 1))->meloStateJson(), 698.0, expected));
+    melo::SoundingPitch sounding;
+    ASSERT_TRUE(melo::noteSoundingPitch(expected, note->meloNPer(), note->meloNGen(), sounding, &error));
+    std::optional<muse::mpe::ExactPitch> actual;
+    NominalNoteCtx::nominalPitchLevelOf(note, &actual);
+    ASSERT_TRUE(actual.has_value());
+    EXPECT_NEAR(actual->frequencyHz, sounding.frequencyHz, 1e-8);
+    double cents;
+    ASSERT_TRUE(melo::noteCentsAboveExtentLower(expected, note->meloNPer(), note->meloNGen(), cents));
+    ASSERT_TRUE(note->meloCentsValid());
+    EXPECT_NEAR(note->meloCentsAboveDo(), cents, 1e-8);
+    for (Harmony* harmony : harmoniesInOrder(score.get())) {
+        EXPECT_TRUE(harmony->meloEvidenceError().empty()) << harmony->meloEvidenceError().toStdString();
+    }
+    EXPECT_FALSE(readAll(exportToScratch(score.get(), "continuous-tuning.musicxml")).empty());
 }
 
 TEST_F(MusicXml_Melo_Tests, HeldNoteEvidenceSurvivesReferenceChange)

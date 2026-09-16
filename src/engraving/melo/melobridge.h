@@ -18,6 +18,8 @@
 #include "draw/types/geometry.h"
 
 namespace mu::engraving::melo {
+bool staffRequestAt(const muse::String& source, const muse::String& curves, const muse::String& at, muse::String& request,
+                    muse::String& error);
 struct RelativeKeyEditor {
     muse::String expression;
     muse::String interval;
