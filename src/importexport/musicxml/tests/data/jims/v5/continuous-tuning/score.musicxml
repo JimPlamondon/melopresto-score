@@ -1,0 +1,5 @@
+<score-partwise version="4.0"><part-list><score-part id="P1"><part-name>Voice</part-name></score-part></part-list>
+<part id="P1"><measure number="1"><attributes><divisions>2</divisions><key><fifths>0</fifths></key><time><beats>2</beats><beat-type>4</beat-type></time><clef><sign>G</sign><line>2</line></clef></attributes>
+<note id="c"><pitch><step>C</step><octave>4</octave></pitch><duration>2</duration><type>quarter</type><lyric><text>Keep</text></lyric></note>
+<note id="e"><pitch><step>E</step><octave>4</octave></pitch><duration>2</duration><type>quarter</type><lyric><text>words</text></lyric></note>
+</measure></part></score-partwise>

@@ -27,6 +27,7 @@
 
 #include "engraving/dom/factory.h"
 #include "engraving/dom/harmony.h"
+#include "engraving/dom/instrument.h"
 #include "engraving/dom/measure.h"
 #include "engraving/dom/note.h"
 #include "engraving/dom/part.h"
@@ -88,7 +89,9 @@ static const char* accidOf(int alter)
     switch (alter) {
     case 1: return "s";
     case -1: return "f";
-    case 2: return "xs";
+    case 2: return "ss";
+    case 3: return "ts";
+    case -3: return "tf";
     case -2: return "ff";
     default: return nullptr;
     }
@@ -683,6 +686,10 @@ bool MeloMeiExporter::writeExtMeta(pugi::xml_node meiHead)
             if (!part->partName().isEmpty()) {
                 pe.append_attribute("name") = part->partName().toStdString().c_str();
             }
+            if (const Instrument* instrument = part->instrument()) {
+                pe.append_attribute("min-pitch-a") = instrument->minPitchA();
+                pe.append_attribute("max-pitch-a") = instrument->maxPitchA();
+            }
         }
         for (size_t si = 0; si < plan.states.size(); ++si) {
             const Fraction tick = plan.states.at(si).first;
@@ -1233,6 +1240,16 @@ bool MeloMeiImporter::apply(Score* score,
             return false;
         }
         Staff* staff = score->staff(staffIdx);
+        if (pe.attribute("min-pitch-a") || pe.attribute("max-pitch-a")) {
+            const int low = pe.attribute("min-pitch-a").as_int(-1);
+            const int high = pe.attribute("max-pitch-a").as_int(-1);
+            if (low < 0 || high > 127 || low > high || !staff->part()->instrument()) {
+                m_error = u"Invalid source range in MeloPresto MEI.";
+                return false;
+            }
+            staff->part()->instrument()->setMinPitchA(low);
+            staff->part()->instrument()->setMaxPitchA(high);
+        }
         bool first = true;
         Fraction lastTick(-1, 1);
         for (pugi::xml_node se : pe.children()) {

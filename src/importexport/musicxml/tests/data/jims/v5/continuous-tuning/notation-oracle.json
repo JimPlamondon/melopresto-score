@@ -1,0 +1,96 @@
+{
+  "schema": "melopresto.score-notation-oracle.v1",
+  "package_sha256": "00a8fcc23d446a0ec9e900513a130a4789bba34450b8810297ade6369cb1520b",
+  "source_sha256": "162696590c5cb1f685f61dbde2e6f9ab80d2f8f307a34fe29832bec13bb2a466",
+  "work_id": "fixture",
+  "reference_timeline": {
+    "schema": "jimstaff-reference-v1",
+    "initial": {
+      "step": "D",
+      "alter": 0,
+      "octave": 4
+    },
+    "events": []
+  },
+  "notes": [
+    {
+      "id": "c",
+      "staff": 0,
+      "voice_group": "[\"P1\",\"1\",null]",
+      "at": "0",
+      "duration": "1/4",
+      "grace": false,
+      "n_per": 1,
+      "n_gen": -2,
+      "frequency_hz": 261.6255653005986,
+      "cents_above_extent_lower": 0.0,
+      "notehead": "conventional"
+    },
+    {
+      "id": "e",
+      "staff": 0,
+      "voice_group": "[\"P1\",\"1\",null]",
+      "at": "1/4",
+      "duration": "1/4",
+      "grace": false,
+      "n_per": -1,
+      "n_gen": 2,
+      "frequency_hz": 328.8668346996865,
+      "cents_above_extent_lower": 392.0,
+      "notehead": "conventional"
+    }
+  ],
+  "staves": [
+    {
+      "staff": 0,
+      "states": [
+        {
+          "at": "0",
+          "configuration": {
+            "collection_rotation": 0,
+            "embedding": {
+              "large_steps": 5,
+              "small_steps": 2
+            },
+            "extent": {
+              "lower": {
+                "nGen": -2,
+                "nPer": 1
+              },
+              "upper": {
+                "nGen": 2,
+                "nPer": -1
+              }
+            },
+            "generator_cents": 700.0,
+            "mode_rotation": 0,
+            "period_cents": 1200.0,
+            "scale": [
+              "M2",
+              "m2",
+              "M2",
+              "M2",
+              "M2",
+              "m2",
+              "M2"
+            ],
+            "schema": "jimstaff-v3",
+            "tonic_ambit": "tonic-bounded"
+          },
+          "indicator": null
+        }
+      ]
+    }
+  ],
+  "harmonies": [
+    {
+      "staff": 0,
+      "at": "0",
+      "name": "Do5"
+    }
+  ],
+  "source_lyric_texts": [
+    "Keep",
+    "words"
+  ]
+}

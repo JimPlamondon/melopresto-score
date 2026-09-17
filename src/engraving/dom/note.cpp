@@ -3167,15 +3167,17 @@ void Note::updateRelLine(int absLine, bool undoable)
     // above. The cents value is the Kernel's (melo::noteCentsAboveExtentLower);
     // this branch only projects it to y.
     if (st->isMelo() && hasMeloPitch()) {
-        st->meloEnsureFrame(score(), staffIdx());
+        st->meloEnsureFrame(score(), idx);
         // The cached ordinate is relative to the state's lower extent.
         // Adding another note can move that origin without changing this
         // note's identity, so identity-only invalidation is insufficient.
-        if (!m_meloCentsValid || m_meloCentsState != st->meloStateJson()) {
+        const String effectiveState = staff->meloStateAt(tick());
+        if (!m_meloCentsValid || m_meloCentsState != effectiveState) {
             double cents = 0.0;
-            if (melo::noteCentsAboveExtentLower(st->meloStateJson(), m_meloNPer, m_meloNGen, cents)) {
+            m_meloCentsValid = false;
+            if (melo::noteCentsAboveExtentLower(effectiveState, m_meloNPer, m_meloNGen, cents)) {
                 setMeloCentsAboveDo(cents);
-                m_meloCentsState = st->meloStateJson();
+                m_meloCentsState = effectiveState;
             }
         }
         if (m_meloCentsValid) {

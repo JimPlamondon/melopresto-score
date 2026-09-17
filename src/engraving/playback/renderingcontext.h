@@ -158,7 +158,7 @@ struct NominalNoteCtx {
             if (st && st->isMelo()) {
                 melo::SoundingPitch sp;
                 muse::String error;
-                if (melo::noteSoundingPitch(st->meloStateJson(), note->meloNPer(), note->meloNGen(), sp, &error)) {
+                if (melo::noteSoundingPitch(note->staff()->meloStateAt(note->tick()), note->meloNPer(), note->meloNGen(), sp, &error)) {
                     if (exactPitch) {
                         // The same Kernel answer, lossless: frequency, the
                         // transport key + full residual cents, and the

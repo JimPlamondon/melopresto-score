@@ -146,6 +146,12 @@ bool staffConfiguration(const String& request, String& configuration, String& er
     return canonicalResult(String(u"{\"abi\":2,\"op\":\"staff_configuration\",\"state\":%1}").arg(request), configuration, error);
 }
 
+bool staffRequestAt(const String& source, const String& curves, const String& at, String& request, String& error)
+{
+    return canonicalResult(String(u"{\"abi\":2,\"op\":\"staff_request_at\",\"state\":%1,\"curves\":%2,\"at\":%3}")
+                           .arg(source).arg(curves).arg(at), request, error);
+}
+
 bool validateStaffContext(const String& request, const String& expected, String& error)
 {
     const String envelope = String(u"{\"abi\":2,\"op\":\"validate_staff_context\",\"state\":%1,\"expected\":%2}")
@@ -1004,6 +1010,14 @@ bool entryFromStandardPitch(const String& stateJson, char step, int alter, int o
 {
     String envelope = String(u"{\"abi\":2,\"op\":\"entry_from_standard_pitch\",\"state\":%1,\"step\":\"%2\",\"alter\":%3,\"octave\":%4}")
                       .arg(stateJson).arg(String(muse::Char(step))).arg(alter).arg(octave);
+    return readSoundingPitch(callBridge(envelope), out, error);
+}
+
+bool reframeNote(const String& sourceState, const String& targetState, int nPer, int nGen,
+                 SoundingPitch& out, String* error)
+{
+    String envelope = String(u"{\"abi\":2,\"op\":\"reframe_note\",\"state\":%1,\"target_state\":%2,\"nPer\":%3,\"nGen\":%4}")
+                      .arg(sourceState).arg(targetState).arg(nPer).arg(nGen);
     return readSoundingPitch(callBridge(envelope), out, error);
 }
 

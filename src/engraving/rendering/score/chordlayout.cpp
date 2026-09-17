@@ -2802,7 +2802,8 @@ void ChordLayout::layoutChords3(const std::vector<Chord*>& chords,
             // JiMStaff (Milestone 1): a lattice-identified note on a JiMS
             // staff takes its y from the single StaffType cents seam, not
             // from the diatonic step product (audited second-writer site).
-            const StaffType* meloSt = chord->staff() ? chord->staff()->staffTypeForElement(chord) : nullptr;
+            const Staff* displayedStaff = chord->score()->staff(chord->vStaffIdx());
+            const StaffType* meloSt = displayedStaff ? displayedStaff->staffTypeForElement(chord) : nullptr;
             if (meloSt && meloSt->isMelo() && note->hasMeloPitch() && note->meloCentsValid()) {
                 ny = note->meloPosY(meloSt);
             }

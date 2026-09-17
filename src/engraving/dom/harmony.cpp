@@ -1377,6 +1377,11 @@ String Harmony::meloEvidenceError(bool live) const
     const auto interval = proof.value("interval").toObject();
     const Fraction start = Fraction::fromString(interval.value("offset").toString()) / 4;
     const Fraction end = start + Fraction::fromString(interval.value("duration").toString()) / 4;
+    const StaffType* harmonyState = staff() ? staff()->staffType(tick()) : nullptr;
+    if (!harmonyState || !harmonyState->isMelo()) {
+        return u"Generated chord evidence needs its governing Melo state";
+    }
+    const String harmonyContext = staff()->meloStateAt(tick());
     muse::JsonArray notes;
     for (const Segment* seg = score()->firstSegment(SegmentType::ChordRest); seg && seg->tick() < end;
          seg = seg->next1(SegmentType::ChordRest)) {
@@ -1395,16 +1400,22 @@ String Harmony::meloEvidenceError(bool live) const
                     return u"Generated chord name is stale: a supporting note has no Melo pitch";
                 }
                 const StaffType* st = note->staff()->staffTypeForElement(note);
+                const String noteContext = note->staff()->meloStateAt(note->tick());
                 melo::SoundingPitch pitch;
                 if (!st || !st->isMelo()
-                    || !melo::noteSoundingPitch(st->meloStateJson(), note->meloNPer(), note->meloNGen(), pitch, &error)) {
+                    || !melo::noteSoundingPitch(noteContext, note->meloNPer(), note->meloNGen(), pitch, &error)) {
                     return u"Generated chord evidence cannot resolve the current sounding notes";
                 }
                 muse::JsonObject point;
+                melo::SoundingPitch observation;
+                if (!melo::reframeNote(noteContext, harmonyContext,
+                                       note->meloNPer(), note->meloNGen(), observation, &error)) {
+                    return error;
+                }
                 point.set("offset", (chord->tick() * 4).toString());
                 point.set("duration", (chord->actualTicks() * 4).toString());
-                point.set("n_per", note->meloNPer());
-                point.set("n_gen", note->meloNGen());
+                point.set("n_per", observation.nPer);
+                point.set("n_gen", observation.nGen);
                 point.set("height", pitch.frequencyHz);
                 notes.append(point);
             }
