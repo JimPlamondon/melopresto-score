@@ -66,6 +66,9 @@
 #include "engraving/infrastructure/mscwriter.h"
 #include "engraving/melo/melointerchange.h"
 #include "engraving/playback/renderingcontext.h"
+#include "engraving/playback/playbackeventsrenderer.h"
+#include "engraving/playback/playbackcontext.h"
+#include "mpe/tests/utils/articulationutils.h"
 #include "io/buffer.h"
 #include "io/file.h"
 #include "io/fileinfo.h"
@@ -2665,4 +2668,38 @@ TEST_F(MusicXml_Melo_Tests, RedundantCarrierPreservesSharedEffectiveTimeline)
     EXPECT_EQ(snapshotOf(again).carriers, before.carriers);
     delete again;
     delete score;
+}
+
+TEST_F(MusicXml_Melo_Tests, ContinuousTuningPlaybackProfileMatchesTheNoteOnset)
+{
+    std::unique_ptr<MasterScore> score(readMelo("v5/melo-continuous-tuning.musicxml"));
+    ASSERT_TRUE(score);
+    const auto notes = notesInOrder(score.get(), 0);
+    ASSERT_EQ(notes.size(), 2u);
+    auto profile = std::make_shared<muse::mpe::ArticulationsProfile>();
+    muse::mpe::ArticulationPatternSegment segment;
+    segment.arrangementPattern = muse::mpe::tests::createArrangementPattern(muse::mpe::HUNDRED_PERCENT, 0);
+    segment.pitchPattern = muse::mpe::tests::createSimplePitchPattern(0);
+    segment.expressionPattern
+        = muse::mpe::tests::createSimpleExpressionPattern(muse::mpe::dynamicLevelFromType(muse::mpe::DynamicType::Natural));
+    muse::mpe::ArticulationPattern pattern;
+    pattern.emplace(0, segment);
+    profile->setPattern(muse::mpe::ArticulationType::Standard, pattern);
+    auto context = std::make_shared<PlaybackContext>();
+    PlaybackEventsRenderer renderer;
+    for (const Note* note : notes) {
+        muse::mpe::PlaybackEventsMap eventMap;
+        renderer.render(note, 0, 500000, muse::mpe::dynamicLevelFromType(muse::mpe::DynamicType::Natural), context, profile, eventMap);
+        ASSERT_EQ(eventMap.size(), 1u);
+        const auto& events = eventMap.at(0);
+        ASSERT_EQ(events.size(), 2u);
+        ASSERT_TRUE(std::holds_alternative<muse::mpe::DynamicTonalityProfileEvent>(events[0]));
+        muse::mpe::DynamicTonalityProfileEvent expected;
+        String error;
+        ASSERT_TRUE(melo::vst3ProfileTransaction(note->staff()->meloStateAt(note->tick()), 0, 0, 0, expected,
+                                                 &error)) << error.toStdString();
+        EXPECT_EQ(std::get<muse::mpe::DynamicTonalityProfileEvent>(events[0]), expected);
+        ASSERT_TRUE(std::holds_alternative<muse::mpe::NoteEvent>(events[1]));
+        EXPECT_TRUE(std::get<muse::mpe::NoteEvent>(events[1]).pitchCtx().exactPitch.has_value());
+    }
 }

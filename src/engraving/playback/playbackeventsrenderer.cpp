@@ -77,7 +77,7 @@ static void appendDynamicTonalityProfile(const EngravingItem* item, PlaybackEven
 
     DynamicTonalityProfileEvent profile;
     String error;
-    if (melo::vst3ProfileTransaction(staffType->meloStateJson(), 0, 0, 0, profile, &error)) {
+    if (melo::vst3ProfileTransaction(staff->meloStateAt(item->tick()), 0, 0, 0, profile, &error)) {
         events.emplace_back(std::move(profile));
     } else {
         LOGE() << mu::engraving::melo::diagnostic::vstProfilePreparationFailed << error;
