@@ -31,6 +31,9 @@ def main():
             value = deepcopy(oracle)
             update(value)
             cases.append((name, value, False))
+        changed('missing-painted-clefs', lambda v: v.update(header_paint_damage='clefs'))
+        changed('missing-clef-clipping', lambda v: v.update(header_paint_damage='clips'))
+        changed('missing-tuning-label', lambda v: v.update(header_paint_damage='tuning'))
         changed('wrong-note-height', lambda v: v['notes'][0].update(cents_above_extent_lower=v['notes'][0]['cents_above_extent_lower'] + 100))
         changed('wrong-playback-frequency', lambda v: v['notes'][0].update(frequency_hz=v['notes'][0]['frequency_hz'] * 1.01))
         changed('wrong-notehead', lambda v: v['notes'][0].update(notehead='triangle-vertex-up' if v['notes'][0]['notehead'] != 'triangle-vertex-up' else 'conventional'))
@@ -51,6 +54,11 @@ def main():
             if tonic_changes:
                 ti, tj = tonic_changes[0]
                 changed('wrong-indicator-position', lambda v: v['staves'][ti]['states'][tj]['indicator']['terrain']['tonic_indicators'][0].update(ordinate=0.123456789))
+            arrow_changes = [(i, j) for i, j in transitions if oracle['staves'][i]['states'][j]['indicator']['terrain']['arrows']]
+            if arrow_changes:
+                ai, aj = arrow_changes[0]
+                changed('missing-painted-arrow-shafts', lambda v: v['staves'][ai]['states'][aj]['indicator'].update(paint_damage='shafts'))
+                changed('missing-painted-arrowheads', lambda v: v['staves'][ai]['states'][aj]['indicator'].update(paint_damage='heads'))
         if oracle['harmonies']:
             changed('wrong-chord-name', lambda v: v['harmonies'][0].update(name='CORRUPTION CONTROL'))
     receipt = dict(schema='melopresto.source-notation-check.v1', score=str(args.score.resolve()),

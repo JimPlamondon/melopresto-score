@@ -36,6 +36,7 @@
 #include <QJsonArray>
 
 #include "engraving/dom/masterscore.h"
+#include "engraving/iengravingfont.h"
 #include "engraving/dom/factory.h"
 #include "engraving/dom/fret.h"
 #include "engraving/dom/harmony.h"
@@ -2005,6 +2006,36 @@ TEST_F(MusicXml_Melo_Tests, HeldNoteEvidenceSurvivesReferenceChange)
     }
 }
 
+// The inherited buffered provider deliberately ignores save/restore. Real
+// painting restores glyph scales; the source oracle must record the same state.
+class SourceNotationPaintProvider : public BufferedPaintProvider
+{
+public:
+    std::vector<RectF> clipRects;
+    void setClipRect(const RectF& rect) override { clipRects.push_back(rect); }
+
+    void save() override
+    {
+        m_saved.push_back(drawData()->states.rbegin()->second);
+    }
+
+    void restore() override
+    {
+        ASSERT_FALSE(m_saved.empty());
+        const auto state = m_saved.back();
+        m_saved.pop_back();
+        setPen(state.pen);
+        setBrush(state.brush);
+        setFont(state.font);
+        setTransform(state.transform);
+        setAntialiasing(state.isAntialiasing);
+        setCompositionMode(state.compositionMode);
+    }
+
+private:
+    std::vector<DrawData::State> m_saved;
+};
+
 static void verifySourceIndicator(MasterScore* score, int staffIndex, const Fraction& at, const QJsonObject& expected)
 {
     const Staff* staff = score->staff(staffIndex);
@@ -2127,8 +2158,9 @@ static void verifySourceIndicator(MasterScore* score, int staffIndex, const Frac
             expectedYs.push_back(lines->pos().y() + displayed->meloYFromCents(c, view) * lines->spatium());
         }
     }
-    auto provider = std::make_shared<BufferedPaintProvider>();
+    auto provider = std::make_shared<SourceNotationPaintProvider>();
     Painter painter(provider, "source-indicator-oracle");
+    painter.setWindow(RectF(0, 0, 4000, 4000));
     painter.setViewport(RectF(0, 0, 4000, 4000));
     lines->renderer()->drawItem(lines, &painter, PaintOptions());
     painter.endDraw();
@@ -2155,12 +2187,231 @@ static void verifySourceIndicator(MasterScore* score, int staffIndex, const Frac
     for (size_t i = 0; i < actualYs.size(); ++i) {
         EXPECT_NEAR(actualYs[i], expectedYs[i], 1e-6);
     }
+
+    // Compare the actual paint commands, independently of the already checked
+    // semantic model. In particular, stored arrow metadata cannot stand in for
+    // a visible shaft or for the right head at the destination row.
+    melo::ConnectorGlyph connector;
+    ASSERT_TRUE(melo::connectorGlyph(connector));
+    const double dist = displayed->lineDistance().val() * lines->spatium();
+    const double penWidth = connector.penCents / StaffType::MELO_CENTS_PER_LINE_DISTANCE * dist;
+    const double headHeight = connector.headHeightCents / StaffType::MELO_CENTS_PER_LINE_DISTANCE * dist;
+    const auto font = score->engravingFont();
+    ASSERT_TRUE(font);
+    const String upSymbol = String::fromUcs4(font->symCode(SymId::arrowheadBlackUp));
+    const String downSymbol = String::fromUcs4(font->symCode(SymId::arrowheadBlackDown));
+    const auto drawing = std::make_shared<DrawData>(*provider->drawData());
+    std::vector<LineF> shafts;
+    std::vector<std::pair<bool, RectF> > heads;
+    const QString damage = expected["paint_damage"].toString();
+    std::function<void(DrawData::Item&)> arrowPaint = [&](DrawData::Item& item) {
+        for (auto& data : item.datas) {
+            const auto& state = drawing->states.at(data.state);
+            auto isShaft = [&](const DrawPolygon& polygon) {
+                return polygon.mode == PolygonMode::Polyline && polygon.polygon.size() == 2
+                       && std::abs(polygon.polygon[0].x() - polygon.polygon[1].x()) < 1e-6
+                       && state.pen.capStyle() == PenCapStyle::RoundCap
+                       && std::abs(state.pen.widthF() - penWidth) < 1e-6;
+            };
+            // Test-only fault injection removes real paint commands while
+            // leaving every source fact and semantic indicator unchanged.
+            if (damage == "shafts") {
+                data.polygons.erase(std::remove_if(data.polygons.begin(), data.polygons.end(), isShaft), data.polygons.end());
+            }
+            if (damage == "heads") {
+                data.texts.erase(std::remove_if(data.texts.begin(), data.texts.end(), [&](const DrawText& text) {
+                    return text.text == upSymbol || text.text == downSymbol;
+                }), data.texts.end());
+            }
+            for (const auto& polygon : data.polygons) {
+                if (!isShaft(polygon)) {
+                    continue;
+                }
+                const LineF line = state.transform.map(LineF(polygon.polygon[0], polygon.polygon[1]));
+                if (line.x1() >= x0 && line.x1() <= x0 + geometry.changeTerrainWidth) {
+                    shafts.push_back(line);
+                }
+            }
+            for (const auto& text : data.texts) {
+                if (text.text != upSymbol && text.text != downSymbol) {
+                    continue;
+                }
+                const bool up = text.text == upSymbol;
+                const RectF glyph = font->bbox(up ? SymId::arrowheadBlackUp : SymId::arrowheadBlackDown, 1.0);
+                const RectF box = state.transform.map(glyph.translated(text.rect.topLeft()));
+                if (box.center().x() >= x0 && box.center().x() <= x0 + geometry.changeTerrainWidth) {
+                    heads.emplace_back(up, box);
+                }
+            }
+        }
+        for (auto& child : item.chilren) {
+            arrowPaint(child);
+        }
+    };
+    arrowPaint(drawing->item);
+    ASSERT_EQ(shafts.size(), size_t(arrows.size())) << "Every selected arrow must paint one shaft in its terrain";
+    ASSERT_EQ(heads.size(), size_t(arrows.size())) << "Every selected arrow must paint one head in its terrain";
+    const size_t modeCount = std::count_if(arrows.begin(), arrows.end(), [](const QJsonValue& value) {
+        return value.toObject()["kind"].toString() == "mode";
+    });
+    size_t modeIndex = 0;
+    size_t keyIndex = 0;
+    auto yFor = [&](const QJsonObject& point) {
+        const double cents = base + (point["period_offset"].toInt() + point["ordinate"].toDouble()) * period;
+        return lines->pos().y() + displayed->meloYFromCents(cents, view) * lines->spatium();
+    };
+    for (const auto& value : arrows) {
+        const auto arrow = value.toObject();
+        const bool mode = arrow["kind"].toString() == "mode";
+        const bool up = arrow["direction"].toString() == "up";
+        const double lane = mode ? geometry.changeLeftArrowLane : geometry.changeArrowLane;
+        const size_t count = mode ? modeCount : size_t(arrows.size()) - modeCount;
+        const size_t index = mode ? modeIndex++ : keyIndex++;
+        const double laneLeft = mode ? dotX - geometry.indicatorW - geometry.changeLeftArrowLane
+                                : dotX + geometry.indicatorW + geometry.changeRightLabelBand;
+        const double x = laneLeft + (index + 0.5) * lane / count;
+        const double fromY = yFor(arrow["from"].toObject());
+        const double toY = yFor(arrow["to"].toObject());
+        auto shaft = std::find_if(shafts.begin(), shafts.end(), [&](const LineF& line) {
+            return std::abs(line.x1() - x) < 1e-6;
+        });
+        ASSERT_NE(shaft, shafts.end()) << "expected shaft x " << x << " actual first " << shafts.front().x1()
+                                       << " terrain " << x0 << " width " << geometry.changeTerrainWidth;
+        EXPECT_NEAR(shaft->y1(), fromY, 1e-6);
+        EXPECT_NEAR(shaft->y2(), toY + (up ? headHeight : -headHeight), 1e-6);
+        auto head = std::find_if(heads.begin(), heads.end(), [&](const auto& item) {
+            return std::abs(item.second.center().x() - x) < 1e-6;
+        });
+        ASSERT_NE(head, heads.end());
+        EXPECT_EQ(head->first, up);
+        EXPECT_NEAR(head->second.height(), headHeight, 1e-6);
+        EXPECT_NEAR(up ? head->second.top() : head->second.bottom(), toY, 1e-6);
+    }
+}
+
+static void verifySourceHeaders(MasterScore* score, const QString& damage)
+{
+    auto sameRect = [](const RectF& a, const RectF& b) {
+        return std::abs(a.left() - b.left()) < 1e-6 && std::abs(a.top() - b.top()) < 1e-6
+               && std::abs(a.width() - b.width()) < 1e-6 && std::abs(a.height() - b.height()) < 1e-6;
+    };
+    for (const System* system : score->systems()) {
+        Measure* measure = system->firstMeasure();
+        if (!measure) {
+            continue;
+        }
+        bool firstVisible = true;
+        for (staff_idx_t index = 0; index < score->nstaves(); ++index) {
+            const Staff* staff = score->staff(index);
+            const StaffType* type = staff->staffType(measure->tick());
+            if (!type->isMelo() || !staff->show() || !system->staff(index)->show()) {
+                continue;
+            }
+            SCOPED_TRACE(std::string("header staff ") + std::to_string(index) + " at " + measure->tick().toString().toStdString());
+            const StaffLines* lines = measure->staffLines(index);
+            ASSERT_TRUE(lines);
+            const auto& view = type->meloFrameView(score, index, system);
+            ASSERT_FALSE(view.empty());
+            const double sp = lines->spatium();
+            const double dist = type->lineDistance().val() * sp;
+            const double period = type->meloPeriodCents();
+            melo::PeriodicOrigins origins;
+            ASSERT_TRUE(melo::periodicOrigins(type->meloStateJson(), origins));
+            const auto geometry = type->meloHeaderGeometry(sp, score->style().defaultSpatium(), &view);
+            const double height = period / StaffType::MELO_CENTS_PER_LINE_DISTANCE * dist;
+            const double width = std::max(geometry.clefRx, height / 2.0);
+            const double right = lines->pos().x() - 0.3 * sp;
+            auto yFor = [&](double cents) { return lines->pos().y() + type->meloYFromCents(cents, view) * sp; };
+            std::vector<RectF> expectedPaths;
+            std::vector<RectF> expectedClips;
+            for (const auto& band : view.bands) {
+                for (const auto& segment : band.segments) {
+                    const double top = yFor(segment.upperCents);
+                    const double bottom = yFor(segment.lowerCents);
+                    expectedClips.emplace_back(right - geometry.clefRx - sp, top - lines->lw(),
+                                               geometry.clefRx + 2 * sp, bottom - top + 2 * lines->lw());
+                    const double first = origins.doCentsAboveExtentLower
+                                         + std::floor((segment.lowerCents - origins.doCentsAboveExtentLower) / period + 1e-6) * period;
+                    for (double floor = first; floor < segment.upperCents - 1e-6; floor += period) {
+                        const double periodTop = top + (segment.upperCents - floor - period)
+                                                 / StaffType::MELO_CENTS_PER_LINE_DISTANCE * dist;
+                        // Each visible interval needs an opaque crescent body
+                        // plus its outline; clipping limits the full-period arcs.
+                        expectedPaths.emplace_back(right - width, periodTop, width, height);
+                        expectedPaths.emplace_back(right - width, periodTop, width, height);
+                    }
+                }
+            }
+            auto provider = std::make_shared<SourceNotationPaintProvider>();
+            Painter painter(provider, "source-header-oracle");
+            painter.setWindow(RectF(0, 0, 4000, 4000));
+            painter.setViewport(RectF(0, 0, 4000, 4000));
+            lines->renderer()->drawItem(lines, &painter, PaintOptions());
+            painter.endDraw();
+            if (damage == "clips") {
+                provider->clipRects.clear();
+            }
+            ASSERT_EQ(provider->clipRects.size(), expectedClips.size());
+            for (size_t i = 0; i < expectedClips.size(); ++i) {
+                EXPECT_TRUE(sameRect(provider->clipRects[i],
+                                     expectedClips[i])) << "crescent clipping differs from the visible staff segment";
+            }
+            auto drawing = std::make_shared<DrawData>(*provider->drawData());
+            std::vector<RectF> actualPaths;
+            std::vector<DrawText> tuning;
+            std::function<void(DrawData::Item&)> visit = [&](DrawData::Item& item) {
+                for (auto& data : item.datas) {
+                    auto isClef = [&](const DrawPath& path) {
+                        const RectF box = path.path.boundingRect();
+                        return std::abs(box.right() - right) < 1e-6 && std::abs(box.width() - width) < 1e-6;
+                    };
+                    if (damage == "clefs") {
+                        data.paths.erase(std::remove_if(data.paths.begin(), data.paths.end(), isClef), data.paths.end());
+                    }
+                    if (damage == "tuning") {
+                        data.texts.erase(std::remove_if(data.texts.begin(), data.texts.end(), [](const DrawText& text) {
+                            return text.text.startsWith(u"M5= ");
+                        }), data.texts.end());
+                    }
+                    for (const auto& path : data.paths) {
+                        if (isClef(path)) {
+                            EXPECT_GT(path.path.elementCount(), 8u) << "clef lost its curved geometry";
+                            actualPaths.push_back(path.path.boundingRect());
+                        }
+                    }
+                    for (const auto& text : data.texts) {
+                        if (text.text.startsWith(u"M5= ")) {
+                            tuning.push_back(text);
+                        }
+                    }
+                }
+                for (auto& child : item.chilren) {
+                    visit(child);
+                }
+            };
+            visit(drawing->item);
+            ASSERT_EQ(actualPaths.size(), expectedPaths.size()) << "each visible crescent requires body and outline";
+            for (size_t i = 0; i < expectedPaths.size(); ++i) {
+                EXPECT_TRUE(sameRect(actualPaths[i], expectedPaths[i])) << "clef dimensions or period placement changed";
+            }
+            ASSERT_EQ(tuning.size(), firstVisible ? 1u : 0u);
+            if (firstVisible) {
+                double generator = 0, periodWidth = 0;
+                ASSERT_TRUE(melo::staffMetrics(type->meloStateJson(), generator, periodWidth));
+                EXPECT_EQ(tuning[0].text, String(u"M5= %1¢").arg(String::number(generator, 1)));
+                EXPECT_NEAR(tuning[0].rect.top(), yFor(view.topCents()) - 1.2 * sp, 1e-6);
+                EXPECT_NEAR(tuning[0].rect.left(), right - geometry.clefRx - 2 * geometry.indicatorW, 1e-6);
+            }
+            firstVisible = false;
+        }
+    }
 }
 
 static void verifySourceNotationOracle(MasterScore* score, const QJsonObject& oracle)
 {
     ASSERT_EQ(oracle["schema"].toString(), "melopresto.score-notation-oracle.v1");
     score->doLayout();
+    verifySourceHeaders(score, oracle["header_paint_damage"].toString());
     EXPECT_EQ(QJsonDocument::fromJson(score->metaTag(melo::REFERENCE_TIMELINE_TAG).toUtf8().constChar()).object(),
               oracle["reference_timeline"].toObject());
     ASSERT_EQ(score->nstaves(), oracle["staves"].toArray().size());
