@@ -340,6 +340,44 @@ TEST_F(Mei_Tests, harmonyReferencesAttackInAnotherVoiceOnTheSameStaff)
     EXPECT_EQ(count, 1);
 }
 
+TEST_F(Mei_Tests, harmonicTimestampBetweenTupletAttacksRetainsDecimalPrecision)
+{
+    QTemporaryDir directory;
+    const QString input = directory.filePath("thirds.mei");
+    QFile source(input);
+    ASSERT_TRUE(source.open(QIODevice::WriteOnly));
+    source.write(
+        R"(<mei xmlns="http://www.music-encoding.org/ns/mei" meiversion="5.1"><meiHead><fileDesc><titleStmt><title>Exact thirds</title></titleStmt><pubStmt/></fileDesc></meiHead><music><body><mdiv><score><scoreDef meter.count="4" meter.unit="4"><staffGrp><staffDef n="1" lines="5" clef.shape="G" clef.line="2"/></staffGrp></scoreDef><section><measure n="1"><staff n="1"><layer n="1"><note pname="c" oct="4" dur="1"/></layer></staff><harm tstamp="1.3333333333333333" staff="1">C</harm><harm tstamp="1.6666666666666667" staff="1">G</harm></measure></section></score></mdiv></body></music></mei>)");
+    source.close();
+    auto importFunc = [](MasterScore* score, const muse::io::path_t& path) -> Err {
+        MeiReader reader(nullptr);
+        return reader.import(score, path);
+    };
+    auto exportFunc = [](Score* score, const muse::io::path_t& path) -> Err {
+        MeiWriter writer;
+        return writer.writeScore(score, path);
+    };
+    std::unique_ptr<MasterScore> score(ScoreRW::readScore(String::fromQString(input), true, importFunc));
+    ASSERT_TRUE(score);
+    score->rebuildMidiMapping();
+    const QString output = directory.filePath("returned.mei");
+    ASSERT_TRUE(ScoreRW::saveScore(score.get(), String::fromQString(output), exportFunc));
+    QFile saved(output);
+    ASSERT_TRUE(saved.open(QIODevice::ReadOnly));
+    QXmlStreamReader xml(saved.readAll());
+    int count = 0;
+    while (!xml.atEnd()) {
+        xml.readNext();
+        if (xml.isStartElement() && xml.name() == u"harm") {
+            ASSERT_LT(count, 2);
+            EXPECT_NEAR(xml.attributes().value("tstamp").toDouble(), (4.0 + count) / 3.0, 1e-12);
+            ++count;
+        }
+    }
+    ASSERT_FALSE(xml.hasError());
+    EXPECT_EQ(count, 2);
+}
+
 // MeloPresto MEI (MeloPresto MEI profile) focused round trip: typed state import,
 // native carriers, and extMeta regeneration on export.
 TEST_F(Mei_Tests, mei_melo_roundtrip_01) {

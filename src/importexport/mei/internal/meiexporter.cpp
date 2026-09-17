@@ -23,6 +23,9 @@
 #include "meiexporter.h"
 
 #include <random>
+#include <iomanip>
+#include <limits>
+#include <sstream>
 #include <vector>
 
 #include "containers.h"
@@ -2050,6 +2053,12 @@ bool MeiExporter::writeHarm(const Harmony* harmony, double tstamp)
     meiHarm.SetTstamp(tstamp);
     const std::string harmXmlId = this->getXmlIdFor(harmony, 'h');
     meiHarm.Write(harmNode, harmXmlId);
+    // libmei's general decimal formatter rounds to four places. A harmony
+    // between tuplet attacks needs the full timestamp precision to agree
+    // with the exact analytical offset carried by the MeloPresto profile.
+    std::ostringstream timestamp;
+    timestamp << std::setprecision(std::numeric_limits<double>::max_digits10) << tstamp;
+    harmNode.attribute("tstamp").set_value(timestamp.str().c_str());
     m_melo.onHarm(harmNode, harmony, harmXmlId);
 
     this->writeLines(harmNode, meiLines);
