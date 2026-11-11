@@ -153,7 +153,7 @@ void MeloStaffSettingsModel::loadProperties()
             m_scaleSteps.push_back(steps);
         };
         addScale(muse::qtrc("inspector", "Diatonic (White notes)"), diatonic, zero);
-        addScale(muse::qtrc("inspector", "Parallel Minor (Grey notes)"), diatonic, minor);
+        addScale(muse::qtrc("inspector", "Parallel Minor"), diatonic, minor);
         addScale(muse::qtrc("inspector", "Double Harmonic Minor"), harmonic, harmonic);
         m_settings["scales"] = scales;
         m_settings["scalesIndex"] = currentScale;
