@@ -18,6 +18,8 @@
 #include "draw/types/geometry.h"
 
 namespace mu::engraving::melo {
+bool staffRequestAt(const muse::String& source, const muse::String& curves, const muse::String& at, muse::String& request,
+                    muse::String& error);
 struct RelativeKeyEditor {
     muse::String expression;
     muse::String interval;
@@ -190,6 +192,10 @@ struct SoundingPitch {
     muse::String anchor;         // "explicit-reference" | "inferred-re0-d4"
 };
 bool noteSoundingPitch(const muse::String& stateJson, int nPer, int nGen, SoundingPitch& out, muse::String* error = nullptr);
+
+/// Express a held note in the harmony's reference without changing the note.
+bool reframeNote(const muse::String& sourceState, const muse::String& targetState, int nPer, int nGen, SoundingPitch& out,
+                 muse::String* error = nullptr);
 
 /// The Kernel's complete VST3 Dynamic Tonality profile transaction. Slot,
 /// generation, and offset are host transport choices; all musical values and

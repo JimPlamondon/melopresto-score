@@ -634,6 +634,12 @@ engraving::BeamMode Convert::beamFromMEI(const std::string& typeAtt, const std::
         beamMode = engraving::BeamMode::MID;
     } else if (Convert::hasTypeValue(typeAtt, prefix + "-none")) {
         beamMode = engraving::BeamMode::NONE;
+    } else if (Convert::hasTypeValue(typeAtt, prefix + "-end")) {
+        beamMode = engraving::BeamMode::END;
+    } else if (Convert::hasTypeValue(typeAtt, prefix + "-begin16")) {
+        beamMode = engraving::BeamMode::BEGIN16;
+    } else if (Convert::hasTypeValue(typeAtt, prefix + "-begin32")) {
+        beamMode = engraving::BeamMode::BEGIN32;
     }
 
     return beamMode;
@@ -652,6 +658,15 @@ std::string Convert::beamToMEI(engraving::BeamMode beamMode, const std::string& 
         break;
     case (engraving::BeamMode::NONE):
         beamType = prefix + "-none";
+        break;
+    case (engraving::BeamMode::END):
+        beamType = prefix + "-end";
+        break;
+    case (engraving::BeamMode::BEGIN16):
+        beamType = prefix + "-begin16";
+        break;
+    case (engraving::BeamMode::BEGIN32):
+        beamType = prefix + "-begin32";
         break;
     default: break;
     }
@@ -1816,6 +1831,7 @@ void Convert::harmFromMEI(engraving::Harmony* harmony, const StringList& meiLine
 
     // text content
     harmony->setHarmonyType(harmonyType);
+    harmony->setVisible(!Convert::hasTypeValue(meiHarm.GetType(), "mscore-harmony-hidden"));
     if (harmonyType == engraving::HarmonyType::MELO) {
         // One opaque canonical MeloPresto chord name; never run the conventional
         // chord parser on it (mirrors the MusicXML importer).
@@ -1860,6 +1876,11 @@ libmei::Harm Convert::harmToMEI(const engraving::Harmony* harmony, StringList& m
         default: break;
         }
         meiHarm.SetType(harmonyType);
+    }
+    // MEI harm has no @visible attribute. Preserve hidden source analysis using
+    // the existing MuseScore @type vocabulary alongside the harmony subtype.
+    if (!harmony->visible()) {
+        meiHarm.SetType(meiHarm.HasType() ? meiHarm.GetType() + " mscore-harmony-hidden" : "mscore-harmony-hidden");
     }
 
     // content

@@ -22,14 +22,11 @@
 
 #pragma once
 
-// MeloPresto MusicXML extension (urn:melopresto:musicxml:3) interchange carriers that the
-// fork TRANSPORTS but does not interpret (owner decision 2026-08-19, item 5 of
-// the Add-JiMS-to-MuseScore follow-ups): melo:provenance (document
-// identification) and melo:tuning-trajectory (a printed continuous-tuning
-// instruction inside a MusicXML direction). Both are read on import, saved
-// in the score file, and written back on export exactly as carried — the
-// fork computes no musical fact from them (no rendering, no playback; a
-// printed trajectory's staff geometry is a later milestone with the Kernel).
+// MeloPresto MusicXML version-5 provenance and tuning-trajectory carriers.
+// Import, native save, and export preserve original source values. The Kernel
+// evaluates the trajectory at note onsets for placement, playback and evidence.
+// Printed continuous staff geometry and automation during sustained notes
+// require the corresponding engraving and playback milestone.
 // Values stay in the extension's own units: cents, normalized [0,1] control
 // times, score time as MuseScore fractions (MusicXML divisions are a
 // per-document encoding, rescaled on export).

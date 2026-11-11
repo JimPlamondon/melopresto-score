@@ -1,0 +1,229 @@
+<?xml version='1.0' encoding='utf-8'?>
+<score-partwise xmlns:melo="urn:melopresto:musicxml:5" version="4.0">
+  <work>
+    <work-title>Unequal staff counts share one musical timeline</work-title>
+  </work>
+  <identification>
+    <encoding>
+      <software>JiMS musescore-jims fixtures (owner ruling 2026-08-22: per-staff fields may differ across parts)</software>
+    </encoding>
+  </identification>
+  <melo:reference-timeline>
+    <melo:initial-pitch step="D" alter="0" octave="4" />
+  </melo:reference-timeline>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Soprano (JiMStaff)</part-name>
+    </score-part>
+    <score-part id="P2">
+      <part-name>Bass (JiMStaff)</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>4</divisions>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <melo:staff-state>
+          <melo:scale>
+            <melo:step>M2</melo:step>
+            <melo:step>m2</melo:step>
+            <melo:step>M2</melo:step>
+            <melo:step>M2</melo:step>
+            <melo:step>M2</melo:step>
+            <melo:step>m2</melo:step>
+            <melo:step>M2</melo:step>
+          </melo:scale>
+          <melo:collection-rotation>0</melo:collection-rotation>
+          <melo:mode-rotation>0</melo:mode-rotation>
+          <melo:generator-cents>700.0</melo:generator-cents>
+          <melo:period-cents>1200.0</melo:period-cents>
+          <melo:embedding large-steps="5" small-steps="2" />
+          <melo:extent lower-n-per="1" lower-n-gen="-2" upper-n-per="2" upper-n-gen="-2" />
+          <melo:tonic-ambit>tonic-centered</melo:tonic-ambit>
+        </melo:staff-state>
+      </attributes>
+      <note>
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <melo:pitch n-per="0" n-gen="0" />
+        <duration>16</duration>
+        <type>whole</type>
+      </note>
+    </measure>
+    <measure number="2">
+      <attributes>
+        <melo:staff-state>
+          <melo:scale>
+            <melo:step>M2</melo:step>
+            <melo:step>m2</melo:step>
+            <melo:step>M2</melo:step>
+            <melo:step>M2</melo:step>
+            <melo:step>M2</melo:step>
+            <melo:step>m2</melo:step>
+            <melo:step>M2</melo:step>
+          </melo:scale>
+          <melo:collection-rotation>0</melo:collection-rotation>
+          <melo:mode-rotation>5</melo:mode-rotation>
+          <melo:generator-cents>700.0</melo:generator-cents>
+          <melo:period-cents>1200.0</melo:period-cents>
+          <melo:embedding large-steps="5" small-steps="2" />
+          <melo:extent lower-n-per="1" lower-n-gen="-2" upper-n-per="2" upper-n-gen="-2" />
+          <melo:tonic-ambit>tonic-centered</melo:tonic-ambit>
+        </melo:staff-state>
+      </attributes>
+      <note>
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <melo:pitch n-per="0" n-gen="1" />
+        <duration>16</duration>
+        <type>whole</type>
+      </note>
+    </measure>
+  </part>
+  <part id="P2">
+    <measure number="1">
+      <attributes>
+        <divisions>4</divisions>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <staves>2</staves>
+        <melo:staff-state number="1">
+          <melo:scale>
+            <melo:step>M2</melo:step>
+            <melo:step>m2</melo:step>
+            <melo:step>M2</melo:step>
+            <melo:step>M2</melo:step>
+            <melo:step>M2</melo:step>
+            <melo:step>m2</melo:step>
+            <melo:step>M2</melo:step>
+          </melo:scale>
+          <melo:collection-rotation>0</melo:collection-rotation>
+          <melo:mode-rotation>0</melo:mode-rotation>
+          <melo:generator-cents>700.0</melo:generator-cents>
+          <melo:period-cents>1200.0</melo:period-cents>
+          <melo:embedding large-steps="5" small-steps="2" />
+          <melo:extent lower-n-per="0" lower-n-gen="-2" upper-n-per="1" upper-n-gen="-2" />
+          <melo:tonic-ambit>tonic-centered</melo:tonic-ambit>
+        </melo:staff-state>
+        <melo:staff-state number="2">
+          <melo:scale>
+            <melo:step>M2</melo:step>
+            <melo:step>m2</melo:step>
+            <melo:step>M2</melo:step>
+            <melo:step>M2</melo:step>
+            <melo:step>M2</melo:step>
+            <melo:step>m2</melo:step>
+            <melo:step>M2</melo:step>
+          </melo:scale>
+          <melo:collection-rotation>0</melo:collection-rotation>
+          <melo:mode-rotation>0</melo:mode-rotation>
+          <melo:generator-cents>700.0</melo:generator-cents>
+          <melo:period-cents>1200.0</melo:period-cents>
+          <melo:embedding large-steps="5" small-steps="2" />
+          <melo:extent lower-n-per="0" lower-n-gen="-2" upper-n-per="1" upper-n-gen="-2" />
+          <melo:tonic-ambit>tonic-centered</melo:tonic-ambit>
+        </melo:staff-state>
+      </attributes>
+      <note>
+        <pitch>
+          <step>G</step>
+          <octave>3</octave>
+        </pitch>
+        <melo:pitch n-per="-1" n-gen="-1" />
+        <duration>16</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>16</duration>
+      </backup>
+      <note>
+        <pitch>
+          <step>G</step>
+          <octave>3</octave>
+        </pitch>
+        <melo:pitch n-per="-1" n-gen="-1" />
+        <duration>16</duration>
+        <voice>2</voice>
+        <type>whole</type>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <measure number="2">
+      <attributes>
+        <melo:staff-state number="1">
+          <melo:scale>
+            <melo:step>M2</melo:step>
+            <melo:step>m2</melo:step>
+            <melo:step>M2</melo:step>
+            <melo:step>M2</melo:step>
+            <melo:step>M2</melo:step>
+            <melo:step>m2</melo:step>
+            <melo:step>M2</melo:step>
+          </melo:scale>
+          <melo:collection-rotation>0</melo:collection-rotation>
+          <melo:mode-rotation>5</melo:mode-rotation>
+          <melo:generator-cents>700.0</melo:generator-cents>
+          <melo:period-cents>1200.0</melo:period-cents>
+          <melo:embedding large-steps="5" small-steps="2" />
+          <melo:extent lower-n-per="0" lower-n-gen="-2" upper-n-per="1" upper-n-gen="-2" />
+          <melo:tonic-ambit>tonic-centered</melo:tonic-ambit>
+        </melo:staff-state>
+        <melo:staff-state number="2">
+          <melo:scale>
+            <melo:step>M2</melo:step>
+            <melo:step>m2</melo:step>
+            <melo:step>M2</melo:step>
+            <melo:step>M2</melo:step>
+            <melo:step>M2</melo:step>
+            <melo:step>m2</melo:step>
+            <melo:step>M2</melo:step>
+          </melo:scale>
+          <melo:collection-rotation>0</melo:collection-rotation>
+          <melo:mode-rotation>5</melo:mode-rotation>
+          <melo:generator-cents>700.0</melo:generator-cents>
+          <melo:period-cents>1200.0</melo:period-cents>
+          <melo:embedding large-steps="5" small-steps="2" />
+          <melo:extent lower-n-per="0" lower-n-gen="-2" upper-n-per="1" upper-n-gen="-2" />
+          <melo:tonic-ambit>tonic-centered</melo:tonic-ambit>
+        </melo:staff-state>
+      </attributes>
+      <note>
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <melo:pitch n-per="0" n-gen="0" />
+        <duration>16</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>16</duration>
+      </backup>
+      <note>
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <melo:pitch n-per="0" n-gen="0" />
+        <duration>16</duration>
+        <voice>2</voice>
+        <type>whole</type>
+        <staff>2</staff>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

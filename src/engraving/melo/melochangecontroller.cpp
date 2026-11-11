@@ -348,6 +348,7 @@ public:
         m_emptyDefault(staffSpanIsEmpty(staff, tick, nextCarrierTick(staff->score(), staff->idx(), tick))), m_referenceOnly(referenceOnly)
     {
     }
+
     UNDO_NAME("MeloChangeStateAt")
     UNDO_CHANGED_OBJECTS({ m_staff })
 };
@@ -865,13 +866,14 @@ bool validateSharedStateTimeline(const Score* score, String& error)
             }
         }
     }
-    // Retain the interchange contract's numbered staff structure within each
-    // part. Compare each part's effective shared projections, not carrier lists.
+    // Compare distinct effective musical configurations, not staff counts.
+    // A voice and a two-staff accompaniment can share the same configuration;
+    // repeating that configuration on another staff adds no musical difference.
     for (const Fraction& tick : ticks) {
-        std::vector<String> reference;
+        std::set<String> reference;
         int firstPart = -1;
         for (size_t partIndex = 0; partIndex < score->parts().size(); ++partIndex) {
-            std::vector<String> shared;
+            std::set<String> shared;
             const Part* part = score->parts()[partIndex];
             for (const Staff* staff : part->staves()) {
                 const StaffType* type = staff->staffType(tick);
@@ -887,7 +889,7 @@ bool validateSharedStateTimeline(const Score* score, String& error)
                 if (!musicxmlConfigurationV5Xml(type->meloStateJson(), 0, true, projection, error)) {
                     return false;
                 }
-                shared.push_back(projection);
+                shared.insert(projection);
             }
             if (shared.empty()) {
                 continue;

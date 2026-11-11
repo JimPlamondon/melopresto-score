@@ -138,10 +138,11 @@ public:
 
     bool hideSystemBarLine() const { return m_hideSystemBarLine; }
     void setHideSystemBarLine(bool val) { m_hideSystemBarLine = val; }
-    // MeloPresto MusicXML interchange carriers riding on this staff (transported, never interpreted)
+    // Source curves retain exact transport values; the Kernel evaluates tuning.
     const std::vector<melo::TuningTrajectory>& meloTuningTrajectories() const { return m_meloTuningTrajectories; }
     void setMeloTuningTrajectories(const std::vector<melo::TuningTrajectory>& t) { m_meloTuningTrajectories = t; }
     void addMeloTuningTrajectory(const melo::TuningTrajectory& t) { m_meloTuningTrajectories.push_back(t); }
+    String meloStateAt(const Fraction& tick) const;
 
     AutoOnOff hideWhenEmpty() const { return m_hideWhenEmpty; }
     void setHideWhenEmpty(AutoOnOff v) { m_hideWhenEmpty = v; }

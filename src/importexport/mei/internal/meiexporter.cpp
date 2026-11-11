@@ -23,6 +23,9 @@
 #include "meiexporter.h"
 
 #include <random>
+#include <iomanip>
+#include <limits>
+#include <sstream>
 #include <vector>
 
 #include "containers.h"
@@ -88,6 +91,32 @@ using namespace mu::engraving;
 
 // Number of spaces for the XML indentation. Set to 0 for tabs
 #define MEI_INDENT 3
+
+// Overlapping beam and tuplet intervals cannot both use nested XML containers.
+// Preserve a crossing beam through the existing per-event beam instructions;
+// keep the tuplet container responsible only for its actual rhythmic members.
+static bool beamCrossesTuplet(const Beam* beam)
+{
+    if (!beam || beam->elements().empty()) {
+        return false;
+    }
+    const Fraction first = beam->elements().front()->tick();
+    const Fraction last = beam->elements().back()->tick();
+    for (const ChordRest* element : beam->elements()) {
+        for (const Tuplet* tuplet = element->tuplet(); tuplet; tuplet = tuplet->tuplet()) {
+            if (tuplet->elements().empty()) {
+                continue;
+            }
+            const Fraction start = tuplet->elements().front()->tick();
+            const Fraction end = tuplet->elements().back()->tick();
+            if ((start < first && first <= end && end < last)
+                || (first < start && start <= last && last < end)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
 
 // Use counter-based IDs for layer elements
 #define MEI_COUNTER_BASED_IDS false
@@ -1134,6 +1163,9 @@ bool MeiExporter::writeBeamAndTuplet(const ChordRest* chordRest, bool& closingBe
     }
 
     const Beam* beam = (chordRest->beam()) ? toBeam(chordRest->beam()) : nullptr;
+    if (beamCrossesTuplet(beam)) {
+        beam = nullptr;
+    }
     const Tuplet* tuplet = (chordRest->tuplet()) ? toTuplet(chordRest->tuplet()) : nullptr;
     const Beam* beamInTuplet = nullptr;
 
@@ -2021,6 +2053,12 @@ bool MeiExporter::writeHarm(const Harmony* harmony, double tstamp)
     meiHarm.SetTstamp(tstamp);
     const std::string harmXmlId = this->getXmlIdFor(harmony, 'h');
     meiHarm.Write(harmNode, harmXmlId);
+    // libmei's general decimal formatter rounds to four places. A harmony
+    // between tuplet attacks needs the full timestamp precision to agree
+    // with the exact analytical offset carried by the MeloPresto profile.
+    std::ostringstream timestamp;
+    timestamp << std::setprecision(std::numeric_limits<double>::max_digits10) << tstamp;
+    harmNode.attribute("tstamp").set_value(timestamp.str().c_str());
     m_melo.onHarm(harmNode, harmony, harmXmlId);
 
     this->writeLines(harmNode, meiLines);
@@ -2329,13 +2367,26 @@ bool MeiExporter::writeBeamTypeAtt(const ChordRest* chordRest, libmei::AttTyped&
         return true;
     }
 
-    switch (chordRest->beamMode()) {
-    // BeamMode::BEGIN16 and BEGIN32 is handled in MeiExporter::writeBeam, which will add MEI a @breaksec to the previous element
-    // This is BeamMode in MuseScore is on the first note _after_ the break, whereas it is on the last note _before_ it in MEI.
+    BeamMode mode = chordRest->beamMode();
+    const Beam* beam = chordRest->beam();
+    const bool crossing = beamCrossesTuplet(beam);
+    if (crossing && mode == BeamMode::AUTO) {
+        mode = beam->elements().front() == chordRest ? BeamMode::BEGIN
+               : beam->elements().back() == chordRest ? BeamMode::END : BeamMode::MID;
+    }
+    if (!crossing && (mode == BeamMode::END || mode == BeamMode::BEGIN16 || mode == BeamMode::BEGIN32)) {
+        return true;
+    }
+    switch (mode) {
+    // Ordinary beam containers carry secondary breaks through @breaksec on the preceding element.
+    // Crossing beams have no container, so retain each break on the following event instead.
     case (BeamMode::BEGIN):
     case (BeamMode::MID):
     case (BeamMode::NONE):
-        typeAtt.SetType(Convert::beamToMEI(chordRest->beamMode(), BEAM_ELEMENT_TYPE));
+    case (BeamMode::END):
+    case (BeamMode::BEGIN16):
+    case (BeamMode::BEGIN32):
+        typeAtt.SetType(Convert::beamToMEI(mode, BEAM_ELEMENT_TYPE));
         break;
     default:
         break;
@@ -2445,7 +2496,11 @@ void MeiExporter::fillControlEventMap(const std::string& xmlId, const ChordRest*
 
     if (!chordRest->isGrace()) {
         for (const EngravingItem* element : chordRest->segment()->annotations()) {
-            if (element->track() == trackIdx) {
+            const bool sameStaffHarmony = element->isHarmony()
+                                          && element->staffIdx() == chordRest->staffIdx()
+                                          && !chordRest->segment()->element(element->track())
+                                          && this->findStartIdFor(element).empty();
+            if (element->track() == trackIdx || sameStaffHarmony) {
                 m_startingControlEventList.push_back(std::make_pair(element, "#" + xmlId));
             }
         }
