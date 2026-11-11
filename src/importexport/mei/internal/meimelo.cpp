@@ -461,23 +461,24 @@ void MeloMeiExporter::writeScoreAnnots(pugi::xml_node scoreNode)
             fr.append_child("p").text().set(reason.toStdString().c_str());
         }
     }
-    if (!m_staves.empty()) {
-        const String token = melo::melodyPartToken(m_score->meloMelodyPart());
-        pugi::xml_node annot = scoreNode.append_child("annot");
-        annot.append_attribute("xml:id") = "melo-melody";
-        annot.append_attribute("type") = "melo-melody-part";
-        annot.append_attribute("class") = ("#melo.melody." + token.toStdString()).c_str();
-        for (const StaffPlan& plan : m_staves) {
-            const Part* part = plan.staff->part();
-            // A MusicXML-imported part carries the role in partName; an
-            // MEI-imported one carries it in the staffDef label, which is
-            // the instrument long name. Either names the melody staff.
-            if (part && (part->partName().toLower() == token || part->longName().toLower() == token)) {
-                annot.append_attribute("plist") = ("#" + plan.staffDefId).c_str();
-                break;
-            }
+    // The melody-part annotation points at exactly one staffDef. A score
+    // with no staff in the designated role (voice and piano, for example)
+    // states no melody part.
+    const String token = melo::melodyPartToken(m_score->meloMelodyPart());
+    for (const StaffPlan& plan : m_staves) {
+        const Part* part = plan.staff->part();
+        // A MusicXML-imported part carries the role in partName; an
+        // MEI-imported one carries it in the staffDef label, which is
+        // the instrument long name. Either names the melody staff.
+        if (part && (part->partName().toLower() == token || part->longName().toLower() == token)) {
+            pugi::xml_node annot = scoreNode.append_child("annot");
+            annot.append_attribute("xml:id") = "melo-melody";
+            annot.append_attribute("type") = "melo-melody-part";
+            annot.append_attribute("class") = ("#melo.melody." + token.toStdString()).c_str();
+            annot.append_attribute("plist") = ("#" + plan.staffDefId).c_str();
+            annot.text().set(token.toStdString().c_str());
+            break;
         }
-        annot.text().set(token.toStdString().c_str());
     }
 }
 
