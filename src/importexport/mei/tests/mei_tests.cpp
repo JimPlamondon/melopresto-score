@@ -456,6 +456,39 @@ TEST_F(Mei_Tests, mei_melo_roundtrip_01) {
     delete score;
 }
 
+// The melody-part annotation is an assertion about one staff (mei-melo
+// MAPPING row 10: @plist to exactly one staffDef). When no staff carries the
+// designated vocal role, as in a voice-and-piano score, the export states no
+// melody part instead of naming a part that does not exist.
+TEST_F(Mei_Tests, mei_melo_melody_part_needs_its_staff)
+{
+    auto importFunc = [](MasterScore* score, const muse::io::path_t& path) -> Err {
+        MeiReader meiReader(nullptr);
+        return meiReader.import(score, path);
+    };
+    auto exportFunc = [](Score* score, const muse::io::path_t& path) -> Err {
+        MeiWriter meiWriter;
+        return meiWriter.writeScore(score, path);
+    };
+
+    MasterScore* score = ScoreRW::readScore(MEI_DIR + u"jims/v5/jims-synthetic.mei", false, importFunc);
+    ASSERT_TRUE(score);
+    for (Part* part : score->parts()) {
+        part->setPartName(u"Voice");
+        part->setLongNameAll(u"Voice");
+    }
+    score->masterScore()->rebuildMidiMapping();
+    ASSERT_TRUE(ScoreRW::saveScore(score, u"jims-no-melody-staff.test.mei", exportFunc));
+    muse::io::File out(muse::io::path_t(u"jims-no-melody-staff.test.mei"));
+    ASSERT_TRUE(out.open(muse::io::IODevice::ReadOnly));
+    const muse::ByteArray meiBytes = out.readAll();
+    const String mei = String::fromUtf8(meiBytes.constChar());
+    out.close();
+    EXPECT_TRUE(mei.contains(u"melo-tonal-state"));
+    EXPECT_FALSE(mei.contains(u"melo-melody-part"));
+    delete score;
+}
+
 TEST_F(Mei_Tests, generated_chord_evidence_roundtrip_and_stale_export)
 {
     auto importFunc = [](MasterScore* score, const muse::io::path_t& path) -> Err {
