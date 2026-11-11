@@ -7,7 +7,7 @@ Every piece was produced through the converter pipeline from an existing M2 acce
 | `m5-mode` | collision (3 bars, one system) | `JIMS_MODE_CHANGE=2:5` | mode: tonic indicators Do, La; arrow down (fewest degrees); no dots |
 | `m5-key-up` | collision | `JIMS_REFERENCE=62 JIMS_KEY_CHANGE=2:0:1` | key Do0→So0: dots Do (lower Do-line), So; arrow up; no tonic indicator |
 | `m5-key-down` | collision | `JIMS_REFERENCE=62 JIMS_KEY_CHANGE=2:-1:1` | key Do0→So−1: dots Do (upper Do-line), So; arrow down |
-| `m5-scale` | collision | `JIMS_SCALE_CHANGE=2:-3` | scale (Grey-notes parallel minor): new stack Do Re Me Fa So Le Te with tonic indicator on Do; no arrows |
+| `m5-scale` | collision | `JIMS_SCALE_CHANGE=2:-3` | scale (Parallel Minor Notes): new stack Do Re Me Fa So Le Te with tonic indicator on Do; no arrows |
 | `m5-key-mode` | collision | `JIMS_REFERENCE=62 JIMS_MODE_CHANGE=2:5 JIMS_KEY_CHANGE=2:-1:3` | owner's worked example: dots Do, La each wrapped by a tonic indicator; ONE arrow up (key trumps mode) |
 | `m5-syshead` | grym (16 bars, 3 systems) | `JIMS_MODE_CHANGE=6:0` | change at a system head: full header, NO enclosure |
 
