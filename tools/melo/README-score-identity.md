@@ -14,7 +14,7 @@ The macOS bundle exports `com.melopresto.score.document` and `com.melopresto.sco
 
 ## Canonical artwork
 
-`share/icons/melopresto/sources.json` records the canonical crescent and button source paths, hashes, palette and meanings. The crescent is the full Do-to-Do glyph without notation overlays. The button is the canonical button-field instrument geometry. These paths are copied byte-for-byte into checked source inputs; the generator applies uniform placement/scaling and rosewood, brass and bone colors. It does not implement musical geometry. The Jammer icon is artwork prepared for that application's later integration.
+`share/icons/melopresto/sources.json` records the canonical crescent source path, hash, palette and meaning. The crescent is the full Do-to-Do glyph without notation overlays. Its path is copied byte-for-byte into a checked source input; the generator applies uniform placement/scaling and rosewood, brass and bone colors. It does not implement musical geometry. The icon of the MeloPresto Jammer application is not kept here; the `melopresto` repository generates it (`tools/generate_jammer_app_icons.py`).
 
 Run `python3 tools/melo/generate_app_icons.py --check` to verify the SVG masters. On macOS, regenerate raster and ICNS resources with `python3 tools/melo/generate_app_icons.py --render --node <node> --sharp-module <sharp-module>`. The renderer requires Node, sharp and iconutil; Python itself uses the standard library. Do not hand-edit the generated masters.
 

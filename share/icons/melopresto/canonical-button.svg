@@ -1,5 +1,0 @@
-<?xml version="1.0"?><svg xmlns="http://www.w3.org/2000/svg" viewBox="-298 -355.28 596 710.56" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
-  <title>MeloPresto button - canonical outline</title>
-  <desc>Canonical MeloPresto button outline, elasticity 0, drawn at FW = 1000 units (fingertip width). Outer radius 0.29 FW, tip circles r = 0.08682 FW centred at (0, +/-0.26046 FW), joined along common tangents. Source: the outer master Assets/JiMS Button - Canonical.svg (the original JiMS-button.js and JiMS Button Geometry.md sources are retired); the Kernel's dt-geometry crate is the numeric authority.</desc>
-  <path d="M 181.4466 -226.2236 A 290.0000 290.0000 0 0 1 181.4466 226.2236 L 54.3214 328.1867 A 86.8200 86.8200 0 0 1 -54.3214 328.1867 L -181.4466 226.2236 A 290.0000 290.0000 0 0 1 -181.4466 -226.2236 L -54.3214 -328.1867 A 86.8200 86.8200 0 0 1 54.3214 -328.1867 L 181.4466 -226.2236 Z" fill="none" stroke="#111" stroke-width="6" stroke-linejoin="round"></path>
-</svg>

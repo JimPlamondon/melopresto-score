@@ -20,17 +20,15 @@ def svg_artworks():
     rose, brass, bone = [palette[x] for x in ('rosewood', 'brass', 'bone')]
     ns = '{http://www.w3.org/2000/svg}'
     crescent = ET.fromstring(re.sub(r'<!--.*?-->', '', (D / 'canonical-crescent.svg').read_text(), flags=re.S)).find(ns + 'path').attrib['d']
-    button = ET.parse(D / 'canonical-button.svg').getroot().find(ns + 'path').attrib['d']
     tile = f'<rect x="64" y="64" width="896" height="896" rx="176" fill="{rose}"/>'
     def glyph(path, transform, fill, stroke, width):
         return f'<path d="{path}" transform="{transform}" fill="{fill}" stroke="{stroke}" stroke-width="{width}" stroke-linejoin="round"/>'
     score = tile + glyph(crescent, 'translate(112 112) scale(0.8)', bone, brass, 15)
-    jammer = tile + glyph(button, 'translate(512 512) scale(1.12)', bone, brass, 6)
     page = f'<path d="M 224 96 H 652 L 816 260 V 928 H 224 Z" fill="{bone}" stroke="{rose}" stroke-width="20"/>'
     page += f'<path d="M 652 96 V 260 H 816" fill="{brass}" stroke="{rose}" stroke-width="20" stroke-linejoin="round"/>'
     document = page + glyph(crescent, 'translate(212 290) scale(0.6)', rose, brass, 15)
     art = {}
-    for name, title, body in [('MeloPrestoScore', 'MeloPresto Score — full Do-to-Do crescent', score), ('MeloPrestoJammer', 'MeloPresto Jammer — canonical button', jammer), ('MeloPrestoScoreDocument', 'MeloPresto Score document', document)]:
+    for name, title, body in [('MeloPrestoScore', 'MeloPresto Score — full Do-to-Do crescent', score), ('MeloPrestoScoreDocument', 'MeloPresto Score document', document)]:
         art[name] = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024"><title>{title}</title>{body}</svg>\n'
     return art
 

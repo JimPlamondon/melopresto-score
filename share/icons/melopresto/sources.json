@@ -11,16 +11,10 @@
       "file": "canonical-crescent.svg",
       "authority": "GitHub/melopresto/Libraries/melo/crates/melo-staff/assets/glyphs/crescent-clef.svg",
       "sha256": "74f3f7544fc980ee8f826451fb28599cc090e4bfa61bb66b8bf71c21ef444865"
-    },
-    {
-      "file": "canonical-button.svg",
-      "authority": "Assets/JiMS Button - Canonical.svg",
-      "sha256": "c4d979c123ce82bf0d3b7c3961a5a2be7f0877851c28e2384d7487cf6cf1d1da"
     }
   ],
   "meaning": {
-    "crescent": "MeloPresto staff notation; full Do-to-Do crescent without any overlay marks",
-    "button": "MeloPresto button-field instruments"
+    "crescent": "MeloPresto staff notation; full Do-to-Do crescent without any overlay marks"
   },
   "approved_by": "Jim Plamondon, current task on 2026-09-08"
 }
