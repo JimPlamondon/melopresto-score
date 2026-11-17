@@ -27,6 +27,7 @@
 
 #include <algorithm>
 #include <climits>
+#include <cmath>
 #include <cstdlib>
 #include <functional>
 #include <QTemporaryDir>
@@ -2702,4 +2703,100 @@ TEST_F(MusicXml_Melo_Tests, ContinuousTuningPlaybackProfileMatchesTheNoteOnset)
         ASSERT_TRUE(std::holds_alternative<muse::mpe::NoteEvent>(events[1]));
         EXPECT_TRUE(std::get<muse::mpe::NoteEvent>(events[1]).pitchCtx().exactPitch.has_value());
     }
+}
+
+// Owner decision 2026-11-17: a score keeps the Tone Diamond point beside the
+// generator and the period. MeloPresto Score has no control that sets it; a
+// point that arrives in a file survives native save and load and MusicXML
+// export and import, and the notes sound at the Kernel's pulled pitches
+// (owner ruling 2026-11-14: one frequency calculation).
+static std::vector<double> meloSoundingFrequencies(const std::vector<const Note*>& notes)
+{
+    std::vector<double> out;
+    for (const Note* note : notes) {
+        if (!note->hasMeloPitch()) {
+            continue;
+        }
+        melo::SoundingPitch pitch;
+        String error;
+        EXPECT_TRUE(melo::noteSoundingPitch(note->staff()->staffType(note->tick())->meloStateJson(), note->meloNPer(),
+                                            note->meloNGen(), pitch, &error)) << error.toStdString();
+        out.push_back(pitch.frequencyHz);
+    }
+    return out;
+}
+
+TEST_F(MusicXml_Melo_Tests, ToneDiamondPointSurvivesNativeAndMusicXmlRoundTripsAndPullsSoundingPitch)
+{
+    MasterScore* original = readMelo("v5/melo-tone-diamond.musicxml");
+    ASSERT_TRUE(original);
+    original->doLayout();
+    const String state = original->staff(0)->staffType(Fraction(0, 1))->meloStateJson();
+    EXPECT_TRUE(state.contains(u"\"tone_diamond\":{\"x\":50.0,\"y\":-80.0}")) << state.toStdString();
+    const std::vector<double> pulled = meloSoundingFrequencies(notesInOrder(original));
+    ASSERT_FALSE(pulled.empty());
+
+    // The same score without the point sounds at the regular temperament's
+    // pitches; the point moves the notes. Re0 (D4) is the Kernel's pulled
+    // value for generator 700 and the point (50, -80).
+    MasterScore* plainScore = readMelo("v5/jims-12tet-diatonic.musicxml");
+    ASSERT_TRUE(plainScore);
+    const std::vector<double> plain = meloSoundingFrequencies(notesInOrder(plainScore));
+    ASSERT_EQ(plain.size(), pulled.size());
+    size_t moved = 0;
+    for (size_t i = 0; i < plain.size(); ++i) {
+        moved += std::abs(1200.0 * std::log2(pulled[i] / plain[i])) > 1.0 ? 1 : 0;
+    }
+    EXPECT_GE(moved, pulled.size() / 2);
+    const std::vector<const Note*> notes = notesInOrder(original);
+    for (size_t i = 0; i < notes.size(); ++i) {
+        if (notes[i]->meloNPer() == 0 && notes[i]->meloNGen() == 0) {
+            EXPECT_DOUBLE_EQ(pulled[i], 292.20916486985965);
+            EXPECT_DOUBLE_EQ(plain[i], 293.6647679174076);
+        }
+    }
+    delete plainScore;
+
+    // MusicXML export writes the point after the period and reads it back.
+    const MeloSnapshot before = snapshotOf(original);
+    const String out = exportToScratch(original, "tone-diamond.musicxml");
+    const String xml = readAll(out);
+    EXPECT_TRUE(xml.contains(u"</melo:period-cents>\n  <melo:tone-diamond x=\"50\" y=\"-80\"/>")) << xml.toStdString();
+    auto importXml = [](MasterScore* score, const muse::io::path_t& path) -> engraving::Err {
+        return importMusicXml(score, path.toQString(), false);
+    };
+    MasterScore* again = ScoreRW::readScore(out, true, importXml);
+    ASSERT_TRUE(again);
+    again->doLayout();
+    EXPECT_EQ(snapshotOf(again).baseStates, before.baseStates);
+    EXPECT_EQ(meloSoundingFrequencies(notesInOrder(again)), pulled);
+    delete again;
+
+    // Native save and load keeps the Kernel's JSON verbatim.
+    const String dir(u"jims-export-scratch");
+    muse::io::Dir::mkpath(dir);
+    const String mscz = dir + u"/tone-diamond-roundtrip.mscz";
+    muse::io::File::remove(mscz);
+    {
+        muse::io::File file(mscz);
+        ASSERT_TRUE(file.open(muse::io::IODevice::WriteOnly));
+        MscWriter::Params params;
+        params.device = &file;
+        params.filePath = mscz;
+        params.mode = MscIoMode::Zip;
+        MscWriter writer(params);
+        ASSERT_TRUE(writer.open());
+        MscSaver saver(original->iocContext());
+        ASSERT_TRUE(saver.writeMscz(original, writer, false));
+        writer.close();
+        file.close();
+    }
+    delete original;
+    MasterScore* reloaded = ScoreRW::readScore(mscz, true);
+    ASSERT_TRUE(reloaded);
+    reloaded->doLayout();
+    EXPECT_EQ(reloaded->staff(0)->staffType(Fraction(0, 1))->meloStateJson(), state);
+    EXPECT_EQ(snapshotOf(reloaded).baseStates, before.baseStates);
+    EXPECT_EQ(meloSoundingFrequencies(notesInOrder(reloaded)), pulled);
+    delete reloaded;
 }
