@@ -345,16 +345,25 @@ TEST_F(MeloUiModelTests, RelativeKeyModelPreviewsWithoutMutatingThenCreatesEdits
     const int undo = score->undoStack()->size();
     notation::MeloKeyChangeModel model;
     model.context.set(global);
-    auto open = [&]() {
+    auto load = [&]() {
         muse::String state;
         ASSERT_TRUE(melo::effectiveState(score.get(), 0, score->tick2measure(tick), tick, state));
         model.load(0, tick.numerator(), tick.denominator(), state.toQString(), score->metaTag(melo::REFERENCE_TIMELINE_TAG).toQString());
         ASSERT_TRUE(model.active()) << model.error().toStdString();
+    };
+    auto open = [&]() {
+        load();
         ASSERT_TRUE(model.valid()) << model.error().toStdString();
     };
-    open();
+    // A key change has no default interval: a new one opens with none stated,
+    // previews nothing and cannot be committed until an interval is entered.
+    load();
     EXPECT_FALSE(model.existing());
-    EXPECT_EQ(model.expression(), "M6");
+    EXPECT_TRUE(model.expression().isEmpty());
+    EXPECT_TRUE(model.error().isEmpty()) << model.error().toStdString();
+    EXPECT_FALSE(model.valid());
+    EXPECT_FALSE(model.commit(""));
+    EXPECT_TRUE(model.error().isEmpty()) << model.error().toStdString();
     EXPECT_EQ(score->metaTag(melo::REFERENCE_TIMELINE_TAG), initial);
     EXPECT_EQ(score->undoStack()->size(), undo);
     model.preview("C4");
@@ -468,7 +477,9 @@ TEST_F(MeloUiModelTests, RelativeKeyDialogUsesTypedIntervalAndNeverAnAbsolutePit
     dialog->setProperty("expectedState", state.toQString());
     dialog->setProperty("expectedTimeline", initial.toQString());
     component.completeCreate();
-    ASSERT_TRUE(model->valid()) << model->error().toStdString();
+    ASSERT_TRUE(model->active()) << model->error().toStdString();
+    EXPECT_TRUE(model->error().isEmpty()) << model->error().toStdString();
+    EXPECT_FALSE(model->valid());
     auto* preview = dialog->findChild<notation::MeloKeyChangePreview*>("meloKeyChangePreview");
     ASSERT_TRUE(preview);
     EXPECT_EQ(preview->model(), model);
@@ -477,6 +488,10 @@ TEST_F(MeloUiModelTests, RelativeKeyDialogUsesTypedIntervalAndNeverAnAbsolutePit
     QObject* textInput = input->property("inputField").value<QObject*>();
     ASSERT_TRUE(textInput);
     const int undo = score->undoStack()->size();
+    EXPECT_TRUE(textInput->property("text").toString().isEmpty());
+    ASSERT_TRUE(sendEditorKey(textInput, Qt::Key_Return));
+    EXPECT_TRUE(model->active());
+    EXPECT_EQ(score->undoStack()->size(), undo);
     textInput->setProperty("text", "D4");
     ASSERT_TRUE(sendEditorKey(textInput, Qt::Key_Return));
     EXPECT_FALSE(model->valid());
@@ -510,7 +525,10 @@ TEST_F(MeloUiModelTests, RelativeKeyPreviewUsesProductionTerrainIn12Tet7TetAnd5T
         notation::MeloKeyChangeModel model;
         model.context.set(global);
         model.load(0, tick.numerator(), tick.denominator(), state.toQString(), root.toQString());
-        ASSERT_TRUE(model.valid()) << model.error().toStdString();
+        ASSERT_TRUE(model.active()) << model.error().toStdString();
+        if (tuning.first == 12) {
+            model.preview("M6");
+        }
         if (tuning.first == 7) {
             model.preview("7*M5 - 4*P8");
         }
