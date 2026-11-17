@@ -250,6 +250,11 @@ bool relativeKeyEditor(const String& source, const String& destination, const St
         return false;
     }
     const JsonObject root = JsonDocument::fromJson(response.toUtf8()).rootObject();
+    if (root.value("interval").isNull()) {
+        // A key change has no default interval: none exists here and none was stated.
+        result = RelativeKeyEditor();
+        return true;
+    }
     const JsonObject interval = root.value("interval").toObject();
     result.expression = root.value("expression").toString();
     result.interval = String(u"{\"nPer\":%1,\"nGen\":%2}").arg(interval.value("nPer").toInt()).arg(interval.value("nGen").toInt());

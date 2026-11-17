@@ -83,6 +83,12 @@ void MeloKeyChangeModel::prepare(const muse::String* expression)
     if (!expression) {
         m_expression = prepared.expression.toQString();
     }
+    if (prepared.interval.isEmpty()) {
+        // A key change has no default interval: there is nothing to preview until one is entered.
+        m_description = muse::qtrc("notation", "Enter the interval for this key change.");
+        emit changed();
+        return;
+    }
     Staff* origin = score->staff(m_staff);
     if (!score->isMaster()) {
         origin = nullptr;
@@ -124,6 +130,10 @@ void MeloKeyChangeModel::prepare(const muse::String* expression)
 
 void MeloKeyChangeModel::preview(const QString& expression)
 {
+    if (expression.trimmed().isEmpty() && !m_editor.exists) {
+        prepare(nullptr);
+        return;
+    }
     const auto text = muse::String::fromQString(expression);
     prepare(&text);
 }
