@@ -21,6 +21,7 @@
  */
 
 #include <gtest/gtest.h>
+#include <cmath>
 #include <QFile>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -1092,5 +1093,78 @@ TEST_F(Mei_Tests, exactEqualTemperamentRoundTripRestoresDerivedTuning)
             EXPECT_NEAR(after[i].second, before[i].second, 1e-8) << "note " << i;
         }
     }
+}
+
+// Owner decision 2026-11-17: a score keeps the Tone Diamond point beside the
+// generator and the period. MeloPresto Score has no control that sets it; a
+// point that arrives in MeloPresto MEI survives export and import, and the
+// notes sound at the Kernel's pulled pitches (owner ruling 2026-11-14).
+static std::vector<double> meloSoundingFrequencies(Score* score)
+{
+    std::vector<double> out;
+    for (const Segment* seg = score->firstSegment(SegmentType::ChordRest); seg; seg = seg->next1(SegmentType::ChordRest)) {
+        for (const EngravingItem* item : seg->elist()) {
+            if (!item || !item->isChord()) {
+                continue;
+            }
+            for (const Note* note : toChord(item)->notes()) {
+                if (!note->hasMeloPitch()) {
+                    continue;
+                }
+                engraving::melo::SoundingPitch pitch;
+                String error;
+                EXPECT_TRUE(engraving::melo::noteSoundingPitch(note->staff()->staffType(note->tick())->meloStateJson(),
+                                                               note->meloNPer(), note->meloNGen(), pitch, &error))
+                    << error.toStdString();
+                out.push_back(pitch.frequencyHz);
+            }
+        }
+    }
+    return out;
+}
+
+TEST_F(Mei_Tests, mei_melo_tone_diamond_point_round_trips_and_pulls_sounding_pitch)
+{
+    auto importFunc = [](MasterScore* score, const muse::io::path_t& path) -> Err {
+        MeiReader meiReader(nullptr);
+        return meiReader.import(score, path);
+    };
+    auto exportFunc = [](Score* score, const muse::io::path_t& path) -> Err {
+        MeiWriter meiWriter;
+        return meiWriter.writeScore(score, path);
+    };
+    MasterScore* score = ScoreRW::readScore(MEI_DIR + u"jims/v5/melo-tone-diamond.mei", false, importFunc);
+    ASSERT_TRUE(score);
+    const String state = score->staff(0)->staffType(Fraction(0, 1))->meloStateJson();
+    EXPECT_TRUE(state.contains(u"\"tone_diamond\":{\"x\":50.0,\"y\":-80.0}")) << state.toStdString();
+    const std::vector<double> pulled = meloSoundingFrequencies(score);
+    ASSERT_FALSE(pulled.empty());
+
+    // The same piece without the point sounds at other pitches.
+    MasterScore* plainScore = ScoreRW::readScore(MEI_DIR + u"jims/v5/jims-synthetic.mei", false, importFunc);
+    ASSERT_TRUE(plainScore);
+    const std::vector<double> plain = meloSoundingFrequencies(plainScore);
+    ASSERT_EQ(plain.size(), pulled.size());
+    size_t moved = 0;
+    for (size_t i = 0; i < plain.size(); ++i) {
+        moved += std::abs(1200.0 * std::log2(pulled[i] / plain[i])) > 1.0 ? 1 : 0;
+    }
+    EXPECT_GT(moved, size_t(0));
+    delete plainScore;
+
+    score->masterScore()->rebuildMidiMapping();
+    ASSERT_TRUE(ScoreRW::saveScore(score, u"melo-tone-diamond.test.mei", exportFunc));
+    muse::io::File out(muse::io::path_t(u"melo-tone-diamond.test.mei"));
+    ASSERT_TRUE(out.open(muse::io::IODevice::ReadOnly));
+    const String mei = String::fromUtf8(out.readAll().constChar());
+    out.close();
+    EXPECT_EQ(mei.count(u"<melo:tone-diamond x=\"50\" y=\"-80\" />"), 3) << mei.toStdString();
+    delete score;
+
+    MasterScore* again = ScoreRW::readScore(u"melo-tone-diamond.test.mei", true, importFunc);
+    ASSERT_TRUE(again);
+    EXPECT_EQ(again->staff(0)->staffType(Fraction(0, 1))->meloStateJson(), state);
+    EXPECT_EQ(meloSoundingFrequencies(again), pulled);
+    delete again;
 }
 }
