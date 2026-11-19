@@ -1824,8 +1824,7 @@ void Convert::harmFromMEI(engraving::Harmony* harmony, const StringList& meiLine
     engraving::HarmonyType harmonyType = engraving::HarmonyType::STANDARD;
     if (Convert::hasTypeValue(meiHarm.GetType(), std::string(HARMONY_TYPE) + "roman")) {
         harmonyType = engraving::HarmonyType::ROMAN;
-    } else if ((Convert::hasTypeValue(meiHarm.GetType(), "melo-chord-name") || Convert::hasTypeValue(meiHarm.GetType(),
-                                                                                                     "jims-chord-name"))) {
+    } else if (Convert::hasTypeValue(meiHarm.GetType(), "melo-chord-name")) {
         harmonyType = engraving::HarmonyType::MELO;
     }
 

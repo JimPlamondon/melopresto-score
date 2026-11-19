@@ -47,8 +47,6 @@ using namespace mu::engraving;
 
 namespace mu::iex::musicxml {
 static const char* MELO_URI_STEM = "urn:melopresto:musicxml:";
-// The retired stem (before 2026-09-11) stays readable; the exporter never writes it.
-static const char* RETIRED_URI_STEM = "urn:jims:musicxml:";
 
 // Fatal MeloPresto import conditions go to the MusicXML logger (the import
 // dialog) AND the console log, so a refused import is never silent.
@@ -69,8 +67,7 @@ Err MeloImportContext::resolveFromRoot(const std::vector<XmlStreamReader::Attrib
 {
     for (const XmlStreamReader::Attribute& a : attributes) {
         const String name = String::fromAscii(a.name.ascii());
-        const char* stem = a.value.startsWith(String::fromAscii(MELO_URI_STEM)) ? MELO_URI_STEM
-                           : a.value.startsWith(String::fromAscii(RETIRED_URI_STEM)) ? RETIRED_URI_STEM : nullptr;
+        const char* stem = a.value.startsWith(String::fromAscii(MELO_URI_STEM)) ? MELO_URI_STEM : nullptr;
         if (!stem) {
             continue;
         }

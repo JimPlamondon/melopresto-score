@@ -4026,7 +4026,7 @@ void TRead::read(StaffType* t, XmlReader& e, ReadContext& ctx)
             t->setMelo(e.readInt());
         } else if (tag == "meloStateJson") {
             t->setMeloStateJson(e.readText());
-        } else if (tag == "meloTonicAmbit" || tag == "jimsTonicExtent") {   // legacy tag still read
+        } else if (tag == "meloTonicAmbit") {
             t->setMeloTonicAmbit(e.readText());
         } else if (tag == "meloJiLines") {
             t->setMeloJiLines(e.readInt());

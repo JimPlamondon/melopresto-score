@@ -23,8 +23,8 @@ def author(entry):
     if hashlib.sha256(raw).hexdigest() != entry["source_sha256"]:
         raise ValueError(f"Fixture source changed: {source}")
     text = raw.decode()
-    prefix = re.search(r'xmlns:(\w+)="urn:(?:jims|melopresto):musicxml:[1-4]"', text).group(1)
-    text = re.sub(r'urn:(?:jims|melopresto):musicxml:[1-4]', 'urn:melopresto:musicxml:5', text)
+    prefix = re.search(r'xmlns:(\w+)="urn:melopresto:musicxml:[1-4]"', text).group(1)
+    text = re.sub(r'urn:melopresto:musicxml:[1-4]', 'urn:melopresto:musicxml:5', text)
     text = re.sub(r'<(\w+):reference>.*?</\1:reference>', '', text, flags=re.S)
     text = re.sub(r'<(\w+):change>.*?</\1:change>', '', text, flags=re.S)
     root = ET.Element(f"{prefix}:reference-timeline")
@@ -35,7 +35,6 @@ def author(entry):
     if entry['initial'] is not None:
         fragment = ET.tostring(root, encoding='unicode')
         if source.suffix == '.mei':
-            text = text.replace('urn:jims:mei:1', 'urn:melopresto:mei:1')
             text = text.replace('<jm:musicxml>', '<jm:musicxml>\n          ' + fragment, 1)
         else:
             text = text.replace('<part-list>', fragment + '\n  <part-list>', 1)

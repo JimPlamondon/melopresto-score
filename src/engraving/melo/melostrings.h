@@ -233,7 +233,7 @@ inline constexpr char exportProjectionFailed[] = "MeloPresto export projection f
 inline constexpr char musicXmlImport[] = "MeloPresto MusicXML import: ";
 inline constexpr char16_t unsupportedMusicXmlNamespace[]
     =
-        u"unsupported MeloPresto MusicXML namespace '%1' (this MuseScore understands urn:melopresto:musicxml:%2..%3 and the retired urn:jims:musicxml:%2..%3); import refused so the document is not silently shown as a plain staff";
+        u"unsupported MeloPresto MusicXML namespace '%1' (this MuseScore understands urn:melopresto:musicxml:%2..%3); import refused so the document is not silently shown as a plain staff";
 inline constexpr char16_t defaultNamespaceUnsupported[]
     = u"the MeloPresto namespace '%1' must be bound to a prefix, not used as the default namespace";
 inline constexpr char16_t conflictingMusicXmlProfiles[]
