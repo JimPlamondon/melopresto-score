@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: GPL-3.0-only
  * MuseScore-Studio-CLA-applies
  *
- * JiMStaff Milestone 6 — change-insertion controller (owner decision 1a,
+ * MeloStaff Milestone 6 — change-insertion controller (owner decision 1a,
  * 2026-08-16). Transports Kernel-returned states into the StaffTypeChange
  * carrier; computes no musical fact.
  */

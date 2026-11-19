@@ -386,7 +386,7 @@ inline void unpack_custom(muse::msgpack::UnPacker& p, muse::mpe::ArrangementCont
 }
 
 // PitchContext: the stock fields, then an OPTIONAL exact-pitch tail
-// (JiMStaff, JiMSynth VST3 workstream 2026-08-19). Encoding contract:
+// (MeloStaff, MeloSynth VST3 workstream 2026-08-19). Encoding contract:
 //  - a context without exactPitch packs exactly as before (byte-identical to
 //    the pre-change encoding: nominalPitchLevel, pitchCurve — nothing else);
 //  - a context with exactPitch appends msgpack `true` (0xc3) followed by the

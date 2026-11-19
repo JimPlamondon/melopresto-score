@@ -20,7 +20,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-// JiMSynth VST3 workstream (2026-08-19): the optional exact-pitch tail of
+// MeloSynth VST3 workstream (2026-08-19): the optional exact-pitch tail of
 // PitchContext on the audio RPC, in all four writer/reader directions:
 //  1. old writer → new reader: a pre-change payload (golden bytes captured
 //     from the fork at c80253ec97, before this change) decodes as stock
@@ -48,7 +48,7 @@ using namespace muse::mpe;
 
 namespace {
 // Captured from the pre-change fork (jims/main c80253ec97) by packing the
-// same values with RpcPacker — see the JiMSynth VST3 final report, Phase 4
+// same values with RpcPacker — see the MeloSynth VST3 final report, Phase 4
 // red receipt.
 const std::vector<uint8_t> GOLDEN_PITCH_CONTEXT = { 0x02, 0x81, 0x0c, 0x0e };
 const std::vector<uint8_t> GOLDEN_NOTE_EVENT = {

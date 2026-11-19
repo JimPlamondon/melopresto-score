@@ -1,0 +1,621 @@
+<?xml version='1.0' encoding='utf-8'?>
+<museScore version="4.70">
+  <Score>
+    <metaTag name="meloReferenceTimelineV1">{"schema":"melostaff-reference-v1","initial":{"step":"D","alter":0,"octave":4},"events":[]}</metaTag>
+    <Division>480</Division>
+    <showInvisible>0</showInvisible>
+    <showUnprintable>0</showUnprintable>
+    <Style>
+      <pageWidth>11.69</pageWidth>
+      <pageHeight>16.54</pageHeight>
+      <Spatium>1.2</Spatium>
+      <staffDistance>4</staffDistance>
+      <akkoladeDistance>4</akkoladeDistance>
+      <hideEmptyStaves>0</hideEmptyStaves>
+      <showInstrumentNames>1</showInstrumentNames>
+    </Style>
+    <metaTag name="workTitle">Empty half-staves — seven modes, two tonic ambits</metaTag>
+    <Part id="1">
+      <Staff id="1">
+        <StaffType group="pitched">
+          <name>melo12tet</name>
+          <lines>13</lines>
+          <clef>0</clef>
+          <keysig>0</keysig>
+          <ledgerlines>0</ledgerlines>
+          <melo>1</melo>
+          <meloJiLines>1</meloJiLines>
+          <meloStateJson>{"scale":["M2","m2","M2","M2","M2","m2","M2"],"collection_rotation":0,"mode_rotation":3,"generator_cents":700.0,"period_cents":1200.0,"embedding":{"large_steps":5,"small_steps":2},"extent":{"lower":{"nPer":2,"nGen":-3},"upper":{"nPer":2,"nGen":-3}},"tonic_ambit":"tonic-centered","schema":"melostaff-v3"}</meloStateJson>
+        </StaffType>
+      </Staff>
+      <trackName>Fa-mode · tonic-centered</trackName>
+      <Instrument id="grand-piano">
+        <longName>Fa-mode · tonic-centered</longName>
+        <shortName>Fa-mode · tonic-centered</shortName>
+        <instrumentId>keyboard.piano.grand</instrumentId>
+        <minPitchA>62</minPitchA>
+        <maxPitchA>68</maxPitchA>
+        <minPitchP>62</minPitchP>
+        <maxPitchP>68</maxPitchP>
+        <Channel>
+          <program value="0" />
+        </Channel>
+      </Instrument>
+    </Part>
+    <Part id="2">
+      <Staff id="2">
+        <StaffType group="pitched">
+          <name>melo12tet</name>
+          <lines>13</lines>
+          <clef>0</clef>
+          <keysig>0</keysig>
+          <ledgerlines>0</ledgerlines>
+          <melo>1</melo>
+          <meloJiLines>1</meloJiLines>
+          <meloStateJson>{"scale":["M2","m2","M2","M2","M2","m2","M2"],"collection_rotation":0,"mode_rotation":3,"generator_cents":700.0,"period_cents":1200.0,"embedding":{"large_steps":5,"small_steps":2},"extent":{"lower":{"nPer":4,"nGen":-6},"upper":{"nPer":4,"nGen":-6}},"tonic_ambit":"tonic-bounded","schema":"melostaff-v3"}</meloStateJson>
+        </StaffType>
+      </Staff>
+      <trackName>Fa-mode · tonic-bounded</trackName>
+      <Instrument id="grand-piano">
+        <longName>Fa-mode · tonic-bounded</longName>
+        <shortName>Fa-mode · tonic-bounded</shortName>
+        <instrumentId>keyboard.piano.grand</instrumentId>
+        <minPitchA>65</minPitchA>
+        <maxPitchA>71</maxPitchA>
+        <minPitchP>65</minPitchP>
+        <maxPitchP>71</maxPitchP>
+        <Channel>
+          <program value="0" />
+        </Channel>
+      </Instrument>
+    </Part>
+    <Part id="3">
+      <Staff id="3">
+        <StaffType group="pitched">
+          <name>melo12tet</name>
+          <lines>13</lines>
+          <clef>0</clef>
+          <keysig>0</keysig>
+          <ledgerlines>0</ledgerlines>
+          <melo>1</melo>
+          <meloJiLines>1</meloJiLines>
+          <meloStateJson>{"scale":["M2","m2","M2","M2","M2","m2","M2"],"collection_rotation":0,"mode_rotation":0,"generator_cents":700.0,"period_cents":1200.0,"embedding":{"large_steps":5,"small_steps":2},"extent":{"lower":{"nPer":1,"nGen":-2},"upper":{"nPer":1,"nGen":-2}},"tonic_ambit":"tonic-centered","schema":"melostaff-v3"}</meloStateJson>
+        </StaffType>
+      </Staff>
+      <trackName>Do-mode · tonic-centered</trackName>
+      <Instrument id="grand-piano">
+        <longName>Do-mode · tonic-centered</longName>
+        <shortName>Do-mode · tonic-centered</shortName>
+        <instrumentId>keyboard.piano.grand</instrumentId>
+        <minPitchA>57</minPitchA>
+        <maxPitchA>63</maxPitchA>
+        <minPitchP>57</minPitchP>
+        <maxPitchP>63</maxPitchP>
+        <Channel>
+          <program value="0" />
+        </Channel>
+      </Instrument>
+    </Part>
+    <Part id="4">
+      <Staff id="4">
+        <StaffType group="pitched">
+          <name>melo12tet</name>
+          <lines>13</lines>
+          <clef>0</clef>
+          <keysig>0</keysig>
+          <ledgerlines>0</ledgerlines>
+          <melo>1</melo>
+          <meloJiLines>1</meloJiLines>
+          <meloStateJson>{"scale":["M2","m2","M2","M2","M2","m2","M2"],"collection_rotation":0,"mode_rotation":0,"generator_cents":700.0,"period_cents":1200.0,"embedding":{"large_steps":5,"small_steps":2},"extent":{"lower":{"nPer":3,"nGen":-5},"upper":{"nPer":3,"nGen":-5}},"tonic_ambit":"tonic-bounded","schema":"melostaff-v3"}</meloStateJson>
+        </StaffType>
+      </Staff>
+      <trackName>Do-mode · tonic-bounded</trackName>
+      <Instrument id="grand-piano">
+        <longName>Do-mode · tonic-bounded</longName>
+        <shortName>Do-mode · tonic-bounded</shortName>
+        <instrumentId>keyboard.piano.grand</instrumentId>
+        <minPitchA>60</minPitchA>
+        <maxPitchA>66</maxPitchA>
+        <minPitchP>60</minPitchP>
+        <maxPitchP>66</maxPitchP>
+        <Channel>
+          <program value="0" />
+        </Channel>
+      </Instrument>
+    </Part>
+    <Part id="5">
+      <Staff id="5">
+        <StaffType group="pitched">
+          <name>melo12tet</name>
+          <lines>13</lines>
+          <clef>0</clef>
+          <keysig>0</keysig>
+          <ledgerlines>0</ledgerlines>
+          <melo>1</melo>
+          <meloJiLines>1</meloJiLines>
+          <meloStateJson>{"scale":["M2","m2","M2","M2","M2","m2","M2"],"collection_rotation":0,"mode_rotation":4,"generator_cents":700.0,"period_cents":1200.0,"embedding":{"large_steps":5,"small_steps":2},"extent":{"lower":{"nPer":1,"nGen":-1},"upper":{"nPer":1,"nGen":-1}},"tonic_ambit":"tonic-centered","schema":"melostaff-v3"}</meloStateJson>
+        </StaffType>
+      </Staff>
+      <trackName>So-mode · tonic-centered</trackName>
+      <Instrument id="grand-piano">
+        <longName>So-mode · tonic-centered</longName>
+        <shortName>So-mode · tonic-centered</shortName>
+        <instrumentId>keyboard.piano.grand</instrumentId>
+        <minPitchA>64</minPitchA>
+        <maxPitchA>70</maxPitchA>
+        <minPitchP>64</minPitchP>
+        <maxPitchP>70</maxPitchP>
+        <Channel>
+          <program value="0" />
+        </Channel>
+      </Instrument>
+    </Part>
+    <Part id="6">
+      <Staff id="6">
+        <StaffType group="pitched">
+          <name>melo12tet</name>
+          <lines>13</lines>
+          <clef>0</clef>
+          <keysig>0</keysig>
+          <ledgerlines>0</ledgerlines>
+          <melo>1</melo>
+          <meloJiLines>1</meloJiLines>
+          <meloStateJson>{"scale":["M2","m2","M2","M2","M2","m2","M2"],"collection_rotation":0,"mode_rotation":4,"generator_cents":700.0,"period_cents":1200.0,"embedding":{"large_steps":5,"small_steps":2},"extent":{"lower":{"nPer":3,"nGen":-4},"upper":{"nPer":3,"nGen":-4}},"tonic_ambit":"tonic-bounded","schema":"melostaff-v3"}</meloStateJson>
+        </StaffType>
+      </Staff>
+      <trackName>So-mode · tonic-bounded</trackName>
+      <Instrument id="grand-piano">
+        <longName>So-mode · tonic-bounded</longName>
+        <shortName>So-mode · tonic-bounded</shortName>
+        <instrumentId>keyboard.piano.grand</instrumentId>
+        <minPitchA>67</minPitchA>
+        <maxPitchA>73</maxPitchA>
+        <minPitchP>67</minPitchP>
+        <maxPitchP>73</maxPitchP>
+        <Channel>
+          <program value="0" />
+        </Channel>
+      </Instrument>
+    </Part>
+    <Part id="7">
+      <Staff id="7">
+        <StaffType group="pitched">
+          <name>melo12tet</name>
+          <lines>13</lines>
+          <clef>0</clef>
+          <keysig>0</keysig>
+          <ledgerlines>0</ledgerlines>
+          <melo>1</melo>
+          <meloJiLines>1</meloJiLines>
+          <meloStateJson>{"scale":["M2","m2","M2","M2","M2","m2","M2"],"collection_rotation":0,"mode_rotation":1,"generator_cents":700.0,"period_cents":1200.0,"embedding":{"large_steps":5,"small_steps":2},"extent":{"lower":{"nPer":0,"nGen":0},"upper":{"nPer":0,"nGen":0}},"tonic_ambit":"tonic-centered","schema":"melostaff-v3"}</meloStateJson>
+        </StaffType>
+      </Staff>
+      <trackName>Re-mode · tonic-centered</trackName>
+      <Instrument id="grand-piano">
+        <longName>Re-mode · tonic-centered</longName>
+        <shortName>Re-mode · tonic-centered</shortName>
+        <instrumentId>keyboard.piano.grand</instrumentId>
+        <minPitchA>59</minPitchA>
+        <maxPitchA>65</maxPitchA>
+        <minPitchP>59</minPitchP>
+        <maxPitchP>65</maxPitchP>
+        <Channel>
+          <program value="0" />
+        </Channel>
+      </Instrument>
+    </Part>
+    <Part id="8">
+      <Staff id="8">
+        <StaffType group="pitched">
+          <name>melo12tet</name>
+          <lines>13</lines>
+          <clef>0</clef>
+          <keysig>0</keysig>
+          <ledgerlines>0</ledgerlines>
+          <melo>1</melo>
+          <meloJiLines>1</meloJiLines>
+          <meloStateJson>{"scale":["M2","m2","M2","M2","M2","m2","M2"],"collection_rotation":0,"mode_rotation":1,"generator_cents":700.0,"period_cents":1200.0,"embedding":{"large_steps":5,"small_steps":2},"extent":{"lower":{"nPer":2,"nGen":-3},"upper":{"nPer":2,"nGen":-3}},"tonic_ambit":"tonic-bounded","schema":"melostaff-v3"}</meloStateJson>
+        </StaffType>
+      </Staff>
+      <trackName>Re-mode · tonic-bounded</trackName>
+      <Instrument id="grand-piano">
+        <longName>Re-mode · tonic-bounded</longName>
+        <shortName>Re-mode · tonic-bounded</shortName>
+        <instrumentId>keyboard.piano.grand</instrumentId>
+        <minPitchA>62</minPitchA>
+        <maxPitchA>68</maxPitchA>
+        <minPitchP>62</minPitchP>
+        <maxPitchP>68</maxPitchP>
+        <Channel>
+          <program value="0" />
+        </Channel>
+      </Instrument>
+    </Part>
+    <Part id="9">
+      <Staff id="9">
+        <StaffType group="pitched">
+          <name>melo12tet</name>
+          <lines>13</lines>
+          <clef>0</clef>
+          <keysig>0</keysig>
+          <ledgerlines>0</ledgerlines>
+          <melo>1</melo>
+          <meloJiLines>1</meloJiLines>
+          <meloStateJson>{"scale":["M2","m2","M2","M2","M2","m2","M2"],"collection_rotation":0,"mode_rotation":5,"generator_cents":700.0,"period_cents":1200.0,"embedding":{"large_steps":5,"small_steps":2},"extent":{"lower":{"nPer":0,"nGen":1},"upper":{"nPer":0,"nGen":1}},"tonic_ambit":"tonic-centered","schema":"melostaff-v3"}</meloStateJson>
+        </StaffType>
+      </Staff>
+      <trackName>La-mode · tonic-centered</trackName>
+      <Instrument id="grand-piano">
+        <longName>La-mode · tonic-centered</longName>
+        <shortName>La-mode · tonic-centered</shortName>
+        <instrumentId>keyboard.piano.grand</instrumentId>
+        <minPitchA>66</minPitchA>
+        <maxPitchA>72</maxPitchA>
+        <minPitchP>66</minPitchP>
+        <maxPitchP>72</maxPitchP>
+        <Channel>
+          <program value="0" />
+        </Channel>
+      </Instrument>
+    </Part>
+    <Part id="10">
+      <Staff id="10">
+        <StaffType group="pitched">
+          <name>melo12tet</name>
+          <lines>13</lines>
+          <clef>0</clef>
+          <keysig>0</keysig>
+          <ledgerlines>0</ledgerlines>
+          <melo>1</melo>
+          <meloJiLines>1</meloJiLines>
+          <meloStateJson>{"scale":["M2","m2","M2","M2","M2","m2","M2"],"collection_rotation":0,"mode_rotation":5,"generator_cents":700.0,"period_cents":1200.0,"embedding":{"large_steps":5,"small_steps":2},"extent":{"lower":{"nPer":2,"nGen":-2},"upper":{"nPer":2,"nGen":-2}},"tonic_ambit":"tonic-bounded","schema":"melostaff-v3"}</meloStateJson>
+        </StaffType>
+      </Staff>
+      <trackName>La-mode · tonic-bounded</trackName>
+      <Instrument id="grand-piano">
+        <longName>La-mode · tonic-bounded</longName>
+        <shortName>La-mode · tonic-bounded</shortName>
+        <instrumentId>keyboard.piano.grand</instrumentId>
+        <minPitchA>69</minPitchA>
+        <maxPitchA>75</maxPitchA>
+        <minPitchP>69</minPitchP>
+        <maxPitchP>75</maxPitchP>
+        <Channel>
+          <program value="0" />
+        </Channel>
+      </Instrument>
+    </Part>
+    <Part id="11">
+      <Staff id="11">
+        <StaffType group="pitched">
+          <name>melo12tet</name>
+          <lines>13</lines>
+          <clef>0</clef>
+          <keysig>0</keysig>
+          <ledgerlines>0</ledgerlines>
+          <melo>1</melo>
+          <meloJiLines>1</meloJiLines>
+          <meloStateJson>{"scale":["M2","m2","M2","M2","M2","m2","M2"],"collection_rotation":0,"mode_rotation":2,"generator_cents":700.0,"period_cents":1200.0,"embedding":{"large_steps":5,"small_steps":2},"extent":{"lower":{"nPer":-1,"nGen":2},"upper":{"nPer":-1,"nGen":2}},"tonic_ambit":"tonic-centered","schema":"melostaff-v3"}</meloStateJson>
+        </StaffType>
+      </Staff>
+      <trackName>Mi-mode · tonic-centered</trackName>
+      <Instrument id="grand-piano">
+        <longName>Mi-mode · tonic-centered</longName>
+        <shortName>Mi-mode · tonic-centered</shortName>
+        <instrumentId>keyboard.piano.grand</instrumentId>
+        <minPitchA>61</minPitchA>
+        <maxPitchA>67</maxPitchA>
+        <minPitchP>61</minPitchP>
+        <maxPitchP>67</maxPitchP>
+        <Channel>
+          <program value="0" />
+        </Channel>
+      </Instrument>
+    </Part>
+    <Part id="12">
+      <Staff id="12">
+        <StaffType group="pitched">
+          <name>melo12tet</name>
+          <lines>13</lines>
+          <clef>0</clef>
+          <keysig>0</keysig>
+          <ledgerlines>0</ledgerlines>
+          <melo>1</melo>
+          <meloJiLines>1</meloJiLines>
+          <meloStateJson>{"scale":["M2","m2","M2","M2","M2","m2","M2"],"collection_rotation":0,"mode_rotation":2,"generator_cents":700.0,"period_cents":1200.0,"embedding":{"large_steps":5,"small_steps":2},"extent":{"lower":{"nPer":1,"nGen":-1},"upper":{"nPer":1,"nGen":-1}},"tonic_ambit":"tonic-bounded","schema":"melostaff-v3"}</meloStateJson>
+        </StaffType>
+      </Staff>
+      <trackName>Mi-mode · tonic-bounded</trackName>
+      <Instrument id="grand-piano">
+        <longName>Mi-mode · tonic-bounded</longName>
+        <shortName>Mi-mode · tonic-bounded</shortName>
+        <instrumentId>keyboard.piano.grand</instrumentId>
+        <minPitchA>64</minPitchA>
+        <maxPitchA>70</maxPitchA>
+        <minPitchP>64</minPitchP>
+        <maxPitchP>70</maxPitchP>
+        <Channel>
+          <program value="0" />
+        </Channel>
+      </Instrument>
+    </Part>
+    <Part id="13">
+      <Staff id="13">
+        <StaffType group="pitched">
+          <name>melo12tet</name>
+          <lines>13</lines>
+          <clef>0</clef>
+          <keysig>0</keysig>
+          <ledgerlines>0</ledgerlines>
+          <melo>1</melo>
+          <meloJiLines>1</meloJiLines>
+          <meloStateJson>{"scale":["M2","m2","M2","M2","M2","m2","M2"],"collection_rotation":0,"mode_rotation":6,"generator_cents":700.0,"period_cents":1200.0,"embedding":{"large_steps":5,"small_steps":2},"extent":{"lower":{"nPer":-1,"nGen":3},"upper":{"nPer":-1,"nGen":3}},"tonic_ambit":"tonic-centered","schema":"melostaff-v3"}</meloStateJson>
+        </StaffType>
+      </Staff>
+      <trackName>Ti-mode · tonic-centered</trackName>
+      <Instrument id="grand-piano">
+        <longName>Ti-mode · tonic-centered</longName>
+        <shortName>Ti-mode · tonic-centered</shortName>
+        <instrumentId>keyboard.piano.grand</instrumentId>
+        <minPitchA>68</minPitchA>
+        <maxPitchA>74</maxPitchA>
+        <minPitchP>68</minPitchP>
+        <maxPitchP>74</maxPitchP>
+        <Channel>
+          <program value="0" />
+        </Channel>
+      </Instrument>
+    </Part>
+    <Part id="14">
+      <Staff id="14">
+        <StaffType group="pitched">
+          <name>melo12tet</name>
+          <lines>13</lines>
+          <clef>0</clef>
+          <keysig>0</keysig>
+          <ledgerlines>0</ledgerlines>
+          <melo>1</melo>
+          <meloJiLines>1</meloJiLines>
+          <meloStateJson>{"scale":["M2","m2","M2","M2","M2","m2","M2"],"collection_rotation":0,"mode_rotation":6,"generator_cents":700.0,"period_cents":1200.0,"embedding":{"large_steps":5,"small_steps":2},"extent":{"lower":{"nPer":1,"nGen":0},"upper":{"nPer":1,"nGen":0}},"tonic_ambit":"tonic-bounded","schema":"melostaff-v3"}</meloStateJson>
+        </StaffType>
+      </Staff>
+      <trackName>Ti-mode · tonic-bounded</trackName>
+      <Instrument id="grand-piano">
+        <longName>Ti-mode · tonic-bounded</longName>
+        <shortName>Ti-mode · tonic-bounded</shortName>
+        <instrumentId>keyboard.piano.grand</instrumentId>
+        <minPitchA>71</minPitchA>
+        <maxPitchA>77</maxPitchA>
+        <minPitchP>71</minPitchP>
+        <maxPitchP>77</maxPitchP>
+        <Channel>
+          <program value="0" />
+        </Channel>
+      </Instrument>
+    </Part>
+    <Staff id="1">
+      <Measure number="1">
+        <voice>
+          <TimeSig>
+            <sigN>4</sigN>
+            <sigD>4</sigD>
+            <visible>0</visible>
+          </TimeSig>
+          <Rest>
+            <durationType>measure</durationType>
+            <duration>1/1</duration>
+            <visible>0</visible>
+          </Rest>
+        </voice>
+      </Measure>
+    </Staff>
+    <Staff id="2">
+      <Measure number="1">
+        <voice>
+          <TimeSig>
+            <sigN>4</sigN>
+            <sigD>4</sigD>
+            <visible>0</visible>
+          </TimeSig>
+          <Rest>
+            <durationType>measure</durationType>
+            <duration>1/1</duration>
+            <visible>0</visible>
+          </Rest>
+        </voice>
+      </Measure>
+    </Staff>
+    <Staff id="3">
+      <Measure number="1">
+        <voice>
+          <TimeSig>
+            <sigN>4</sigN>
+            <sigD>4</sigD>
+            <visible>0</visible>
+          </TimeSig>
+          <Rest>
+            <durationType>measure</durationType>
+            <duration>1/1</duration>
+            <visible>0</visible>
+          </Rest>
+        </voice>
+      </Measure>
+    </Staff>
+    <Staff id="4">
+      <Measure number="1">
+        <voice>
+          <TimeSig>
+            <sigN>4</sigN>
+            <sigD>4</sigD>
+            <visible>0</visible>
+          </TimeSig>
+          <Rest>
+            <durationType>measure</durationType>
+            <duration>1/1</duration>
+            <visible>0</visible>
+          </Rest>
+        </voice>
+      </Measure>
+    </Staff>
+    <Staff id="5">
+      <Measure number="1">
+        <voice>
+          <TimeSig>
+            <sigN>4</sigN>
+            <sigD>4</sigD>
+            <visible>0</visible>
+          </TimeSig>
+          <Rest>
+            <durationType>measure</durationType>
+            <duration>1/1</duration>
+            <visible>0</visible>
+          </Rest>
+        </voice>
+      </Measure>
+    </Staff>
+    <Staff id="6">
+      <Measure number="1">
+        <voice>
+          <TimeSig>
+            <sigN>4</sigN>
+            <sigD>4</sigD>
+            <visible>0</visible>
+          </TimeSig>
+          <Rest>
+            <durationType>measure</durationType>
+            <duration>1/1</duration>
+            <visible>0</visible>
+          </Rest>
+        </voice>
+      </Measure>
+    </Staff>
+    <Staff id="7">
+      <Measure number="1">
+        <voice>
+          <TimeSig>
+            <sigN>4</sigN>
+            <sigD>4</sigD>
+            <visible>0</visible>
+          </TimeSig>
+          <Rest>
+            <durationType>measure</durationType>
+            <duration>1/1</duration>
+            <visible>0</visible>
+          </Rest>
+        </voice>
+      </Measure>
+    </Staff>
+    <Staff id="8">
+      <Measure number="1">
+        <voice>
+          <TimeSig>
+            <sigN>4</sigN>
+            <sigD>4</sigD>
+            <visible>0</visible>
+          </TimeSig>
+          <Rest>
+            <durationType>measure</durationType>
+            <duration>1/1</duration>
+            <visible>0</visible>
+          </Rest>
+        </voice>
+      </Measure>
+    </Staff>
+    <Staff id="9">
+      <Measure number="1">
+        <voice>
+          <TimeSig>
+            <sigN>4</sigN>
+            <sigD>4</sigD>
+            <visible>0</visible>
+          </TimeSig>
+          <Rest>
+            <durationType>measure</durationType>
+            <duration>1/1</duration>
+            <visible>0</visible>
+          </Rest>
+        </voice>
+      </Measure>
+    </Staff>
+    <Staff id="10">
+      <Measure number="1">
+        <voice>
+          <TimeSig>
+            <sigN>4</sigN>
+            <sigD>4</sigD>
+            <visible>0</visible>
+          </TimeSig>
+          <Rest>
+            <durationType>measure</durationType>
+            <duration>1/1</duration>
+            <visible>0</visible>
+          </Rest>
+        </voice>
+      </Measure>
+    </Staff>
+    <Staff id="11">
+      <Measure number="1">
+        <voice>
+          <TimeSig>
+            <sigN>4</sigN>
+            <sigD>4</sigD>
+            <visible>0</visible>
+          </TimeSig>
+          <Rest>
+            <durationType>measure</durationType>
+            <duration>1/1</duration>
+            <visible>0</visible>
+          </Rest>
+        </voice>
+      </Measure>
+    </Staff>
+    <Staff id="12">
+      <Measure number="1">
+        <voice>
+          <TimeSig>
+            <sigN>4</sigN>
+            <sigD>4</sigD>
+            <visible>0</visible>
+          </TimeSig>
+          <Rest>
+            <durationType>measure</durationType>
+            <duration>1/1</duration>
+            <visible>0</visible>
+          </Rest>
+        </voice>
+      </Measure>
+    </Staff>
+    <Staff id="13">
+      <Measure number="1">
+        <voice>
+          <TimeSig>
+            <sigN>4</sigN>
+            <sigD>4</sigD>
+            <visible>0</visible>
+          </TimeSig>
+          <Rest>
+            <durationType>measure</durationType>
+            <duration>1/1</duration>
+            <visible>0</visible>
+          </Rest>
+        </voice>
+      </Measure>
+    </Staff>
+    <Staff id="14">
+      <Measure number="1">
+        <voice>
+          <TimeSig>
+            <sigN>4</sigN>
+            <sigD>4</sigD>
+            <visible>0</visible>
+          </TimeSig>
+          <Rest>
+            <durationType>measure</durationType>
+            <duration>1/1</duration>
+            <visible>0</visible>
+          </Rest>
+        </voice>
+      </Measure>
+    </Staff>
+  </Score>
+</museScore>

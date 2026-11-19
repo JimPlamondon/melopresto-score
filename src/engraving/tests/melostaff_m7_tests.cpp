@@ -20,7 +20,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-// JiMStaff Milestone 7 — playback (owner rulings 2026-08-17): a JiMS note
+// MeloStaff Milestone 7 — playback (owner rulings 2026-08-17): a JiMS note
 // SOUNDS what its identity + its section's state (tuning, reference) say,
 // through the Kernel's note_sounding_pitch answer only. Every expected
 // value below is a fresh Kernel call for the section state in force at
@@ -92,7 +92,7 @@ protected:
         return out;
     }
 
-    /// The exact-pitch field of every NoteEvent, in event order (JiMSynth
+    /// The exact-pitch field of every NoteEvent, in event order (MeloSynth
     /// VST3 workstream: the lossless Kernel answer beside the pitch level).
     std::vector<std::optional<ExactPitch> > exactPitches(Score* score)
     {
@@ -173,9 +173,9 @@ protected:
     std::shared_ptr<NiceMock<ArticulationProfilesRepositoryMock> > m_repositoryMock = nullptr;
 };
 
-const String M7_GATE(u"jimstaff_data/m7-gate.mscz");
-const String M7_DEFAULT(u"jimstaff_data/collision.mscx");
-const String COMMON_TONE(u"jimstaff_data/ws-jims-common-tone-projection.mscx");
+const String M7_GATE(u"melostaff_data/m7-gate.mscz");
+const String M7_DEFAULT(u"melostaff_data/collision.mscx");
+const String COMMON_TONE(u"melostaff_data/ws-jims-common-tone-projection.mscx");
 }
 
 // The MIDI-key → pitch-level conversion (owner decision 1a): raw MIDI
@@ -221,7 +221,7 @@ TEST_F(Engraving_MeloStaffM7PlaybackTests, m7PlaybackUsesKernelPitchAcrossRelati
     delete score;
 }
 
-// JiMSynth VST3 workstream (2026-08-19): every lattice-identified JiMS note's
+// MeloSynth VST3 workstream (2026-08-19): every lattice-identified JiMS note's
 // NoteEvent carries the Kernel's exact sounding pitch — the same fresh
 // note_sounding_pitch answer, lossless (frequency, transport key, full
 // residual cents) plus the note's lattice identity — beside the integer
@@ -428,10 +428,10 @@ TEST_F(Engraving_MeloStaffM7PlaybackTests, m7LivePlaybackModelFollowsTuningPrevi
 TEST_F(Engraving_MeloStaffM7PlaybackTests, m7ImportedAndAcceptedPiecesUseEffectiveSectionPitch)
 {
     const std::vector<String> pieces = {
-        u"jimstaff_data/m5-key-down.mscx", u"jimstaff_data/m5-key-up.mscx", u"jimstaff_data/m5-key-mode.mscx",
-        u"jimstaff_data/m5-mode.mscx", u"jimstaff_data/m5-scale.mscx", u"jimstaff_data/m5-syshead.mscx",
-        u"jimstaff_data/collision.mscx", u"jimstaff_data/grym.mscx", u"jimstaff_data/mode-change.mscx",
-        u"jimstaff_data/ode-to-joy.mscx", u"jimstaff_data/acc-chromatic.mscx",
+        u"melostaff_data/m5-key-down.mscx", u"melostaff_data/m5-key-up.mscx", u"melostaff_data/m5-key-mode.mscx",
+        u"melostaff_data/m5-mode.mscx", u"melostaff_data/m5-scale.mscx", u"melostaff_data/m5-syshead.mscx",
+        u"melostaff_data/collision.mscx", u"melostaff_data/grym.mscx", u"melostaff_data/mode-change.mscx",
+        u"melostaff_data/ode-to-joy.mscx", u"melostaff_data/acc-chromatic.mscx",
     };
     int checked = 0;
     for (const String& path : pieces) {
@@ -465,7 +465,7 @@ TEST_F(Engraving_MeloStaffM7PlaybackTests, m7ImportedAndAcceptedPiecesUseEffecti
 
 TEST_F(Engraving_MeloStaffM7PlaybackTests, fullTieAcrossStateChangeHasOneAttackAtLatchedFrequency)
 {
-    Score* score = ScoreRW::readScore(u"jimstaff_data/m5-key-up.mscx");
+    Score* score = ScoreRW::readScore(u"melostaff_data/m5-key-up.mscx");
     ASSERT_TRUE(score);
     std::vector<Note*> notes = notesOf(score);
     ASSERT_GE(notes.size(), 5u);
@@ -527,7 +527,7 @@ TEST_F(Engraving_MeloStaffM7PlaybackTests, syntheticCommonToneHasOneAttackAtOneE
 
 TEST_F(Engraving_MeloStaffM7PlaybackTests, latticeTieKeyboardUndoHasOneSustainedProductionEvent)
 {
-    Score* score = ScoreRW::readScore(u"jimstaff_data/m5-key-up.mscx");
+    Score* score = ScoreRW::readScore(u"melostaff_data/m5-key-up.mscx");
     ASSERT_TRUE(score);
     const auto notes = notesOf(score);
     ASSERT_GE(notes.size(), 5u);
@@ -589,7 +589,7 @@ TEST_F(Engraving_MeloStaffM7PlaybackTests, latticeTieKeyboardUndoHasOneSustained
 TEST_F(Engraving_MeloStaffM7PlaybackTests, coincidentWrittenPositionsRetainExactPlaybackAt701)
 {
     for (double generator : { 700.0, 701.0 }) {
-        Score* score = ScoreRW::readScore(u"jimstaff_data/m5-key-up.mscx");
+        Score* score = ScoreRW::readScore(u"melostaff_data/m5-key-up.mscx");
         ASSERT_TRUE(score);
         melo::TuningController tuning(score, 0);
         ASSERT_TRUE(tuning.beginPreview());
@@ -626,7 +626,7 @@ TEST_F(Engraving_MeloStaffM7PlaybackTests, coincidentWrittenPositionsRetainExact
 TEST_F(Engraving_MeloStaffM7PlaybackTests, exactTwelveSevenFiveEqualTemperamentPlayback)
 {
     for (double generator : { 700.0, 1200.0 * 4.0 / 7.0, 720.0 }) {
-        Score* score = ScoreRW::readScore(u"jimstaff_data/m5-key-up.mscx");
+        Score* score = ScoreRW::readScore(u"melostaff_data/m5-key-up.mscx");
         ASSERT_TRUE(score);
         melo::TuningController tuning(score, 0);
         ASSERT_TRUE(tuning.beginPreview());

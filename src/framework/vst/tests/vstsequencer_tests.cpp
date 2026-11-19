@@ -20,7 +20,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-// JiMSynth VST3 workstream (2026-08-19): the VST sequencer
+// MeloSynth VST3 workstream (2026-08-19): the VST sequencer
 //  - gives every note its own nonnegative 31-bit VST3 note identifier from a
 //    monotonic allocator, shared by its Note On, Note Off and every per-note
 //    expression event (no new event carries -1);

@@ -155,7 +155,7 @@ void VstSequencer::addNoteEvent(EventSequenceMap& destination, const mpe::NoteEv
                                 SostenutoTimeAndDurations& sostenutoTimeAndDurations)
 {
     const mpe::ArrangementContext& arrangementCtx = noteEvent.arrangementCtx();
-    // JiMSynth VST3 workstream: the VST3 note identifier is its own unique,
+    // MeloSynth VST3 workstream: the VST3 note identifier is its own unique,
     // monotonic value — never the pitch index (the stock code wrote -1).
     const int32_t noteId = allocateNoteId();
     const std::optional<mpe::ExactPitch>& exact = noteEvent.pitchCtx().exactPitch;
@@ -433,7 +433,7 @@ void VstSequencer::addSostenutoEvents(EventSequenceMap& destination, const Soste
 //! Hack to make keyswitches work until we have proper UI support
 //! see: https://github.com/musescore/MuseScore/issues/32150
 //!
-//! JiMSynth VST3 workstream: per-note expression events (lattice identity,
+//! MeloSynth VST3 workstream: per-note expression events (lattice identity,
 //! tuning) that share a timestamp with their Note On travel WITH it — they
 //! are grouped behind the Note On of the same id before the pitch sort, so a
 //! plug-in always sees the Note On before the note's expressions.

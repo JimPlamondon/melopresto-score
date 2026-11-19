@@ -20,7 +20,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-// JiMStaff Milestone 9 — SATB open score (owner decisions 2026-08-22).
+// MeloStaff Milestone 9 — SATB open score (owner decisions 2026-08-22).
 //
 // Three things are under test here.
 //
@@ -356,7 +356,7 @@ TEST(Engraving_MeloStaffM9SATBTests, m9EveryStaffIsAMeloStaffCarryingItsRangeDer
         const StaffType* st = score->staff(i)->staffType(Fraction(0, 1));
         ASSERT_TRUE(st) << "staff " << i;
         EXPECT_TRUE(st->isMelo()) << "staff " << i << " must be a MeloPresto Staff";
-        EXPECT_EQ(st->xmlName(), muse::String(u"jims12tet")) << "staff " << i;
+        EXPECT_EQ(st->xmlName(), muse::String(u"melo12tet")) << "staff " << i;
         // The modern key. The legacy `tonic_extent` spelling must not appear
         // in a template authored today.
         EXPECT_TRUE(st->meloStateJson().contains(u"\"tonic_ambit\":\"tonic-bounded\"")) << "staff " << i;
@@ -402,7 +402,7 @@ TEST(Engraving_MeloStaffM9SATBTests, m9EmptyFramesKeepTheirDeclaredAnchorsWithHa
 
 TEST(Engraving_MeloStaffM9SATBTests, m9WrittenStavesUseTheirOwnMelodyFrameWhileUnwrittenStavesKeepTheDefault)
 {
-    MasterScore* score = ScoreRW::readScore(u"jimstaff_data/m9-satb-mixed.mscx");
+    MasterScore* score = ScoreRW::readScore(u"melostaff_data/m9-satb-mixed.mscx");
     ASSERT_TRUE(score);
     score->doLayout();
     ASSERT_EQ(score->nstaves(), 4u);
@@ -433,9 +433,9 @@ TEST(Engraving_MeloStaffM9SATBTests, m9IntroducesNoDoAnchoredFramingLanguage)
     // artifact this milestone introduces may say otherwise.
     const muse::String files[] = {
         muse::String(ScoreRW::rootPath()) + u"/melostaff_m9_tests.cpp",
-        muse::String(ScoreRW::rootPath()) + u"/jimstaff_data/m9-satb-mixed.mscx",
-        muse::String(ScoreRW::rootPath()) + u"/jimstaff_data/m9-satb-blocked.mscx",
-        muse::String(ScoreRW::rootPath()) + u"/jimstaff_data/m9-dense-voices.mscx",
+        muse::String(ScoreRW::rootPath()) + u"/melostaff_data/m9-satb-mixed.mscx",
+        muse::String(ScoreRW::rootPath()) + u"/melostaff_data/m9-satb-blocked.mscx",
+        muse::String(ScoreRW::rootPath()) + u"/melostaff_data/m9-dense-voices.mscx",
         forkRoot() + u"/src/engraving/melo/melochangecontroller.h",
         forkRoot() + u"/src/engraving/melo/melochangecontroller.cpp",
         forkRoot() + u"/src/inspector/qml/MuseScore/Inspector/melostaffsettingsmodel.cpp",
@@ -652,7 +652,7 @@ TEST(Engraving_MeloStaffM9SATBTests, m9PropagationStartsFromAnyVoiceAndKeepsEach
 
 TEST(Engraving_MeloStaffM9SATBTests, m9ARefusedTargetLeavesTheWholeScoreUntouched)
 {
-    MasterScore* score = ScoreRW::readScore(u"jimstaff_data/m9-satb-blocked.mscx");
+    MasterScore* score = ScoreRW::readScore(u"melostaff_data/m9-satb-blocked.mscx");
     ASSERT_TRUE(score);
     score->doLayout();
     ASSERT_EQ(score->nstaves(), 4u);
@@ -684,7 +684,7 @@ TEST(Engraving_MeloStaffM9SATBTests, m9ARefusedTargetLeavesTheWholeScoreUntouche
 
 TEST(Engraving_MeloStaffM9SATBTests, m9StockPartsAreLeftUntouchedAndASinglePartScoreBehavesAsBefore)
 {
-    MasterScore* score = ScoreRW::readScore(u"jimstaff_data/m8-two-staves.mscx");
+    MasterScore* score = ScoreRW::readScore(u"melostaff_data/m8-two-staves.mscx");
     ASSERT_TRUE(score);
     score->doLayout();
     ASSERT_GE(score->nstaves(), 2u);
@@ -792,7 +792,7 @@ std::vector<Note*> collidingPair(Measure* measure)
 // way MuseScore separates any unshareable unison.
 TEST(Engraving_MeloStaffM9SATBTests, m9CollidingHeadsOfDifferentShapesAreOffsetAcrossTheStemAndNeverShared)
 {
-    MasterScore* score = ScoreRW::readScore(u"jimstaff_data/m9-dense-voices.mscx");
+    MasterScore* score = ScoreRW::readScore(u"melostaff_data/m9-dense-voices.mscx");
     ASSERT_TRUE(score);
     score->doLayout();
 
@@ -832,7 +832,7 @@ TEST(Engraving_MeloStaffM9SATBTests, m9CollidingHeadsOfDifferentShapesAreOffsetA
 // drawn (fixed 2026-09-14), so two shared heads coincide exactly.
 TEST(Engraving_MeloStaffM9SATBTests, m9CollidingHeadsOfIdenticalShapeMayShareOneHead)
 {
-    MasterScore* score = ScoreRW::readScore(u"jimstaff_data/m9-dense-voices.mscx");
+    MasterScore* score = ScoreRW::readScore(u"melostaff_data/m9-dense-voices.mscx");
     ASSERT_TRUE(score);
     score->doLayout();
 
@@ -881,7 +881,7 @@ TEST(Engraving_MeloStaffM9SATBTests, m9CollidingHeadsOfIdenticalShapeMayShareOne
 // ---------------------------------------------------------------------------
 
 namespace {
-const char16_t* HYMN = u"jimstaff_data/m9-satb-hymn.mscx";
+const char16_t* HYMN = u"melostaff_data/m9-satb-hymn.mscx";
 }
 
 // A MeloPresto Staff draws no clef and no key signature, while the stock clef entries
@@ -1034,7 +1034,7 @@ TEST(Engraving_MeloStaffM9SATBTests, m9SweepRangeColouringInputsAreCorrectOnMelo
 // stock behaviour, unchanged by the MeloPresto staff type.
 TEST(Engraving_MeloStaffM9SATBTests, m9SweepHideEmptyStavesWorksOnAFourMeloStaffMixedScore)
 {
-    MasterScore* score = ScoreRW::readScore(u"jimstaff_data/m9-satb-mixed.mscx");
+    MasterScore* score = ScoreRW::readScore(u"melostaff_data/m9-satb-mixed.mscx");
     ASSERT_TRUE(score);
     score->doLayout();
     ASSERT_EQ(score->nstaves(), 4u);
@@ -1074,9 +1074,9 @@ TEST(Engraving_MeloStaffM9SATBTests, m9SweepHideEmptyStavesWorksOnAFourMeloStaff
 TEST(Engraving_MeloStaffM9SATBTests, m9EveryNotesPitchIsTheKernelsProjectionOfItsIdentity)
 {
     const char16_t* fixtures[] = {
-        u"jimstaff_data/m9-satb-hymn.mscx",
-        u"jimstaff_data/m9-satb-mixed.mscx",
-        u"jimstaff_data/m9-dense-voices.mscx",
+        u"melostaff_data/m9-satb-hymn.mscx",
+        u"melostaff_data/m9-satb-mixed.mscx",
+        u"melostaff_data/m9-dense-voices.mscx",
     };
     for (const char16_t* f : fixtures) {
         MasterScore* score = ScoreRW::readScore(muse::String(f));

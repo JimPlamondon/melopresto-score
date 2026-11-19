@@ -152,7 +152,7 @@ int LyricNumberHandler::getLyricNo(const String& number) const
 
 void LyricNumberHandler::determineLyricNos()
 {
-    // MeloPresto (mei-jims profile): when every lyric number is a plain positive
+    // MeloPresto (mei-melo profile): when every lyric number is a plain positive
     // integer, honor it as the verse identity (number N -> verse N-1) so a
     // sparse numbering such as a lone verse 2 survives the round trip.
     // Any non-numeric or out-of-range number falls back to the historical

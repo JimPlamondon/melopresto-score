@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <museScore version="4.70">
   <Score>
-    <metaTag name="meloReferenceTimelineV1">{"schema":"jimstaff-reference-v1","initial":{"step":"D","alter":0,"octave":4},"events":[]}</metaTag>
+    <metaTag name="meloReferenceTimelineV1">{"schema":"melostaff-reference-v1","initial":{"step":"D","alter":0,"octave":4},"events":[]}</metaTag>
     <LayerTag id="0" tag="default"></LayerTag>
     <currentLayer>0</currentLayer>
     <Division>480</Division>
@@ -45,12 +45,12 @@
     <Part>
       <Staff id="1">
         <StaffType group="pitched">
-          <name>jims12tet</name>
+          <name>melo12tet</name>
           <lines>13</lines>
           <clef>0</clef>
-          <jims>1</jims>
-          <jimsStateJson>{"scale":["M2","m2","M2","M2","M2","m2","M2"],"collection_rotation":0,"mode_rotation":0,"generator_cents":700.0,"period_cents":1200.0,"embedding":{"large_steps":5,"small_steps":2},"extent":{"lower":{"nPer":3,"nGen":-5},"upper":{"nPer":4,"nGen":-5}},"tonic_ambit":"tonic-bounded","schema":"jimstaff-v3"}</jimsStateJson>
-          <jimsJiLines>1</jimsJiLines>
+          <melo>1</melo>
+          <meloStateJson>{"scale":["M2","m2","M2","M2","M2","m2","M2"],"collection_rotation":0,"mode_rotation":0,"generator_cents":700.0,"period_cents":1200.0,"embedding":{"large_steps":5,"small_steps":2},"extent":{"lower":{"nPer":3,"nGen":-5},"upper":{"nPer":4,"nGen":-5}},"tonic_ambit":"tonic-bounded","schema":"melostaff-v3"}</meloStateJson>
+          <meloJiLines>1</meloJiLines>
           <keysig>0</keysig>
           <ledgerlines>0</ledgerlines>
           </StaffType>
@@ -117,12 +117,12 @@
     <Part>
       <Staff id="2">
         <StaffType group="pitched">
-          <name>jims12tet</name>
+          <name>melo12tet</name>
           <lines>13</lines>
           <clef>0</clef>
-          <jims>1</jims>
-          <jimsStateJson>{"scale":["M2","m2","M2","M2","M2","m2","M2"],"collection_rotation":0,"mode_rotation":0,"generator_cents":700.0,"period_cents":1200.0,"embedding":{"large_steps":5,"small_steps":2},"extent":{"lower":{"nPer":2,"nGen":-4},"upper":{"nPer":3,"nGen":-4}},"tonic_ambit":"tonic-bounded","schema":"jimstaff-v3"}</jimsStateJson>
-          <jimsJiLines>1</jimsJiLines>
+          <melo>1</melo>
+          <meloStateJson>{"scale":["M2","m2","M2","M2","M2","m2","M2"],"collection_rotation":0,"mode_rotation":0,"generator_cents":700.0,"period_cents":1200.0,"embedding":{"large_steps":5,"small_steps":2},"extent":{"lower":{"nPer":2,"nGen":-4},"upper":{"nPer":3,"nGen":-4}},"tonic_ambit":"tonic-bounded","schema":"melostaff-v3"}</meloStateJson>
+          <meloJiLines>1</meloJiLines>
           <keysig>0</keysig>
           <ledgerlines>0</ledgerlines>
           </StaffType>
@@ -188,12 +188,12 @@
     <Part>
       <Staff id="3">
         <StaffType group="pitched">
-          <name>jims12tet</name>
+          <name>melo12tet</name>
           <lines>13</lines>
           <clef>0</clef>
-          <jims>1</jims>
-          <jimsStateJson>{"scale":["M2","m2","M2","M2","M2","m2","M2"],"collection_rotation":0,"mode_rotation":0,"generator_cents":700.0,"period_cents":1200.0,"embedding":{"large_steps":5,"small_steps":2},"extent":{"lower":{"nPer":1,"nGen":-3},"upper":{"nPer":2,"nGen":-3}},"tonic_ambit":"tonic-bounded","schema":"jimstaff-v3"}</jimsStateJson>
-          <jimsJiLines>1</jimsJiLines>
+          <melo>1</melo>
+          <meloStateJson>{"scale":["M2","m2","M2","M2","M2","m2","M2"],"collection_rotation":0,"mode_rotation":0,"generator_cents":700.0,"period_cents":1200.0,"embedding":{"large_steps":5,"small_steps":2},"extent":{"lower":{"nPer":1,"nGen":-3},"upper":{"nPer":2,"nGen":-3}},"tonic_ambit":"tonic-bounded","schema":"melostaff-v3"}</meloStateJson>
+          <meloJiLines>1</meloJiLines>
           <keysig>0</keysig>
           <ledgerlines>0</ledgerlines>
           </StaffType>
@@ -261,12 +261,12 @@
     <Part>
       <Staff id="4">
         <StaffType group="pitched">
-          <name>jims12tet</name>
+          <name>melo12tet</name>
           <lines>13</lines>
           <clef>0</clef>
-          <jims>1</jims>
-          <jimsStateJson>{"scale":["M2","m2","M2","M2","M2","m2","M2"],"collection_rotation":0,"mode_rotation":0,"generator_cents":700.0,"period_cents":1200.0,"embedding":{"large_steps":5,"small_steps":2},"extent":{"lower":{"nPer":2,"nGen":-6},"upper":{"nPer":3,"nGen":-6}},"tonic_ambit":"tonic-bounded","schema":"jimstaff-v3"}</jimsStateJson>
-          <jimsJiLines>1</jimsJiLines>
+          <melo>1</melo>
+          <meloStateJson>{"scale":["M2","m2","M2","M2","M2","m2","M2"],"collection_rotation":0,"mode_rotation":0,"generator_cents":700.0,"period_cents":1200.0,"embedding":{"large_steps":5,"small_steps":2},"extent":{"lower":{"nPer":2,"nGen":-6},"upper":{"nPer":3,"nGen":-6}},"tonic_ambit":"tonic-bounded","schema":"melostaff-v3"}</meloStateJson>
+          <meloJiLines>1</meloJiLines>
           <keysig>0</keysig>
           <ledgerlines>0</ledgerlines>
           </StaffType>

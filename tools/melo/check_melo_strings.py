@@ -34,12 +34,12 @@ for dirpath, dirnames, filenames in os.walk(os.path.join(ROOT, "src")):
         except OSError:
             continue
         relative_path = os.path.relpath(path, ROOT)
-        for jims_name in NAMES:
-            for match in re.finditer(rf'"[^"\n]*{re.escape(jims_name)}[^"\n]*"', text):
+        for melo_name in NAMES:
+            for match in re.finditer(rf'"[^"\n]*{re.escape(melo_name)}[^"\n]*"', text):
                 if (relative_path, match.group()[1:-1]) in NON_UI_LITERALS:
                     continue
                 line = text.count("\n", 0, match.start()) + 1
-                failures.append(f"{os.path.relpath(path, ROOT)}:{line}: literal {jims_name!r} outside the string table")
+                failures.append(f"{os.path.relpath(path, ROOT)}:{line}: literal {melo_name!r} outside the string table")
 
 if failures:
     print("\n".join(failures))

@@ -100,7 +100,7 @@ static const QStringList ALL_PAGE_CODES {
     "fretboard-diagrams",
     "tablature-styles",
     "text-styles",
-    "jims"
+    "melo"
 };
 
 static const QStringList ALL_TEXT_STYLE_SUBPAGE_CODES {
@@ -330,7 +330,7 @@ EditStyle::EditStyle(QWidget* parent)
     // ====================================================
 
     auto* meloPage = new QWidget(pageStack);
-    meloPage->setObjectName("jimsStylePage");
+    meloPage->setObjectName("meloStylePage");
     auto* meloLayout = new QVBoxLayout(meloPage);
     auto* meloElide = new QCheckBox(muse::qtrc("notation/editstyle", "Elide empty octaves (hollow stacks)"), meloPage);
     meloElide->setObjectName("meloElide");
@@ -1324,7 +1324,7 @@ void EditStyle::changeEvent(QEvent* event)
 void EditStyle::retranslate()
 {
     retranslateUi(this);
-    if (auto* page = findChild<QWidget*>("jimsStylePage")) {
+    if (auto* page = findChild<QWidget*>("meloStylePage")) {
         pageList->item(pageStack->indexOf(page))->setText(melo::featureName().toQString());
         auto* elide = page->findChild<QCheckBox*>("meloElide");
         elide->setText(muse::qtrc("notation/editstyle", "Elide empty octaves (hollow stacks)"));

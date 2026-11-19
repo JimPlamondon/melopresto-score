@@ -323,7 +323,7 @@ bool Read460::readScoreTag(Score* score, XmlReader& e, ReadContext& ctx)
         } else if (tag == "metaTag") {
             String name = e.attribute("name");
             score->setMetaTag(name, e.readText());
-        } else if (tag == "jimsProvenance") {
+        } else if (tag == "meloProvenance") {
             melo::Provenance prov;
             prov.strictFallback = e.intAttribute("strict", 0) != 0;
             while (e.readNextStartElement()) {
@@ -340,9 +340,9 @@ bool Read460::readScoreTag(Score* score, XmlReader& e, ReadContext& ctx)
                 }
             }
             score->setMeloProvenance(prov);
-        } else if (tag == "jimsReview") {
+        } else if (tag == "meloReview") {
             score->setMeloReview(readMeloReview(e));
-        } else if (tag == "jimsMelodyPart") {
+        } else if (tag == "meloMelodyPart") {
             melo::MelodyPart part = melo::MelodyPart::Soprano;
             if (melo::melodyPartFromToken(e.readText().trimmed(), part)) {
                 score->setMeloMelodyPart(part);

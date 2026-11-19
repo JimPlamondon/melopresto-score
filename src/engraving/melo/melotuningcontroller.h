@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: GPL-3.0-only
  * MuseScore-Studio-CLA-applies
  *
- * JiMStaff Milestone 3 — the shared continuous-tuning controller. One
+ * MeloStaff Milestone 3 — the shared continuous-tuning controller. One
  * semantic seam for every tuning-control surface (panel slider, numeric
  * field, scripted evidence sweeps): it replaces ONLY generator_cents
  * across every state span of every JiMS staff in the score (each base

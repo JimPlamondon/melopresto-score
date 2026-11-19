@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: GPL-3.0-only
  * MuseScore-Studio-CLA-applies
  *
- * JiMStaff Milestone 2 Phase 6 — the CLI round-trip checks of Milestones
+ * MeloStaff Milestone 2 Phase 6 — the CLI round-trip checks of Milestones
  * 1–2, ported into the standard engraving_tests binary. Every musical
  * expectation below is a Kernel-pinned fact (the jims repo's contract
  * tests pin the same numbers); these tests prove the fork's bridge seam
@@ -50,7 +50,7 @@ namespace {
 muse::String meloState(double generatorCents, int modeRotation = 0)
 {
     return test::canonicalRequest(muse::String(
-                                      u"{\"schema\":\"jimstaff-v3\",\"scale\":[\"M2\",\"m2\",\"M2\",\"M2\",\"M2\",\"m2\",\"M2\"],"
+                                      u"{\"schema\":\"melostaff-v3\",\"scale\":[\"M2\",\"m2\",\"M2\",\"M2\",\"M2\",\"m2\",\"M2\"],"
                                       u"\"collection_rotation\":0,\"mode_rotation\":%1,"
                                       u"\"generator_cents\":%2,\"period_cents\":1200.0,"
                                       u"\"embedding\":{\"large_steps\":5,\"small_steps\":2},"
@@ -66,7 +66,7 @@ constexpr double G19 = 1200.0 * 11.0 / 19.0; // 694.736842...
 constexpr double EPS = 1e-6;
 }
 
-// The bridge speaks ABI 2 (JiMStaffStateV2 contract, Milestone 2 Phase 4).
+// The bridge speaks ABI 2 (MeloStaffStateV2 contract, Milestone 2 Phase 4).
 TEST(MeloStaffTests, bridgeSpeaksAbi2)
 {
     EXPECT_TRUE(melo::available());
@@ -177,7 +177,7 @@ TEST(MeloStaffTests, tonicBoundedLaModeFrameKeepsStoredExtentMinimum)
 TEST(MeloStaffTests, fixedRatioLineExtentCanReturnASubperiodSoToDoFrame)
 {
     const muse::String state
-        = test::canonicalRequest(u"{\"schema\":\"jimstaff-v3\",\"scale\":[\"M2\",\"m2\",\"M2\",\"M2\",\"M2\",\"m2\",\"M2\"],"
+        = test::canonicalRequest(u"{\"schema\":\"melostaff-v3\",\"scale\":[\"M2\",\"m2\",\"M2\",\"M2\",\"M2\",\"m2\",\"M2\"],"
                                  u"\"collection_rotation\":0,\"mode_rotation\":0,\"generator_cents\":700.0,\"period_cents\":1200.0,"
                                  u"\"embedding\":{\"large_steps\":5,\"small_steps\":2},"
                                  u"\"extent\":{\"lower\":{\"nPer\":-2,\"nGen\":-1},\"upper\":{\"nPer\":-1,\"nGen\":-2}},"
@@ -263,7 +263,7 @@ double stateGeneratorCents(const StaffType* st)
 // the seam re-derives — no stale notes, frames, or labels.
 TEST(MeloStaffTests, tuningControllerPreviewCommitCancelUndo)
 {
-    Score* score = ScoreRW::readScore(u"jimstaff_data/mode-change.mscx");
+    Score* score = ScoreRW::readScore(u"melostaff_data/mode-change.mscx");
     ASSERT_TRUE(score);
     Staff* staff = score->staff(0);
     ASSERT_TRUE(staff);
@@ -303,7 +303,7 @@ TEST(MeloStaffTests, tuningControllerPreviewCommitCancelUndo)
 // the per-span tonic extents survive untouched.
 TEST(MeloStaffTests, tuningControllerUpdatesEverySpanPreservingIdentity)
 {
-    Score* score = ScoreRW::readScore(u"jimstaff_data/mode-change.mscx");
+    Score* score = ScoreRW::readScore(u"melostaff_data/mode-change.mscx");
     ASSERT_TRUE(score);
     Staff* staff = score->staff(0);
     // The fixture's bar-5 StaffTypeChange carries mode_rotation 5.
@@ -331,7 +331,7 @@ TEST(MeloStaffTests, tuningControllerUpdatesEverySpanPreservingIdentity)
 // staff on one map (VTR boundary crossing exercised in both directions).
 TEST(MeloStaffTests, tuningControllerRederivesNoteCentsAcrossVtrBoundary)
 {
-    Score* score = ScoreRW::readScore(u"jimstaff_data/mode-change.mscx");
+    Score* score = ScoreRW::readScore(u"melostaff_data/mode-change.mscx");
     ASSERT_TRUE(score);
     Staff* staff = score->staff(0);
     // First note of the piece: C4 = (1,-2), 0 cents at any tuning.
@@ -370,17 +370,17 @@ TEST(MeloStaffTests, tuningControllerRederivesNoteCentsAcrossVtrBoundary)
 // M3 Phase 6: the scripted evidence driver — the same shared controller
 // the panel uses, swept 680->720 cents and back, three round trips per
 // piece after warm-up, with exact samples at every semantic boundary.
-// Gated by JIMS_SWEEP=1 (artifact dir in JIMS_SWEEP_OUT) so the normal
+// Gated by MELO_SWEEP=1 (artifact dir in MELO_SWEEP_OUT) so the normal
 // fence stays fast. Semantic artifacts are deterministic; timing is
 // reported separately and statistically.
 TEST(MeloStaffTests, evidenceSweepAcceptancePieces)
 {
-    const char* gate = std::getenv("JIMS_SWEEP");
+    const char* gate = std::getenv("MELO_SWEEP");
     if (!gate || muse::String::fromUtf8(gate) != u"1") {
-        GTEST_SKIP() << "set JIMS_SWEEP=1 to run the evidence sweep";
+        GTEST_SKIP() << "set MELO_SWEEP=1 to run the evidence sweep";
     }
-    const char* outDir = std::getenv("JIMS_SWEEP_OUT");
-    ASSERT_TRUE(outDir) << "JIMS_SWEEP_OUT must name the artifact directory";
+    const char* outDir = std::getenv("MELO_SWEEP_OUT");
+    ASSERT_TRUE(outDir) << "MELO_SWEEP_OUT must name the artifact directory";
 
     const double G17T = 1200.0 * 10.0 / 17.0;
     const std::vector<double> exactSamples
@@ -389,7 +389,7 @@ TEST(MeloStaffTests, evidenceSweepAcceptancePieces)
         = { u"collision", u"ode-to-joy", u"acc-chromatic", u"mode-change", u"grym" };
 
     for (const muse::String& piece : pieces) {
-        Score* score = ScoreRW::readScore(u"jimstaff_data/" + piece + u".mscx");
+        Score* score = ScoreRW::readScore(u"melostaff_data/" + piece + u".mscx");
         ASSERT_TRUE(score) << piece.toStdString();
         score->doLayout();
         melo::TuningController controller(score, 0);
@@ -509,7 +509,7 @@ TEST(MeloStaffTests, meloMusicNoteheadsPublishStemAnchors)
 // default leaves the stem short when the tuning moves the heads apart.
 TEST(MeloStaffTests, chordStemSpansCentsHeightAcrossTunings)
 {
-    Score* score = ScoreRW::readScore(u"jimstaff_data/collision.mscx");
+    Score* score = ScoreRW::readScore(u"melostaff_data/collision.mscx");
     ASSERT_TRUE(score);
     melo::TuningController controller(score, 0);
     for (double g : { 680.0, 700.0, 720.0 }) {
@@ -546,7 +546,7 @@ TEST(MeloStaffTests, chordStemSpansCentsHeightAcrossTunings)
 // fired the second-cluster logic at every tuning.
 TEST(MeloStaffTests, dyadHeadClusteringIsCentsTrueAcrossTunings)
 {
-    Score* score = ScoreRW::readScore(u"jimstaff_data/collision.mscx");
+    Score* score = ScoreRW::readScore(u"melostaff_data/collision.mscx");
     ASSERT_TRUE(score);
     melo::TuningController controller(score, 0);
 
@@ -704,7 +704,7 @@ size_t ledgerLineCountOnStaff0(Score* score)
 // resulting empty staff derives the half-P8 default from its declared range.
 TEST(MeloStaffTests, deletingAllNotesRetainsTheWrittenFrameUntilReload)
 {
-    Score* score = ScoreRW::readScore(u"jimstaff_data/collision.mscx");
+    Score* score = ScoreRW::readScore(u"melostaff_data/collision.mscx");
     ASSERT_TRUE(score);
     score->doLayout();
     ASSERT_FALSE(frameOf(score).empty());
@@ -754,7 +754,7 @@ TEST(MeloStaffTests, deletingAllNotesRetainsTheWrittenFrameUntilReload)
 // and at every step the fork frame equals the Kernel's answer.
 TEST(MeloStaffTests, liveFrameGrowsShrinksAndRoundTripsThroughUndo)
 {
-    Score* score = ScoreRW::readScore(u"jimstaff_data/collision.mscx");
+    Score* score = ScoreRW::readScore(u"melostaff_data/collision.mscx");
     ASSERT_TRUE(score);
     score->doLayout();
     const Segs base = frameOf(score);
@@ -818,7 +818,7 @@ TEST(MeloStaffTests, liveFrameGrowsShrinksAndRoundTripsThroughUndo)
 // the header geometry is one shared calculation for all systems.
 TEST(MeloStaffTests, frameAndHeaderGeometryAreIdenticalAcrossSystems)
 {
-    Score* score = ScoreRW::readScore(u"jimstaff_data/grym.mscx");
+    Score* score = ScoreRW::readScore(u"melostaff_data/grym.mscx");
     ASSERT_TRUE(score);
     score->doLayout();
     ASSERT_GE(score->systems().size(), 2u) << "grym must span multiple systems for this test";
@@ -853,7 +853,7 @@ TEST(MeloStaffTests, frameAndHeaderGeometryAreIdenticalAcrossSystems)
 // suppression by non-generation, not by hiding at paint time).
 TEST(MeloStaffTests, meloChordsGenerateNoLedgerLinesEvenFarOutside)
 {
-    Score* score = ScoreRW::readScore(u"jimstaff_data/collision.mscx");
+    Score* score = ScoreRW::readScore(u"melostaff_data/collision.mscx");
     ASSERT_TRUE(score);
     score->doLayout();
     Note* top = highestMeloNote(score);
@@ -871,7 +871,7 @@ TEST(MeloStaffTests, meloChordsGenerateNoLedgerLinesEvenFarOutside)
 // suppression target (owner decision 3a).
 TEST(MeloStaffTests, shadowNoteShowsNoLedgerLinesOnMeloStaff)
 {
-    Score* score = ScoreRW::readScore(u"jimstaff_data/collision.mscx");
+    Score* score = ScoreRW::readScore(u"melostaff_data/collision.mscx");
     ASSERT_TRUE(score);
     score->doLayout();
     ShadowNote* sn = score->shadowNote();
@@ -891,7 +891,7 @@ TEST(MeloStaffTests, shadowNoteShowsNoLedgerLinesOnMeloStaff)
 // Auto, serialized as its own tag, never entering the Kernel state.
 TEST(MeloStaffTests, scaleDotLabelModeDefaultsPersistsAndStaysOutOfKernelState)
 {
-    Score* score = ScoreRW::readScore(u"jimstaff_data/collision.mscx");
+    Score* score = ScoreRW::readScore(u"melostaff_data/collision.mscx");
     ASSERT_TRUE(score);
     StaffType* st = score->staff(0)->staffType(Fraction(0, 1));
     ASSERT_TRUE(st && st->isMelo());
@@ -904,7 +904,7 @@ TEST(MeloStaffTests, scaleDotLabelModeDefaultsPersistsAndStaysOutOfKernelState)
                        MeloScaleDotLabelMode::Split, MeloScaleDotLabelMode::Auto }) {
         st->setMeloScaleDotLabelMode(mode);
         EXPECT_EQ(st->meloScaleDotLabelMode(), mode);
-        const muse::String path = u"jims_label_mode_roundtrip.mscx";
+        const muse::String path = u"melo_label_mode_roundtrip.mscx";
         ASSERT_TRUE(ScoreRW::saveScore(score, path));
         std::ifstream in(path.toStdString());
         const std::string xml((std::istreambuf_iterator<char>(in)),
@@ -912,7 +912,7 @@ TEST(MeloStaffTests, scaleDotLabelModeDefaultsPersistsAndStaysOutOfKernelState)
         if (mode == MeloScaleDotLabelMode::Auto) {
             // Default mode: tag may be omitted; absent reads Auto.
         } else {
-            EXPECT_NE(xml.find("<jimsScaleDotLabels>"), std::string::npos);
+            EXPECT_NE(xml.find("<meloScaleDotLabels>"), std::string::npos);
         }
         // The mode NEVER enters the Kernel state JSON.
         EXPECT_EQ(st->meloStateJson().toStdString().find("ScaleDotLabel"), std::string::npos);
@@ -933,7 +933,7 @@ TEST(MeloStaffTests, scaleDotLabelModeDefaultsPersistsAndStaysOutOfKernelState)
 // differing StaffType spans keep independent modes.
 TEST(MeloStaffTests, scaleDotLabelModeRoundTripsAndSpansAreIndependent)
 {
-    Score* score = ScoreRW::readScore(u"jimstaff_data/mode-change.mscx");
+    Score* score = ScoreRW::readScore(u"melostaff_data/mode-change.mscx");
     ASSERT_TRUE(score);
     Staff* staff = score->staff(0);
     StaffType* base = staff->staffType(Fraction(0, 1));
@@ -944,7 +944,7 @@ TEST(MeloStaffTests, scaleDotLabelModeRoundTripsAndSpansAreIndependent)
     EXPECT_EQ(base->meloScaleDotLabelMode(), MeloScaleDotLabelMode::Left);
     EXPECT_EQ(changed->meloScaleDotLabelMode(), MeloScaleDotLabelMode::Split);
 
-    const muse::String path = u"jims_label_mode_spans.mscx";
+    const muse::String path = u"melo_label_mode_spans.mscx";
     ASSERT_TRUE(ScoreRW::saveScore(score, path));
     std::ifstream in(path.toStdString());
     const std::string xml((std::istreambuf_iterator<char>(in)),
@@ -960,7 +960,7 @@ TEST(MeloStaffTests, scaleDotLabelModeRoundTripsAndSpansAreIndependent)
 // none.
 TEST(MeloStaffTests, scaleDotLabelAutoResolvesExactlyAtLegibilityBoundaries)
 {
-    Score* score = ScoreRW::readScore(u"jimstaff_data/collision.mscx");
+    Score* score = ScoreRW::readScore(u"melostaff_data/collision.mscx");
     ASSERT_TRUE(score);
     StaffType* st = score->staff(0)->staffType(Fraction(0, 1));
     ASSERT_TRUE(st && st->isMelo());
@@ -1000,7 +1000,7 @@ TEST(MeloStaffTests, scaleDotLabelAutoResolvesExactlyAtLegibilityBoundaries)
 // labels exist on that side.
 TEST(MeloStaffTests, scaleDotLabelHeaderGeometryIsSharedAndModeAware)
 {
-    Score* score = ScoreRW::readScore(u"jimstaff_data/collision.mscx");
+    Score* score = ScoreRW::readScore(u"melostaff_data/collision.mscx");
     ASSERT_TRUE(score);
     score->doLayout();
     StaffType* st = score->staff(0)->staffType(Fraction(0, 1));
@@ -1036,7 +1036,7 @@ TEST(MeloStaffTests, scaleDotLabelHeaderGeometryIsSharedAndModeAware)
 // dots collide.
 TEST(MeloStaffTests, edgeCollisionStacksAlwaysStraddleTheReSplit)
 {
-    Score* score = ScoreRW::readScore(u"jimstaff_data/collision.mscx");
+    Score* score = ScoreRW::readScore(u"melostaff_data/collision.mscx");
     ASSERT_TRUE(score);
     melo::TuningController controller(score, 0);
     for (double g : { 720.0, 1200.0 * 4.0 / 7.0 + 0.0001 }) {
@@ -1065,15 +1065,15 @@ TEST(MeloStaffTests, edgeCollisionStacksAlwaysStraddleTheReSplit)
 
 // Phase 5 (labels FINAL §13): the labels-enabled controller sweep — the
 // same shared controller, all four modes, per-tick semantic assertions
-// and the latency floor. Gated by JIMS_SWEEP=1 with artifacts in
-// JIMS_SWEEP_OUT (suffix -labels).
+// and the latency floor. Gated by MELO_SWEEP=1 with artifacts in
+// MELO_SWEEP_OUT (suffix -labels).
 TEST(MeloStaffTests, labelsEnabledControllerSweepHasNoStaleLabels)
 {
-    const char* gate = std::getenv("JIMS_SWEEP");
+    const char* gate = std::getenv("MELO_SWEEP");
     if (!gate || muse::String::fromUtf8(gate) != u"1") {
-        GTEST_SKIP() << "set JIMS_SWEEP=1 to run the labels sweep";
+        GTEST_SKIP() << "set MELO_SWEEP=1 to run the labels sweep";
     }
-    const char* outDir = std::getenv("JIMS_SWEEP_OUT");
+    const char* outDir = std::getenv("MELO_SWEEP_OUT");
     ASSERT_TRUE(outDir);
 
     const std::vector<muse::String> pieces
@@ -1085,7 +1085,7 @@ TEST(MeloStaffTests, labelsEnabledControllerSweepHasNoStaleLabels)
     const char* modeNames[] = { "auto", "left", "split", "none" };
 
     for (const muse::String& piece : pieces) {
-        Score* score = ScoreRW::readScore(u"jimstaff_data/" + piece + u".mscx");
+        Score* score = ScoreRW::readScore(u"melostaff_data/" + piece + u".mscx");
         ASSERT_TRUE(score);
         score->doLayout();
         StaffType* st = score->staff(0)->staffType(Fraction(0, 1));
@@ -1193,7 +1193,7 @@ TEST(MeloStaffTests, labelsEnabledControllerSweepHasNoStaleLabels)
 // as transient feedback) and re-derives exactly once on drop.
 TEST(MeloStaffTests, frameStaysFrozenDuringNoteDragAndRederivesOnDrop)
 {
-    Score* score = ScoreRW::readScore(u"jimstaff_data/collision.mscx");
+    Score* score = ScoreRW::readScore(u"melostaff_data/collision.mscx");
     ASSERT_TRUE(score);
     score->doLayout();
     const Segs base = frameOf(score);
@@ -1231,7 +1231,7 @@ TEST(MeloStaffTests, frameStaysFrozenDuringNoteDragAndRederivesOnDrop)
 // captured at drag start, like stock MuseScore anchors at the start line.
 TEST(MeloStaffTests, noteDragAnchorsAtStartCentsAndNeverCompounds)
 {
-    Score* score = ScoreRW::readScore(u"jimstaff_data/collision.mscx");
+    Score* score = ScoreRW::readScore(u"melostaff_data/collision.mscx");
     ASSERT_TRUE(score);
     score->doLayout();
     Note* top = highestMeloNote(score);
@@ -1279,7 +1279,7 @@ TEST(MeloStaffTests, noteDragAnchorsAtStartCentsAndNeverCompounds)
 
 TEST(MeloStaffTests, draggingBelowExtentKeepsTheOriginalCentsOrigin)
 {
-    std::unique_ptr<Score> score(ScoreRW::readScore(u"jimstaff_data/collision.mscx"));
+    std::unique_ptr<Score> score(ScoreRW::readScore(u"melostaff_data/collision.mscx"));
     ASSERT_TRUE(score);
     score->doLayout();
     Note* note = highestMeloNote(score.get());
@@ -1310,11 +1310,11 @@ TEST(MeloStaffTests, draggingBelowExtentKeepsTheOriginalCentsOrigin)
 
 // M4 gate finding 4 (Jim, 2026-08-16): Cmd-Z after a drag did nothing.
 // The drag's undo record covered PITCH/TPC but not the JiMS lattice
-// identity the JiMStaff actually draws. Undo must restore identity AND
+// identity the MeloStaff actually draws. Undo must restore identity AND
 // the stave stack; redo must re-apply both.
 TEST(MeloStaffTests, dragIsUndoableIncludingLatticeIdentityAndFrame)
 {
-    Score* score = ScoreRW::readScore(u"jimstaff_data/collision.mscx");
+    Score* score = ScoreRW::readScore(u"melostaff_data/collision.mscx");
     ASSERT_TRUE(score);
     score->doLayout();
     const Segs base = frameOf(score);
@@ -1363,15 +1363,15 @@ TEST(MeloStaffTests, dragIsUndoableIncludingLatticeIdentityAndFrame)
 // the same frame, and p95 apply latency stays within the floor.
 TEST(MeloStaffTests, wideMelodyControllerSweepKeepsFrameValidAndFast)
 {
-    const char* gate = std::getenv("JIMS_SWEEP");
+    const char* gate = std::getenv("MELO_SWEEP");
     if (!gate || muse::String::fromUtf8(gate) != u"1") {
-        GTEST_SKIP() << "set JIMS_SWEEP=1 to run the M4 wide-melody sweep";
+        GTEST_SKIP() << "set MELO_SWEEP=1 to run the M4 wide-melody sweep";
     }
-    const char* outDir = std::getenv("JIMS_SWEEP_OUT");
+    const char* outDir = std::getenv("MELO_SWEEP_OUT");
     ASSERT_TRUE(outDir);
 
     for (const muse::String& piece : { muse::String(u"collision"), muse::String(u"grym") }) {
-        Score* score = ScoreRW::readScore(u"jimstaff_data/" + piece + u".mscx");
+        Score* score = ScoreRW::readScore(u"melostaff_data/" + piece + u".mscx");
         ASSERT_TRUE(score);
         score->doLayout();
         StaffType* st = score->staff(0)->staffType(Fraction(0, 1));
@@ -1454,16 +1454,16 @@ TEST(MeloStaffTests, wideMelodyControllerSweepKeepsFrameValidAndFast)
 // crossing (whole middle + partial edge), and shrink after growth.
 TEST(MeloStaffTests, m4WriteRenderScenarios)
 {
-    const char* gate = std::getenv("JIMS_M4_SCENARIOS");
+    const char* gate = std::getenv("MELO_M4_SCENARIOS");
     if (!gate || muse::String::fromUtf8(gate) != u"1") {
-        GTEST_SKIP() << "set JIMS_M4_SCENARIOS=1 (and JIMS_SWEEP_OUT) to write the M4 render scenarios";
+        GTEST_SKIP() << "set MELO_M4_SCENARIOS=1 (and MELO_SWEEP_OUT) to write the M4 render scenarios";
     }
-    const char* outDir = std::getenv("JIMS_SWEEP_OUT");
+    const char* outDir = std::getenv("MELO_SWEEP_OUT");
     ASSERT_TRUE(outDir);
     const muse::String out = muse::String::fromUtf8(outDir);
 
     auto fresh = []() {
-        Score* s = ScoreRW::readScore(u"jimstaff_data/collision.mscx");
+        Score* s = ScoreRW::readScore(u"melostaff_data/collision.mscx");
         s->doLayout();
         return s;
     };
@@ -1628,7 +1628,7 @@ TEST(MeloStaffTests, changeIndicatorTransportCarriesTheKernelTerrainVerbatim)
 // changes at measure 6 (a system head) -> no indicator, no reservation.
 TEST(MeloStaffTests, changeIndicatorIsReservedMidSystemOrCourtesyAtSystemEnd)
 {
-    Score* score = ScoreRW::readScore(u"jimstaff_data/m5-mode.mscx");
+    Score* score = ScoreRW::readScore(u"melostaff_data/m5-mode.mscx");
     ASSERT_TRUE(score);
     score->doLayout();
     Measure* m2 = m5Measure(score, 2);
@@ -1653,7 +1653,7 @@ TEST(MeloStaffTests, changeIndicatorIsReservedMidSystemOrCourtesyAtSystemEnd)
     EXPECT_GE(firstCR->x(), want - 1e-6) << "terrain reserved before the first segment";
     delete score;
 
-    Score* head = ScoreRW::readScore(u"jimstaff_data/m5-syshead.mscx");
+    Score* head = ScoreRW::readScore(u"melostaff_data/m5-syshead.mscx");
     ASSERT_TRUE(head);
     head->doLayout();
     Measure* m6 = m5Measure(head, 6);
@@ -1719,7 +1719,7 @@ TEST(MeloStaffTests, changeIndicatorSemanticsPerFixtureMatchTheOwnerRules)
         { u"m5-key-mode", { u"key", u"mode" },  2, 2, 1, true,  u"mode" },
     };
     for (const Case& c : cases) {
-        Score* score = ScoreRW::readScore(muse::String(u"jimstaff_data/") + c.piece + u".mscx");
+        Score* score = ScoreRW::readScore(muse::String(u"melostaff_data/") + c.piece + u".mscx");
         ASSERT_TRUE(score) << muse::String(c.piece).toStdString();
         score->doLayout();
         Measure* m2 = m5Measure(score, 2);
@@ -1734,7 +1734,7 @@ TEST(MeloStaffTests, changeIndicatorSemanticsPerFixtureMatchTheOwnerRules)
             EXPECT_EQ(model.arrows[0].trumps, c.trumps) << muse::String(c.piece).toStdString();
         }
         // Semantic record.
-        const char* outDir = std::getenv("JIMS_M5_OUT");
+        const char* outDir = std::getenv("MELO_M5_OUT");
         if (outDir) {
             std::ofstream rec(std::string(outDir) + "/" + muse::String(c.piece).toStdString() + "-m5-semantics.json");
             rec << "{\"piece\":\"" << muse::String(c.piece).toStdString() << "\",\"kinds\":[";
@@ -1765,8 +1765,8 @@ TEST(MeloStaffTests, presetIdentitySurvivesTheStaffTypeLookup)
     EXPECT_NE(melo->type(), StaffType::preset(StaffTypes::STANDARD)->type());
     EXPECT_EQ(StaffType::preset(melo->type())->name(), melo->name());
     EXPECT_EQ(melo->name(), u"MeloPresto Staff 12-TET");
-    EXPECT_EQ(melo->xmlName(), u"jims12tet");
-    EXPECT_EQ(StaffType::presetFromXmlName(u"jims12tet"), melo);
+    EXPECT_EQ(melo->xmlName(), u"melo12tet");
+    EXPECT_EQ(StaffType::presetFromXmlName(u"melo12tet"), melo);
 }
 
 TEST(MeloStaffTests, guideColorDefaultsPreserveTheExistingPaletteAndAreStyleValues)

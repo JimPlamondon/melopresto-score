@@ -119,7 +119,7 @@ Column {
         }
         StyledSlider {
             id: slider
-            objectName: "jimsTuningSlider"
+            objectName: "meloTuningSlider"
             x: figure.split
             y: (121.5 + (720 - root.model.maximum) * 16) * figure.factor - 7
             width: figure.slot

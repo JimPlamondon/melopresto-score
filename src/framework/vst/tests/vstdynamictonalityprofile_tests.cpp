@@ -12,13 +12,13 @@ using namespace muse::vst;
 
 namespace {
 constexpr std::array<const char*, VstDynamicTonalityProfileHost::POINT_COUNT> TITLES = {
-    "jims.profile.capability", "jims.profile.slot", "jims.profile.generation", "jims.profile.schemaVersion",
-    "jims.profile.flags", "jims.profile.nPerMin", "jims.profile.nPerMax", "jims.profile.nGenMin",
-    "jims.profile.nGenMax", "jims.profile.originNPer", "jims.profile.originNGen", "jims.profile.originFrequencyHi",
-    "jims.profile.originFrequencyLo", "jims.profile.periodLog2Hi", "jims.profile.periodLog2Lo",
-    "jims.profile.generatorLog2Hi", "jims.profile.generatorLog2Lo", "jims.profile.digestWord0",
-    "jims.profile.digestWord1", "jims.profile.digestWord2", "jims.profile.digestWord3", "jims.profile.digestWord4",
-    "jims.profile.digestWord5", "jims.profile.digestWord6", "jims.profile.digestWord7", "jims.profile.commit"
+    "melo.profile.capability", "melo.profile.slot", "melo.profile.generation", "melo.profile.schemaVersion",
+    "melo.profile.flags", "melo.profile.nPerMin", "melo.profile.nPerMax", "melo.profile.nGenMin",
+    "melo.profile.nGenMax", "melo.profile.originNPer", "melo.profile.originNGen", "melo.profile.originFrequencyHi",
+    "melo.profile.originFrequencyLo", "melo.profile.periodLog2Hi", "melo.profile.periodLog2Lo",
+    "melo.profile.generatorLog2Hi", "melo.profile.generatorLog2Lo", "melo.profile.digestWord0",
+    "melo.profile.digestWord1", "melo.profile.digestWord2", "melo.profile.digestWord3", "melo.profile.digestWord4",
+    "melo.profile.digestWord5", "melo.profile.digestWord6", "melo.profile.digestWord7", "melo.profile.commit"
 };
 constexpr std::array<int32_t, VstDynamicTonalityProfileHost::POINT_COUNT> STEPS = {
     0, 1, 0, 0, 0, 127, 127, 34, 34, 127, 34, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0

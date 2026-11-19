@@ -32,12 +32,12 @@ class StringTableGuardTests(unittest.TestCase):
     def test_table_and_test_fixture_names_are_allowed(self):
         result = self.check_tree({
             "src/engraving/melo/melostrings.h": 'return "MeloPresto Staff";',
-            "src/engraving/tests/test.cpp": 'load("SATB_(JiMStaff).mscx");',
+            "src/engraving/tests/test.cpp": 'load("SATB_(MeloStaff).mscx");',
         })
         self.assertEqual(result.returncode, 0, result.stdout)
 
     def test_diagnostics_also_require_the_central_table(self):
-        existing = 'LOGE() << "JiMStaff: Kernel frame derivation failed for staff ";'
+        existing = 'LOGE() << "MeloPresto Staff: Kernel frame derivation failed for staff ";'
         self.assertNotEqual(self.check_tree({"src/engraving/dom/stafftype.cpp": existing}).returncode, 0)
         self.assertNotEqual(self.check_tree({"src/other.cpp": existing}).returncode, 0)
         self.assertNotEqual(self.check_tree({"src/engraving/dom/stafftype.cpp": existing.replace("failed", "stopped")}).returncode, 0)

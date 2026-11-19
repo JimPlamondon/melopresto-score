@@ -172,7 +172,7 @@ MenuItemList AppMenuModel::makeChordAndFretboardDiagramsItems()
 {
     MenuItemList items {
         makeMenuItem("chord-text"),
-        makeMenuItem("jims-chord-name-text"),
+        makeMenuItem("melo-chord-name-text"),
         makeMenuItem("add-fretboard-diagram"),
         makeSeparator(),
         makeMenuItem("insert-fretframe", TranslatableString("appshell/menu/add/chordandfret", "Fretboard diagram legend"))
@@ -757,7 +757,7 @@ MenuItemList AppMenuModel::makeTextItems()
         makeSeparator(),
         makeMenuItem("sticking-text"),
         makeMenuItem("chord-text"),
-        makeMenuItem("jims-chord-name-text"),
+        makeMenuItem("melo-chord-name-text"),
         makeMenuItem("roman-numeral-text"),
         makeMenuItem("nashville-number-text"),
         makeMenuItem("lyrics"),

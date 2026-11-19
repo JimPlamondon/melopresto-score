@@ -112,7 +112,7 @@ struct NominalNoteCtx {
     muse::mpe::dynamic_level_t dynamicLevel = 0;
     float userVelocityFraction = 0.f;
 
-    /// JiMStaff (JiMSynth VST3 workstream): the exact sounding pitch of a
+    /// MeloStaff (MeloSynth VST3 workstream): the exact sounding pitch of a
     /// lattice-identified JiMS note from the same fresh Kernel call that
     /// produces `pitchLevel` (declared before it so the call below can fill
     /// it), plus the pitch level it belongs to. Renderers that derive
@@ -144,7 +144,7 @@ struct NominalNoteCtx {
         exactPitchLevel = pitchLevel;
     }
 
-    /// The nominal pitch level of a note. JiMStaff Milestone 7 (owner
+    /// The nominal pitch level of a note. MeloStaff Milestone 7 (owner
     /// rulings 2026-08-17): a JiMS note SOUNDS what its lattice identity
     /// and its section's state (tuning + reference) say — the Kernel's
     /// note_sounding_pitch answer, resolved per note against the staff
@@ -162,7 +162,7 @@ struct NominalNoteCtx {
                     if (exactPitch) {
                         // The same Kernel answer, lossless: frequency, the
                         // transport key + full residual cents, and the
-                        // lattice identity (JiMSynth VST3 workstream).
+                        // lattice identity (MeloSynth VST3 workstream).
                         muse::mpe::ExactPitch exact;
                         exact.frequencyHz = sp.frequencyHz;
                         exact.midiKey = sp.midiKey;

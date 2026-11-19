@@ -141,13 +141,13 @@ struct ParamChangeEvent {
 };
 
 //! What the selected plug-in advertises through INoteExpressionController
-//! (JiMSynth VST3 workstream, 2026-08-19). Discovered once per plug-in
+//! (MeloSynth VST3 workstream, 2026-08-19). Discovered once per plug-in
 //! instance; the sequencer emits only what is advertised:
 //!  - `tuning`: the standard per-note tuning expression (kTuningTypeID) —
 //!    when present, a note's pitch curve travels as per-note events with the
 //!    note's id instead of the global pitch-bend parameter;
-//!  - `jimsLattice`: BOTH frozen JiMS custom types (jims.note.nPer
-//!    0x4A531001 and jims.note.nGen 0x4A531002) with their plug-in-declared
+//!  - `meloLattice`: BOTH frozen JiMS custom types (melo.note.nPer
+//!    0x4A531001 and melo.note.nGen 0x4A531002) with their plug-in-declared
 //!    discrete-step domains (`min`, `stepCount`; normalized =
 //!    (coord - min) / stepCount) — when present, a lattice-identified note's
 //!    (nPer, nGen) is sent once at its Note On.

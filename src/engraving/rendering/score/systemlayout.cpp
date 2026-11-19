@@ -94,8 +94,8 @@ using namespace mu::engraving::rendering::score;
 //---------------------------------------------------------
 
 //---------------------------------------------------------
-//   applyJimsBandOffsets (JiMStaff Milestone 8, octave-band elision)
-//    Notes on a JiMStaff are placed by the single StaffType seam against
+//   applyMeloBandOffsets (MeloStaff Milestone 8, octave-band elision)
+//    Notes on a MeloStaff are placed by the single StaffType seam against
 //    the whole-piece frame while measures are laid out — before anyone
 //    knows which system a measure lands in. Once the system's measures
 //    are final, each JiMS chord is shifted RIGIDLY to its band's place in
@@ -213,8 +213,8 @@ static void applyMeloBandOffsets(System* system, LayoutContext& ctx)
 }
 
 //---------------------------------------------------------
-//   jimsSystemStaffHeight (JiMStaff Milestone 8, owner finding 1)
-//    The height a JiMStaff occupies on THIS system: its frame view's
+//   meloSystemStaffHeight (MeloStaff Milestone 8, owner finding 1)
+//    The height a MeloStaff occupies on THIS system: its frame view's
 //    band heights plus gaps (in absolute units), not the staff type's
 //    nominal line count. Used wherever system layout stacks staves and
 //    where SystemLayout::minDistance subtracts the staff's height from the
@@ -553,7 +553,7 @@ System* SystemLayout::collectSystem(LayoutContext& ctx)
 
     updateTimeSigAboveStavesXPos(system, ctx);
 
-    // JiMStaff Milestone 8: now that the system's measure list is final,
+    // MeloStaff Milestone 8: now that the system's measure list is final,
     // shift every JiMS chord to its octave band for THIS system (elision
     // off: nothing to do) before spacing, skylines, and staff distances.
     applyMeloBandOffsets(system, ctx);
@@ -2336,7 +2336,7 @@ void SystemLayout::layoutSystem(System* system, LayoutContext& ctx, double xo1, 
         system->setLeftMargin(indent + maxBracketsWidth);
     }
 
-    // JiMStaff (M2 Phase 5/7, header-on-every-system completion): the
+    // MeloStaff (M2 Phase 5/7, header-on-every-system completion): the
     // JiMS header — scale dots, tonic indicator, crescent clef — draws
     // left of each system's first measure (owner geometry: left edge =
     // 2 indicator widths beyond the clef's leftmost extent). Reserve
@@ -2734,9 +2734,9 @@ void SystemLayout::layout2(System* system, LayoutContext& ctx)
         const Staff* staff  = ctx.dom().staff(si1);
         auto ni = std::next(i);
 
-        // JiMStaff Milestone 8 (owner finding 1): a JiMStaff's height on this
+        // MeloStaff Milestone 8 (owner finding 1): a MeloStaff's height on this
         // system is its frame view's height (bands + gaps), never the nominal
-        // line count — see jimsSystemStaffHeight.
+        // line count — see meloSystemStaffHeight.
         const Measure* firstMeasure = system->firstMeasure();
         const Fraction sysTick = firstMeasure ? firstMeasure->tick() : Fraction(0, 1);
         double dist = meloSystemStaffHeight(staff, si1, system, sysTick);

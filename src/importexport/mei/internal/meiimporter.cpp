@@ -133,7 +133,7 @@ bool MeiImporter::read(const muse::io::path_t& path)
     pugi::xml_node root = doc.first_child();
 
     pugi::xml_attribute meiVersion = root.attribute("meiversion");
-    // "5.1" is the MeloPresto MEI profile (mei-jims customization of MEI 5.1 CMN)
+    // "5.1" is the MeloPresto MEI profile (mei-melo customization of MEI 5.1 CMN)
     if (!meiVersion
         || (String(meiVersion.value()) != String(MEI_BASIC_VERSION)
             && String(meiVersion.value()) != u"5.1")) {
@@ -149,9 +149,7 @@ bool MeiImporter::read(const muse::io::path_t& path)
         for (pugi::xpath_node node : root.select_nodes("//*[@type]")) {
             const String tokens = u" " + String(node.node().attribute("type").value()).simplified() + u" ";
             for (const char* token : { "melo-melody-part", "melo-provenance", "melo-tonal-state", "melo-chord-name", "melo-tonic-ambit",
-                                       "melo-focused-review", "melo-adjudication", "jims-melody-part", "jims-provenance",
-                                       "jims-tonal-state", "jims-chord-name", "jims-tonic-ambit", "jims-focused-review",
-                                       "jims-adjudication" }) {
+                                       "melo-focused-review", "melo-adjudication" }) {
                 if (tokens.contains(u" " + String::fromUtf8(token) + u" ")) {
                     hasMeloCarrier = true;
                 }
@@ -1351,7 +1349,7 @@ bool MeiImporter::readStaffDefs(pugi::xml_node parentNode)
             if (warning) {
                 this->addLog("key signature", keySigNode);
             }
-            // mei-jims profile: keySig/@mode carries the conventional mode
+            // mei-melo profile: keySig/@mode carries the conventional mode
             m_keyModes.erase(staffIdx);
             const KeyMode mode = Convert::keyModeFromString(keySigNode.attribute("mode").value());
             if (mode != KeyMode::UNKNOWN) {
@@ -2382,12 +2380,11 @@ bool MeiImporter::readVerse(pugi::xml_node verseNode, Chord* chord)
     bool success = true;
 
     // If the verse has a syl with @con="u", add it to the lyrics to extend;
-    // verse@label="melo-extend" (retired spelling jims-extend still read) is the MeloPresto MEI carrier for an extension on
+    // verse@label="melo-extend" is the MeloPresto MEI carrier for an extension on
     // a dashed syllable (where @con carries the dash).
     pugi::xpath_node extender = verseNode.select_node("./syl[@con='u']");
     if (extender
-        || (std::string(verseNode.attribute("label").value()) == "melo-extend"
-            || std::string(verseNode.attribute("label").value()) == "jims-extend")) {
+        || std::string(verseNode.attribute("label").value()) == "melo-extend") {
         m_lyricExtenders[chord->track()][no] = std::make_pair(lyrics, nullptr);
     }
 

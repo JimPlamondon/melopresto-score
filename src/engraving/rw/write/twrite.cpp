@@ -2791,7 +2791,7 @@ void TWrite::write(const Staff* item, XmlWriter& xml, WriteContext& ctx)
         if (!t.placement.isEmpty()) {
             tattrs.push_back({ "placement", t.placement });
         }
-        xml.startElement("jimsTuningTrajectory", tattrs);
+        xml.startElement("meloTuningTrajectory", tattrs);
         for (const melo::TrajectorySegment& seg : t.segments) {
             xml.startElement("segment", { { "duration", seg.duration.toString() }, { "startCents", seg.startCents },
                                  { "endCents", seg.endCents }, { "interpolation", seg.interpolation } });
@@ -2956,11 +2956,11 @@ void TWrite::write(const StaffType* item, XmlWriter& xml, WriteContext& ctx)
         // MeloPresto Staff authoritative state only: marker, Kernel-owned
         // section state, tonic-ambit token. Projected geometry,
         // notehead classes, and memberships are derived, never stored.
-        xml.tag("jims", item->isMelo());
+        xml.tag("melo", item->isMelo());
         if (!item->meloStateJson().isEmpty()) {
             String configuration, error;
             if (melo::staffConfiguration(item->meloStateJson(), configuration, error)) {
-                xml.tag("jimsStateJson", configuration);
+                xml.tag("meloStateJson", configuration);
             } else {
                 // The writer's canonical preflight rejects this before output.
                 LOGE() << error;
@@ -2970,24 +2970,24 @@ void TWrite::write(const StaffType* item, XmlWriter& xml, WriteContext& ctx)
         // written only for a legacy token with no V2 home to ride in.
         if (!item->meloTonicAmbit().isEmpty()
             && !item->meloStateJson().contains(u"\"tonic_ambit\"")) {
-            xml.tag("jimsTonicAmbit", item->meloTonicAmbit());
+            xml.tag("meloTonicAmbit", item->meloTonicAmbit());
         }
         if (item->meloJiLines()) {
-            xml.tag("jimsJiLines", item->meloJiLines());
+            xml.tag("meloJiLines", item->meloJiLines());
         }
         if (item->meloScaleDotLabelMode() != MeloScaleDotLabelMode::Auto) {
             const char* mode = item->meloScaleDotLabelMode() == MeloScaleDotLabelMode::None ? "none"
                                : item->meloScaleDotLabelMode() == MeloScaleDotLabelMode::Left ? "left"
                                : "split";
-            xml.tag("jimsScaleDotLabels", String::fromUtf8(mode));
+            xml.tag("meloScaleDotLabels", String::fromUtf8(mode));
         }
         // Milestone 8: the per-staff-type octave-band elision override
         // (presentation only; Auto is the absent default).
         if (item->meloElideOctaves() != MeloElideOctaves::Auto) {
-            xml.tag("jimsElideOctaves", String::fromAscii(item->meloElideOctaves() == MeloElideOctaves::On ? "on" : "off"));
+            xml.tag("meloElideOctaves", String::fromAscii(item->meloElideOctaves() == MeloElideOctaves::On ? "on" : "off"));
         }
         if (!item->meloRatioLineExtentJson().isEmpty()) {
-            xml.tag("jimsRatioLineExtent", item->meloRatioLineExtentJson());
+            xml.tag("meloRatioLineExtent", item->meloRatioLineExtentJson());
         }
     }
     if (item->group() == StaffGroup::STANDARD || item->group() == StaffGroup::PERCUSSION) {

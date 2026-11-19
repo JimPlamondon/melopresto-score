@@ -5039,7 +5039,7 @@ void TLayout::layoutForWidth(StaffLines* item, double w, LayoutContext& ctx)
     double y  = item->pos().y();
     ldata->setBbox(x1, -item->lw() * .5 + y, w, (_lines - 1) * dist + item->lw());
 
-    // JiMStaff (Milestone 1): a JiMS staff draws exactly three guide
+    // MeloStaff (Milestone 1): a JiMS staff draws exactly three guide
     // lines — solid red Do-lines at 0 and 1200 cents and the dashed
     // yellow mid-period line at 600 cents — never the uniform line set.
     // Ordinates route through the single StaffType seam. The bbox above
@@ -6364,7 +6364,7 @@ void TLayout::layoutTimeSig(const TimeSig* item, TimeSig::LayoutData* ldata, con
 
     ldata->moveY(item->yPos());
 
-    // JiMStaff (owner correction 2026-08-14): the opening time signature
+    // MeloStaff (owner correction 2026-08-14): the opening time signature
     // centers vertically on the derived frame (a partial stave is
     // shorter than the nominal line count), and kerns leftward into the
     // empty mouth between the crescent's tips — only when a whole

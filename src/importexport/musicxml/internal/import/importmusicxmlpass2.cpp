@@ -3237,7 +3237,7 @@ void MusicXmlParserPass2::attributes(const String& partId, Measure* measure, con
 }
 
 //---------------------------------------------------------
-//   jimsStaffState
+//   meloStaffState
 //---------------------------------------------------------
 
 /**
@@ -8555,7 +8555,7 @@ void MusicXmlParserLyric::parse(bool visibility)
         l->setSyllabic(syllabic);
         m_numberedLyrics[lyricNo] = l;
 
-        // mei-jims profile: an extension is a musical fact on ANY syllabic -
+        // mei-melo profile: an extension is a musical fact on ANY syllabic -
         // a begin/middle syllable may carry a melisma before the word's next
         // syllable (Codex acceptance review, 2026-08-26). The exporter
         // already writes <extend> from ticks alone.

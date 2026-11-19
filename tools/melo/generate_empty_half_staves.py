@@ -63,8 +63,8 @@ def generate(bridge, output):
             staff = add(part,"Staff",id=str(number))
             st = add(staff,"StaffType",group="pitched")
             for tag,value in {"name":"melo12tet","lines":13,"clef":0,"keysig":0,
-                              "ledgerlines":0,"jims":1,"jimsJiLines":1,
-                              "jimsStateJson":json.dumps(state["configuration"],separators=(",",":"))}.items():
+                              "ledgerlines":0,"melo":1,"meloJiLines":1,
+                              "meloStateJson":json.dumps(state["configuration"],separators=(",",":"))}.items():
                 add(st,tag,value)
             add(part,"trackName",label)
             instrument=add(part,"Instrument",id="grand-piano")
@@ -96,6 +96,6 @@ def generate(bridge, output):
 if __name__=="__main__":
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--bridge",required=True)
-    parser.add_argument("--output",type=Path,default=Path(__file__).resolve().parents[2]/"src/engraving/tests/jimstaff_data/empty-half-staves-14.mscx")
+    parser.add_argument("--output",type=Path,default=Path(__file__).resolve().parents[2]/"src/engraving/tests/melostaff_data/empty-half-staves-14.mscx")
     args=parser.parse_args()
     generate(args.bridge,args.output)

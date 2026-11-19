@@ -5498,7 +5498,7 @@ void Score::cmdAddPitch(int step, bool addFlag, bool insert)
     insert = insert || inputState().usingNoteEntryMethod(NoteEntryMethod::TIMEWISE);
     Position pos;
 
-    // JiMStaff Milestone 6 (owner decision 1a, 2026-08-16): a JiMStaff has
+    // MeloStaff Milestone 6 (owner decision 1a, 2026-08-16): a MeloStaff has
     // no clef and its lines are 50 cents apart, so a typed letter must not
     // be routed through a stock-clef LINE (that entered whatever pitch sat
     // at that height). The letter (+ the input state's accidental, at the

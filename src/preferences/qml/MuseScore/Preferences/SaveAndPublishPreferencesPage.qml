@@ -46,11 +46,11 @@ PreferencesPage {
             checked: preferencesModel.warnOnMeloSave
             onClicked: preferencesModel.warnOnMeloSave = !checked
             navigation.panel: NavigationPanel {
-                name: "JimsSaveWarning"
+                name: "MeloSaveWarning"
                 section: root.navigationSection
                 order: root.navigationOrderStart
             }
-            navigation.name: "JimsSaveWarning"
+            navigation.name: "MeloSaveWarning"
             navigation.order: 1
         }
 

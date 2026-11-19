@@ -29,7 +29,7 @@
 #include "../vsttypes.h"
 
 namespace muse::vst {
-//! The VST host's record of currently sounding notes (JiMSynth VST3
+//! The VST host's record of currently sounding notes (MeloSynth VST3
 //! workstream, 2026-08-19). The primary key is the note's VST3 note
 //! identifier; the pitch/channel key is kept only for genuinely legacy
 //! events that carry `noteId = -1`, so overlapping unisons with distinct ids

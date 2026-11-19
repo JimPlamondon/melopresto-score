@@ -148,7 +148,7 @@ enum class ParenthesizeTiedFret : unsigned char {
     NEVER,
 };
 
-// JiMStaff scale-dot label display mode (owner epiphany 2026-08-15):
+// MeloStaff scale-dot label display mode (owner epiphany 2026-08-15):
 // presentation-only, fork-owned — never part of the Kernel state.
 // Auto resolves to Left strictly inside the Kernel's label-legibility
 // range and Split at or outside it; the RESOLVED value is never
@@ -160,11 +160,11 @@ enum class MeloScaleDotLabelMode : unsigned char {
     Split,
 };
 
-// JiMStaff Milestone 8: per-staff-type octave-band elision override
+// MeloStaff Milestone 8: per-staff-type octave-band elision override
 // (MuseScore's per-staff hideWhenEmpty shape). Presentation-only,
 // fork-owned, never part of the Kernel state. Auto follows the score
 // style; On/Off beat the style in both directions. Persisted in .mscx
-// beside jimsScaleDotLabels; absent reads as Auto.
+// beside meloScaleDotLabels; absent reads as Auto.
 enum class MeloElideOctaves : unsigned char {
     Auto = 0,
     On,
@@ -255,7 +255,7 @@ public:
     int     visualStringToPhys(int line) const;                   // return the string in physical order from visual string
     double   physStringToYOffset(int strg) const;                  // return the string Y offset (in sp, chord-relative)
 
-    // JiMStaff (Milestone 1): the STANDARD-group JiMS staff variant.
+    // MeloStaff (Milestone 1): the STANDARD-group JiMS staff variant.
     bool isMelo() const { return m_melo; }
     void setMelo(bool val) { m_melo = val; }
     const String& meloStateJson() const { return m_meloStateJson; }
@@ -410,14 +410,14 @@ public:
     // Cached per (staff-type, system range, state, token, melody, options,
     // effective policy); never re-derived while the frame is frozen.
     const MeloFrameView& meloFrameView(const Score* score, staff_idx_t staffIdx, const System* system) const;
-    // The legacy whole-piece view (jimsEnsureFrame's cache as one band).
+    // The legacy whole-piece view (meloEnsureFrame's cache as one band).
     const MeloFrameView& meloWholeFrameView(const Score* score, staff_idx_t staffIdx) const;
     // The EFFECTIVE elision policy for one system (style + first-system
     // rule + this staff type's Auto/On/Off override, MuseScore's
     // hide-empty-staves shape). Presentation only.
     bool meloElisionActive(const Score* score, staff_idx_t staffIdx, const System* system) const;
     // Milestone 8: cents -> chord-relative y in spatium units for `view`
-    // (the seam jimsYFromCents generalizes to; identical for one band).
+    // (the seam meloYFromCents generalizes to; identical for one band).
     double meloYFromCents(double centsAboveDo, const MeloFrameView& view) const;
     String tabBassStringPrefix(int strg, bool* hasFret) const;   // return a string with the prefix, if any, identifying a bass string
     int     numOfTabLedgerLines(int string) const;
@@ -530,8 +530,8 @@ private:
     int m_stepOffset = 0;
     Spatium m_lineDistance = 1_sp;
 
-    // JiMStaff (Milestone 1): marker, Kernel-owned serialized section
-    // state, and the tonic-ambit token (jims.tonic-ambit.v1 envelope).
+    // MeloStaff (Milestone 1): marker, Kernel-owned serialized section
+    // state, and the tonic-ambit token (melo.tonic-ambit.v1 envelope).
     // Only authoritative state — projected geometry is never stored.
     bool m_melo = false;
     String m_meloStateJson;

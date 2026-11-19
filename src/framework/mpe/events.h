@@ -91,7 +91,7 @@ struct ArrangementContext
     }
 };
 
-/// JiMStaff (JiMSynth VST3 workstream, 2026-08-19): the exact sounding pitch
+/// MeloStaff (MeloSynth VST3 workstream, 2026-08-19): the exact sounding pitch
 /// of a lattice-identified JiMS note — the Kernel's `note_sounding_pitch`
 /// answer carried losslessly beside the integer `nominalPitchLevel`, so a
 /// VST3 instrument receives the note without the pitch-level grid's 2-cent

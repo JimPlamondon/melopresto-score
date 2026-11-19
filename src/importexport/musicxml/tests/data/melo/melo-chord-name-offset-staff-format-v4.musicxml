@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="4.0" xmlns:melo="urn:melopresto:musicxml:4">
+  <part-list>
+    <score-part id="P1"><part-name>Mixed two-staff harmony</part-name></score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>4</divisions>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <staves>2</staves>
+        <clef number="1"><sign>G</sign><line>2</line></clef>
+        <clef number="2"><sign>F</sign><line>4</line></clef>
+        <melo:staff-state number="2">
+          <melo:scale>
+            <melo:step>M2</melo:step><melo:step>m2</melo:step><melo:step>M2</melo:step>
+            <melo:step>M2</melo:step><melo:step>M2</melo:step><melo:step>m2</melo:step>
+            <melo:step>M2</melo:step>
+          </melo:scale>
+          <melo:collection-rotation>0</melo:collection-rotation>
+          <melo:mode-rotation>0</melo:mode-rotation>
+          <melo:generator-cents>700.0</melo:generator-cents>
+          <melo:period-cents>1200.0</melo:period-cents>
+          <melo:embedding large-steps="5" small-steps="2"/>
+          <melo:extent lower-n-per="1" lower-n-gen="-2" upper-n-per="2" upper-n-gen="-2"/>
+          <melo:tonic-ambit>tonic-bounded</melo:tonic-ambit>
+          <melo:reference><melo:reference-pitch key-number="62"/></melo:reference>
+        </melo:staff-state>
+      </attributes>
+      <harmony placement="below" print-object="no" color="#112233" font-family="Edwin" font-size="13" font-style="italic" font-weight="bold" relative-x="20" relative-y="-10">
+        <melo:chord-name>La:So7</melo:chord-name>
+        <offset>4</offset>
+        <staff>2</staff>
+      </harmony>
+      <note><pitch><step>C</step><octave>4</octave></pitch><duration>16</duration><voice>1</voice><type>whole</type><staff>1</staff></note>
+      <backup><duration>16</duration></backup>
+      <note><pitch><step>C</step><octave>4</octave></pitch><melo:pitch n-per="1" n-gen="-2"/><duration>16</duration><voice>5</voice><type>whole</type><staff>2</staff></note>
+    </measure>
+  </part>
+</score-partwise>

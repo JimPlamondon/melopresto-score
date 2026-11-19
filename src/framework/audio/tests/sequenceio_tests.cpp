@@ -64,22 +64,22 @@ TEST(SequenceIOTests, RejectsStaleHostParameterAfterInputResourceReplacement)
     TestTracks tracks;
     auto input = std::make_shared<TestInput>();
     input->params.resourceMeta.type = AudioResourceType::VstPlugin;
-    input->params.resourceMeta.id = "JiMSynth";
+    input->params.resourceMeta.id = "MeloSynth";
     auto track = std::make_shared<EventTrack>();
     track->id = 7;
     track->inputHandler = input;
     tracks.tracks.emplace(track->id, track);
     SequenceIO sequence(&tracks);
 
-    sequence.setInputParamPlain(track->id, "JiMSynth", 0x4A530020u, 690.0);
+    sequence.setInputParamPlain(track->id, "MeloSynth", 0x4A530020u, 690.0);
     ASSERT_EQ(input->received.size(), 1u);
 
     input->params.resourceMeta.id = "ReplacementSynth";
-    sequence.setInputParamPlain(track->id, "JiMSynth", 0x4A530020u, 700.0);
+    sequence.setInputParamPlain(track->id, "MeloSynth", 0x4A530020u, 700.0);
     EXPECT_EQ(input->received.size(), 1u);
 
-    input->params.resourceMeta.id = "JiMSynth";
+    input->params.resourceMeta.id = "MeloSynth";
     input->params.resourceMeta.type = AudioResourceType::MusePlugin;
-    sequence.setInputParamPlain(track->id, "JiMSynth", 0x4A530020u, 700.0);
+    sequence.setInputParamPlain(track->id, "MeloSynth", 0x4A530020u, 700.0);
     EXPECT_EQ(input->received.size(), 1u);
 }

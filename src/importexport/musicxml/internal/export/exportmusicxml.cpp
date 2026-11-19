@@ -9242,7 +9242,7 @@ void ExportMusicXml::writeMeloTrajectories(const Measure* const m, const int par
                     m_xml.endElement();
                 }
             }
-            m_xml.endElement();   // jims:tuning-trajectory
+            m_xml.endElement();   // melo:tuning-trajectory
             m_xml.endElement();   // direction-type
             const int offset = calculateTimeDeltaInDivisions(t.tick, m->tick(), m_div);
             if (offset != 0) {

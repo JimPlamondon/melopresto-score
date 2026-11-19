@@ -101,7 +101,7 @@ private:
     std::thread::id m_mainThreadId;
 
     mutable std::mutex m_mutex;
-    //! JiMSynth VST3 workstream: a configuration handed over before the
+    //! MeloSynth VST3 workstream: a configuration handed over before the
     //! module has loaded is applied inside load(), before loadingCompleted
     //! fires, so the plug-in starts with its saved state (instrument etc.)
     //! rather than switching a few milliseconds into playback/export.

@@ -21,7 +21,7 @@
  */
 #pragma once
 
-// MeloPresto MEI carriage (the MeloPresto MEI profile, spec/MAPPING.md of the mei-jims
+// MeloPresto MEI carriage (the MeloPresto MEI profile, spec/MAPPING.md of the mei-melo
 // repository). Extends the Pull-Request-19 preservation pattern: native MEI
 // carries what it can express exactly (typed harm, ambitus, typed annots),
 // and the irreducibly JiMS-specific remainder rides as validated typed XML
@@ -51,11 +51,8 @@ class Staff;
 
 namespace mu::iex::mei {
 static constexpr const char* MELO_MEI_NS = "urn:melopresto:mei:1";
-// Retired spellings (before 2026-09-11): still read, never written.
-static constexpr const char* RETIRED_MELO_MEI_NS = "urn:jims:mei:1";
 static constexpr const char* MELO_MUSICXML_NS = "urn:melopresto:musicxml:4";
 static constexpr const char* MELO_MUSICXML_V5_NS = "urn:melopresto:musicxml:5";
-static constexpr const char* RETIRED_MELO_MUSICXML_NS = "urn:jims:musicxml:4";
 
 /// Export-side plan and emission.
 class MeloMeiExporter

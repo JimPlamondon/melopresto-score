@@ -251,7 +251,7 @@ StaffTypes StaffType::type() const
 {
     static const std::map<String, StaffTypes> xmlNameToType {
         { u"stdNormal", StaffTypes::STANDARD },
-        { u"jims12tet", StaffTypes::MELO_12TET },
+        { u"melo12tet", StaffTypes::MELO_12TET },
 
         { u"perc1Line", StaffTypes::PERC_1LINE },
         { u"perc2Line", StaffTypes::PERC_2LINE },
@@ -769,8 +769,8 @@ double StaffType::physStringToYOffset(int strg) const
 }
 
 //---------------------------------------------------------
-//   setJimsStateJson
-//    JiMStaffStateV2 (Milestone 2): the tonic-ambit token is a
+//   setMeloStateJson
+//    MeloStaffStateV2 (Milestone 2): the tonic-ambit token is a
 //    first-class field of the Kernel-owned state JSON. When the state
 //    carries it, extract it into the token member so layout consumes
 //    one value regardless of source. M10 accepts exactly one state spelling;
@@ -793,7 +793,7 @@ void StaffType::setMeloStateJson(const String& s)
 }
 
 //---------------------------------------------------------
-//   jimsResolvedScaleDotLabelMode
+//   meloResolvedScaleDotLabelMode
 //    Auto resolves against the Kernel's label-legibility range with
 //    STRICT comparisons and no epsilon (owner ruling 2026-08-15):
 //    Left strictly inside, Split at or outside either exact boundary.
@@ -819,7 +819,7 @@ MeloScaleDotLabelMode StaffType::meloResolvedScaleDotLabelMode() const
 }
 
 //---------------------------------------------------------
-//   jimsHeaderGeometry
+//   meloHeaderGeometry
 //    The single shared header calculation: crescent, indicator, and
 //    label-band widths for the current state and RESOLVED label mode.
 //    Label bands measure the actual Kernel-supplied label strings in
@@ -946,13 +946,13 @@ StaffType::MeloHeaderGeometry StaffType::meloHeaderGeometry(double spatium, doub
 }
 
 //---------------------------------------------------------
-//   jimsEnsureFrame
+//   meloEnsureFrame
 //    Derive (or reuse) the Kernel staff frame for this staff's melody.
 //    Pure transport: the notes' lattice identities are collected in
 //    document order and handed to the Kernel with the declared
 //    tonic-ambit token; no musical fact is computed here. Keyed by
 //    state+token+melody, so repeated calls are cheap. Every consumer of
-//    jimsFrameTopCents/jimsFrameSegments (staff lines, note placement,
+//    meloFrameTopCents/meloFrameSegments (staff lines, note placement,
 //    note entry, drawing) calls this first — note layout can run before
 //    the staff lines' layout, so laziness here is what keeps the notes
 //    and the frame on the same map (M2 owner correction 2026-08-14:
@@ -1033,7 +1033,7 @@ void StaffType::meloEnsureSectionFrame(const Score* score, staff_idx_t staffIdx)
         return;
     }
     // Mid-drag: keep the frame the drag started with (see
-    // jimsSetFrameFrozen); the dragged note may draw past the frozen
+    // meloSetFrameFrozen); the dragged note may draw past the frozen
     // edge as transient feedback, and the drop re-derives once.
     if (m_meloFrameFrozen && !m_meloFrameSegments.empty()) {
         return;
@@ -1135,8 +1135,8 @@ void StaffType::meloEnsureSectionFrame(const Score* score, staff_idx_t staffIdx)
 }
 
 //---------------------------------------------------------
-//   jimsYFromCents
-//    The single JiMStaff vertical seam (Milestone 1): cents above the
+//   meloYFromCents
+//    The single MeloStaff vertical seam (Milestone 1): cents above the
 //    staff's lower Do boundary to a y offset in spatium units. One staff
 //    spans exactly one 1200-cent period across (m_lines - 1) line
 //    distances — 100 cents per staff location — and y grows downward,
@@ -1159,7 +1159,7 @@ double StaffType::meloYFromCents(double centsAboveDo) const
 {
     // Continuous cents axis (owner ruling 2026-08-14, Milestone 2): the
     // staff defines NO discrete locations; a note's height is its cents
-    // value, affinely mapped to spatium space. JIMS_CENTS_PER_LINE_DISTANCE
+    // value, affinely mapped to spatium space. MELO_CENTS_PER_LINE_DISTANCE
     // is pure DRAWING density (how tall a cent draws), not a musical
     // fact; the frame's total height in cents is likewise drawing
     // geometry derived from the configured line count. Every musical
@@ -1172,7 +1172,7 @@ double StaffType::meloYFromCents(double centsAboveDo) const
 //   Milestone 8 — the explicit frame VIEW (octave-band elision)
 //    A view is ordered bands with one style-derived gap between
 //    neighbours. The legacy whole-piece frame is one band whose top sits
-//    at 0, so every one-band coordinate is jimsYFromCents's, bit for bit
+//    at 0, so every one-band coordinate is meloYFromCents's, bit for bit
 //    (same expression, same operation order). Which periods survive is
 //    the Kernel's decision; this code only lays the Kernel's bands out
 //    vertically and maps between y and cents.
@@ -1211,7 +1211,7 @@ double StaffType::MeloFrameView::yLdFromCents(double cents) const
     }
     if (bands.size() == 1) {
         // The legacy affine map (top band at 0): identical to
-        // jimsYFromCents's numerator, bit for bit.
+        // meloYFromCents's numerator, bit for bit.
         return (bands.back().upperCents - cents) / MELO_CENTS_PER_LINE_DISTANCE;
     }
     if (const MeloFrameBand* band = bandForCents(cents)) {
@@ -1289,7 +1289,7 @@ double StaffType::meloYFromCents(double centsAboveDo, const MeloFrameView& view)
 }
 
 // The system-range melody collector: the same lattice-identity walk as
-// jimsEnsureFrame's whole-piece collector (document order, every voice of
+// meloEnsureFrame's whole-piece collector (document order, every voice of
 // the staff, main-chord notes with a MeloPresto identity), restricted to the
 // measures of one system. Pure transport — no musical fact is computed.
 static muse::String meloCollectSystemMelody(const System* system, staff_idx_t staffIdx, const StaffType* staffType)
@@ -1367,7 +1367,7 @@ const StaffType::MeloFrameView& StaffType::meloWholeFrameView(const Score* score
 }
 
 //---------------------------------------------------------
-//   jimsElisionActive
+//   meloElisionActive
 //    The EFFECTIVE octave-band elision policy for one system
 //    (Milestone 8, MuseScore's hide-empty-staves shape): the score style
 //    opts in (default off), the staff's Auto/On/Off override beats the
@@ -2236,12 +2236,12 @@ void StaffType::initStaffTypes(const Color& defaultColor)
         StaffType(StaffGroup::TAB, u"tab10StrSimple", muse::mtrc("engraving", "Tab. 10-str. simple"), 10, 0, 1.5, true,  true, true, false, false,  defaultColor, u"MuseScore Tab Modern", 15, 0, false, true,  u"MuseScore Tab Sans",                     9, 0,  TablatureSymbolRepeat::NEVER, false, TablatureMinimStyle::NONE,    true,  false, true,  false, false, false, true,  false),
     };
 
-    // JiMStaff 12-TET (Milestone 1): a STANDARD-group variant spanning one
+    // MeloStaff 12-TET (Milestone 1): a STANDARD-group variant spanning one
     // 1200-cent period across 13 staff locations (100 cents = one line
     // distance). Clef, key signatures, and ledger lines are suppressed;
     // Kernel-selected ratio-lines are drawn by the JiMS StaffLines branch.
     // Keep in sync with StaffTypes::MELO_12TET.
-    StaffType melo(StaffGroup::STANDARD, u"jims12tet", melo::presetName(),
+    StaffType melo(StaffGroup::STANDARD, u"melo12tet", melo::presetName(),
                    13, 0, 1, false, true, false, true, false, false, false, defaultColor);
     melo.setMelo(true);
     melo.setMeloJiLines(true);

@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="4.0" xmlns:melo="urn:melopresto:musicxml:3">
+  <work><work-title>God Rest Ye Merry, Gentlemen</work-title></work>
+  <part-list><score-part id="P1"><part-name>Jimmy</part-name></score-part></part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes><divisions>2</divisions><time><beats>4</beats><beat-type>4</beat-type></time>
+        <melo:staff-state>
+          <melo:scale><melo:step>M2</melo:step><melo:step>m2</melo:step><melo:step>M2</melo:step><melo:step>M2</melo:step><melo:step>M2</melo:step><melo:step>m2</melo:step><melo:step>M2</melo:step></melo:scale>
+          <melo:collection-rotation>0</melo:collection-rotation>
+          <melo:mode-rotation>5</melo:mode-rotation>
+          <melo:generator-cents>700</melo:generator-cents>
+          <melo:period-cents>1200</melo:period-cents>
+          <melo:embedding large-steps="5" small-steps="2"/>
+          <melo:extent lower-n-per="1" lower-n-gen="-2" upper-n-per="2" upper-n-gen="-2"/>
+          <melo:tonic-ambit>tonic-bounded</melo:tonic-ambit>
+          <melo:reference><melo:none/></melo:reference>
+        </melo:staff-state>
+      </attributes>
+      <note><pitch><step>A</step><octave>4</octave></pitch>
+        <melo:pitch n-per="0" n-gen="1"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+      <note><pitch><step>A</step><octave>4</octave></pitch>
+        <melo:pitch n-per="0" n-gen="1"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+      <note><pitch><step>E</step><octave>5</octave></pitch>
+        <melo:pitch n-per="0" n-gen="2"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+      <note><pitch><step>E</step><octave>5</octave></pitch>
+        <melo:pitch n-per="0" n-gen="2"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+    </measure>
+    <measure number="2">
+      <note><pitch><step>D</step><octave>5</octave></pitch>
+        <melo:pitch n-per="1" n-gen="0"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+      <note><pitch><step>C</step><octave>5</octave></pitch>
+        <melo:pitch n-per="2" n-gen="-2"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+      <note><pitch><step>B</step><octave>4</octave></pitch>
+        <melo:pitch n-per="-1" n-gen="3"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+      <note><pitch><step>A</step><octave>4</octave></pitch>
+        <melo:pitch n-per="0" n-gen="1"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+    </measure>
+    <measure number="3">
+      <note><pitch><step>G</step><octave>4</octave></pitch>
+        <melo:pitch n-per="1" n-gen="-1"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+      <note><pitch><step>A</step><octave>4</octave></pitch>
+        <melo:pitch n-per="0" n-gen="1"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+      <note><pitch><step>B</step><octave>4</octave></pitch>
+        <melo:pitch n-per="-1" n-gen="3"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+      <note><pitch><step>C</step><octave>5</octave></pitch>
+        <melo:pitch n-per="2" n-gen="-2"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+    </measure>
+    <measure number="4">
+      <note><pitch><step>D</step><octave>5</octave></pitch>
+        <melo:pitch n-per="1" n-gen="0"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+      <note><pitch><step>E</step><octave>5</octave></pitch>
+        <melo:pitch n-per="0" n-gen="2"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+      <note><pitch><step>A</step><octave>4</octave></pitch>
+        <melo:pitch n-per="0" n-gen="1"/><duration>4</duration><voice>1</voice><staff>1</staff></note>
+    </measure>
+    <measure number="5">
+      <note><pitch><step>A</step><octave>4</octave></pitch>
+        <melo:pitch n-per="0" n-gen="1"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+      <note><pitch><step>A</step><octave>4</octave></pitch>
+        <melo:pitch n-per="0" n-gen="1"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+      <note><pitch><step>E</step><octave>5</octave></pitch>
+        <melo:pitch n-per="0" n-gen="2"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+      <note><pitch><step>E</step><octave>5</octave></pitch>
+        <melo:pitch n-per="0" n-gen="2"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+    </measure>
+    <measure number="6">
+      <attributes>
+        <melo:staff-state>
+          <melo:scale><melo:step>M2</melo:step><melo:step>m2</melo:step><melo:step>M2</melo:step><melo:step>M2</melo:step><melo:step>M2</melo:step><melo:step>m2</melo:step><melo:step>M2</melo:step></melo:scale>
+          <melo:collection-rotation>0</melo:collection-rotation>
+          <melo:mode-rotation>0</melo:mode-rotation>
+          <melo:generator-cents>700</melo:generator-cents>
+          <melo:period-cents>1200</melo:period-cents>
+          <melo:embedding large-steps="5" small-steps="2"/>
+          <melo:extent lower-n-per="1" lower-n-gen="-2" upper-n-per="2" upper-n-gen="-2"/>
+          <melo:tonic-ambit>tonic-bounded</melo:tonic-ambit>
+          <melo:reference><melo:none/></melo:reference>
+        </melo:staff-state>
+        <melo:change>
+          <melo:kind>mode</melo:kind>
+          <melo:mode-change old-tonic-n-gen="1" old-tonic-label="La" new-tonic-n-gen="-2" new-tonic-label="Do"/>
+        </melo:change>
+      </attributes>
+      <note><pitch><step>D</step><octave>5</octave></pitch>
+        <melo:pitch n-per="1" n-gen="0"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+      <note><pitch><step>C</step><octave>5</octave></pitch>
+        <melo:pitch n-per="2" n-gen="-2"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+      <note><pitch><step>B</step><octave>4</octave></pitch>
+        <melo:pitch n-per="-1" n-gen="3"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+      <note><pitch><step>A</step><octave>4</octave></pitch>
+        <melo:pitch n-per="0" n-gen="1"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+    </measure>
+    <measure number="7">
+      <note><pitch><step>G</step><octave>4</octave></pitch>
+        <melo:pitch n-per="1" n-gen="-1"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+      <note><pitch><step>A</step><octave>4</octave></pitch>
+        <melo:pitch n-per="0" n-gen="1"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+      <note><pitch><step>B</step><octave>4</octave></pitch>
+        <melo:pitch n-per="-1" n-gen="3"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+      <note><pitch><step>C</step><octave>5</octave></pitch>
+        <melo:pitch n-per="2" n-gen="-2"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+    </measure>
+    <measure number="8">
+      <note><pitch><step>D</step><octave>5</octave></pitch>
+        <melo:pitch n-per="1" n-gen="0"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+      <note><pitch><step>B</step><octave>4</octave></pitch>
+        <melo:pitch n-per="-1" n-gen="3"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+      <note><pitch><step>A</step><octave>4</octave></pitch>
+        <melo:pitch n-per="0" n-gen="1"/><duration>4</duration><voice>1</voice><staff>1</staff></note>
+    </measure>
+    <measure number="9">
+      <note><pitch><step>E</step><octave>5</octave></pitch>
+        <melo:pitch n-per="0" n-gen="2"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+      <note><pitch><step>F</step><octave>5</octave></pitch>
+        <melo:pitch n-per="3" n-gen="-3"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+      <note><pitch><step>G</step><octave>5</octave></pitch>
+        <melo:pitch n-per="2" n-gen="-1"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+      <note><pitch><step>F</step><octave>5</octave></pitch>
+        <melo:pitch n-per="3" n-gen="-3"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+    </measure>
+    <measure number="10">
+      <note><pitch><step>E</step><octave>5</octave></pitch>
+        <melo:pitch n-per="0" n-gen="2"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+      <note><pitch><step>D</step><octave>5</octave></pitch>
+        <melo:pitch n-per="1" n-gen="0"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+      <note><pitch><step>C</step><octave>5</octave></pitch>
+        <melo:pitch n-per="2" n-gen="-2"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+      <note><pitch><step>B</step><octave>4</octave></pitch>
+        <melo:pitch n-per="-1" n-gen="3"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+    </measure>
+    <measure number="11">
+      <note><pitch><step>A</step><octave>4</octave></pitch>
+        <melo:pitch n-per="0" n-gen="1"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+      <note><pitch><step>B</step><octave>4</octave></pitch>
+        <melo:pitch n-per="-1" n-gen="3"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+      <note><pitch><step>C</step><octave>5</octave></pitch>
+        <melo:pitch n-per="2" n-gen="-2"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+      <note><pitch><step>D</step><octave>5</octave></pitch>
+        <melo:pitch n-per="1" n-gen="0"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+    </measure>
+    <measure number="12">
+      <note><pitch><step>E</step><octave>5</octave></pitch>
+        <melo:pitch n-per="0" n-gen="2"/><duration>4</duration><voice>1</voice><staff>1</staff></note>
+      <note><pitch><step>A</step><octave>5</octave></pitch>
+        <melo:pitch n-per="1" n-gen="1"/><duration>4</duration><voice>1</voice><staff>1</staff></note>
+    </measure>
+    <measure number="13">
+      <note><pitch><step>G</step><octave>5</octave></pitch>
+        <melo:pitch n-per="2" n-gen="-1"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+      <note><pitch><step>F</step><octave>5</octave></pitch>
+        <melo:pitch n-per="3" n-gen="-3"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+      <note><pitch><step>E</step><octave>5</octave></pitch>
+        <melo:pitch n-per="0" n-gen="2"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+      <note><pitch><step>D</step><octave>5</octave></pitch>
+        <melo:pitch n-per="1" n-gen="0"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+    </measure>
+    <measure number="14">
+      <note><pitch><step>C</step><octave>5</octave></pitch>
+        <melo:pitch n-per="2" n-gen="-2"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+      <note><pitch><step>D</step><octave>5</octave></pitch>
+        <melo:pitch n-per="1" n-gen="0"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+      <note><pitch><step>E</step><octave>5</octave></pitch>
+        <melo:pitch n-per="0" n-gen="2"/><duration>4</duration><voice>1</voice><staff>1</staff></note>
+    </measure>
+    <measure number="15">
+      <note><pitch><step>D</step><octave>5</octave></pitch>
+        <melo:pitch n-per="1" n-gen="0"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+      <note><pitch><step>C</step><octave>5</octave></pitch>
+        <melo:pitch n-per="2" n-gen="-2"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+      <note><pitch><step>B</step><octave>4</octave></pitch>
+        <melo:pitch n-per="-1" n-gen="3"/><duration>4</duration><voice>1</voice><staff>1</staff></note>
+    </measure>
+    <measure number="16">
+      <note><pitch><step>A</step><octave>4</octave></pitch>
+        <melo:pitch n-per="0" n-gen="1"/><duration>4</duration><voice>1</voice><staff>1</staff></note>
+      <note><rest/><duration>4</duration><voice>1</voice><staff>1</staff></note>
+    </measure>
+  </part>
+</score-partwise>

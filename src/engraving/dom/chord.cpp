@@ -115,7 +115,7 @@ Note* Chord::upNote() const
     }
 
     const StaffType* st  = stf->staffTypeForElement(this);
-    // JiMStaff (owner correction 2026-08-14): "up" is the highest CENTS,
+    // MeloStaff (owner correction 2026-08-14): "up" is the highest CENTS,
     // not the highest diatonic line — the enharmonic dyad inverts its
     // visual order away from 12-TET while its line order never changes,
     // and the stem must anchor at the visually-top head.

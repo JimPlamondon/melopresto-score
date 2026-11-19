@@ -131,7 +131,7 @@ inline muse::mpe::octave_t actualOctave(const int nominalOctave, const muse::mpe
     return static_cast<muse::mpe::octave_t>(nominalOctave);
 }
 
-/// JiMStaff Milestone 7 (owner decision 1a, 2026-08-17): the Kernel's
+/// MeloStaff Milestone 7 (owner decision 1a, 2026-08-17): the Kernel's
 /// sounding pitch arrives as a MIDI key + residual cents; it maps straight
 /// onto the pitch-level scale (MIDI 12 = C0 = pitch level 0), with no
 /// invented enharmonic spelling in between.

@@ -12,7 +12,7 @@ from tools.tests.test_melo_ready_complete import continuous_tuning_package
 from tools.musicxml_to_melo.ready_writer import convert_package
 from tools.musicxml_to_melo.notation_oracle import build_oracle
 import json
-data = Path(__file__).resolve().parents[2] / 'src/importexport/musicxml/tests/data/jims/v5'
+data = Path(__file__).resolve().parents[2] / 'src/importexport/musicxml/tests/data/melo/v5'
 package = data / 'continuous-tuning'
 package.mkdir(exist_ok=True)
 continuous_tuning_package(package)

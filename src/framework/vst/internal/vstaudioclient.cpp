@@ -60,7 +60,7 @@ static std::optional<TransportEvent> mmcToTransportEvent(const IMMCDecoderPtr& d
 }
 
 namespace {
-// JiMSynth VST3 workstream: an optional diagnostic trace of every event the
+// MeloSynth VST3 workstream: an optional diagnostic trace of every event the
 // client forwards to the plug-in and every process call, appended as text to
 // the file named by MUSE_VST_EVENT_TRACE. Off (one static check) unless the
 // environment variable is set; the enabled path is not real-time safe and is
@@ -309,7 +309,7 @@ bool VstAudioClient::handleEvent(const VstEvent& event)
 {
     ensureActivity();
 
-    // JiMSynth VST3 workstream: active notes are keyed by their VST3 note
+    // MeloSynth VST3 workstream: active notes are keyed by their VST3 note
     // identifier (pitch/channel only for legacy events with noteId < 0), so
     // overlapping unisons with distinct ids are tracked — and released —
     // separately. Note-expression events pass straight through.

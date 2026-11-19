@@ -155,7 +155,7 @@ bool MeiExporter::write(std::string& meiData)
         }
 
         // schema processing instruction; a MeloPresto score uses the full CMN
-        // profile its carriers require (the mei-jims customization)
+        // profile its carriers require (the mei-melo customization)
         std::string schema = m_melo.present()
                              ? "https://music-encoding.org/schema/5.1/mei-CMN.rng"
                              : "https://music-encoding.org/schema/5.1/mei-basic.rng";
@@ -624,7 +624,7 @@ bool MeiExporter::writeScoreDefChange()
     // Single keysig change
     if (scoreDefKeySig) {
         //libmei::StaffDef keySigDef = Convert::keyToMEI(scoreDefKeySig->sig());
-        // mei-jims profile: a known mode rides on a child keySig (an
+        // mei-melo profile: a known mode rides on a child keySig (an
         // attribute cannot carry it); otherwise keep the attribute form.
         const KeyMode mode = scoreDefKeySig->keySigEvent().mode();
         if (m_melo.present() && mode != KeyMode::UNKNOWN && mode != KeyMode::NONE) {
@@ -1684,7 +1684,7 @@ bool MeiExporter::writeVerse(const Lyrics* lyrics)
     m_currentNode = m_currentNode.append_child();
     std::string xmlId = this->getXmlIdFor(lyrics, 'v');
     meiVerse.Write(m_currentNode, xmlId);
-    // mei-jims profile: a lyric extension on a dashed (begin/middle)
+    // mei-melo profile: a lyric extension on a dashed (begin/middle)
     // syllable cannot ride on syl@con (the dash occupies it); carry it as
     // verse@label="melo-extend" (the importer enrolls it as an extender).
     if (lyrics->ticks() != Fraction(0, 1)

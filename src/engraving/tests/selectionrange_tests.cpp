@@ -387,8 +387,8 @@ TEST_F(Engraving_SelectionRangeTests, deleteSelectionListElements)
 
 TEST_F(Engraving_SelectionRangeTests, meloRangeEnclosesRenderedStaff)
 {
-    std::vector<const char*> fixtures { "jimstaff_data/m9-satb-mixed.mscx", "jimstaff_data/m8-two-staves.mscx",
-                                        "jimstaff_data/empty-half-staves-14.mscx", "selectionrange_data/selrangeandspanners.mscx" };
+    std::vector<const char*> fixtures { "melostaff_data/m9-satb-mixed.mscx", "melostaff_data/m8-two-staves.mscx",
+                                        "melostaff_data/empty-half-staves-14.mscx", "selectionrange_data/selrangeandspanners.mscx" };
     if (const char* pilot = std::getenv("MELO_SELECTION_PILOT")) {
         fixtures.push_back(pilot);
     }

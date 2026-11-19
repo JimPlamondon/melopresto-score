@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-# musescore-jims (JiMSynth VST3 workstream, 2026-08-19): host-side tests for
+# melopresto-score (MeloSynth VST3 workstream, 2026-08-19): host-side tests for
 # the VST sequencer (unique note identifiers, exact optional JiMS pitch,
 # per-note tuning expression, capability-gated lattice identity), the
 # id-keyed active-note tracking, and the optional exact-pitch RPC tail.

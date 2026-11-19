@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: GPL-3.0-only
  * MuseScore-Studio-CLA-applies
  *
- * JiMStaff Milestone 10 — song-wide versus per-staff state.
+ * MeloStaff Milestone 10 — song-wide versus per-staff state.
  */
 
 #include <gtest/gtest.h>
@@ -141,7 +141,7 @@ size_t tuningLabelCount(const StaffLines* lines)
 TEST(Engraving_MeloStaffM10SATBTests, stateChangesKeepDoLinesOnTheSystemHeaderReference)
 {
     for (bool elide : { false, true }) {
-        MasterScore* score = ScoreRW::readScore(u"jimstaff_data/collision.mscx");
+        MasterScore* score = ScoreRW::readScore(u"melostaff_data/collision.mscx");
         ASSERT_TRUE(score);
         score->style().set(Sid::meloElideEmptyOctaves, elide);
         score->style().set(Sid::meloShowAllOctavesInFirstSystem, false);
@@ -184,7 +184,7 @@ TEST(Engraving_MeloStaffM10SATBTests, systemsShowOnlyTheSectionsTheyContain)
     // Do-line anchored within the system. A system without a state change
     // therefore looks exactly as if the piece had none.
     auto load = [](bool withChange) -> MasterScore* {
-        MasterScore* score = ScoreRW::readScore(u"jimstaff_data/collision.mscx");
+        MasterScore* score = ScoreRW::readScore(u"melostaff_data/collision.mscx");
         EXPECT_TRUE(score);
         if (!score) {
             return nullptr;
@@ -322,7 +322,7 @@ TEST(Engraving_MeloStaffM10SATBTests, aSystemPaysOnlyForTheNotesItShows)
     // written range. Three systems, one measure each; the change starts
     // system 2; a note raised three periods on system 3 must not change system 2.
     auto load = [](bool raise) -> MasterScore* {
-        MasterScore* score = ScoreRW::readScore(u"jimstaff_data/collision.mscx");
+        MasterScore* score = ScoreRW::readScore(u"melostaff_data/collision.mscx");
         EXPECT_TRUE(score);
         if (!score) {
             return nullptr;
@@ -518,7 +518,7 @@ TEST(Engraving_MeloStaffM10SATBTests, tuningUpdatesMidMeasureCarriersAndCancelRe
 
 TEST(Engraving_MeloStaffM10SATBTests, tuningCrossesNoteOrderWithoutChangingLatticeIdentities)
 {
-    MasterScore* score = ScoreRW::readScore(u"jimstaff_data/m9-satb-mixed.mscx");
+    MasterScore* score = ScoreRW::readScore(u"melostaff_data/m9-satb-mixed.mscx");
     ASSERT_TRUE(score);
     melo::TuningController controller(score, 0);
     ASSERT_TRUE(controller.beginPreview());
@@ -649,7 +649,7 @@ TEST(Engraving_MeloStaffM10SATBTests, tuningIndicatorAppearsOnlyOnTheTopVisibleM
 
 TEST(Engraving_MeloStaffM10SATBTests, referenceChangesPreserveWrittenAndEmptyStaffGeometry)
 {
-    const String paths[] = { satbTemplatePath(), ScoreRW::rootPath() + u"/jimstaff_data/m9-satb-mixed.mscx" };
+    const String paths[] = { satbTemplatePath(), ScoreRW::rootPath() + u"/melostaff_data/m9-satb-mixed.mscx" };
     for (const String& path : paths) {
         for (double generator : { 700.0, 4800.0 / 7.0, 720.0 }) {
             MasterScore* score = ScoreRW::readScore(path, true);
@@ -877,7 +877,7 @@ TEST(Engraving_MeloStaffM10SATBTests, everyEmptyVocalStaffUsesItsKernelRangeCent
 // scaffold shares the preceding section's Do reference.
 TEST(Engraving_MeloStaffM10SATBTests, eachStaffTypeSpanCollectsOnlyItsOwnNotes)
 {
-    MasterScore* score = ScoreRW::readScore(u"jimstaff_data/m9-satb-mixed.mscx");
+    MasterScore* score = ScoreRW::readScore(u"melostaff_data/m9-satb-mixed.mscx");
     ASSERT_TRUE(score);
     Staff* staff = score->staff(0);
     Measure* second = score->firstMeasure()->nextMeasure();
@@ -936,7 +936,7 @@ TEST(Engraving_MeloStaffM10SATBTests, eachStaffTypeSpanCollectsOnlyItsOwnNotes)
 
 TEST(Engraving_MeloStaffM10SATBTests, extentGrowsOnlyUntilSaveAndContractsOnlyOnReload)
 {
-    MasterScore* score = ScoreRW::readScore(u"jimstaff_data/m9-satb-mixed.mscx");
+    MasterScore* score = ScoreRW::readScore(u"melostaff_data/m9-satb-mixed.mscx");
     ASSERT_TRUE(score);
     score->setMeloMelodyPart(melo::MelodyPart::Bass); // isolate extent from melody analysis
     std::vector<Note*> notes = notesOn(score, 0);
@@ -980,7 +980,7 @@ TEST(Engraving_MeloStaffM10SATBTests, extentGrowsOnlyUntilSaveAndContractsOnlyOn
 
 TEST(Engraving_MeloStaffM10SATBTests, ratioLineExtentSurvivesWhileLatticeCoverageReconciles)
 {
-    MasterScore* score = ScoreRW::readScore(u"jimstaff_data/m9-satb-mixed.mscx");
+    MasterScore* score = ScoreRW::readScore(u"melostaff_data/m9-satb-mixed.mscx");
     ASSERT_TRUE(score);
     StaffType* type = score->staff(0)->staffType(Fraction(0, 1));
     ASSERT_TRUE(type && type->isMelo());
@@ -1006,7 +1006,7 @@ TEST(Engraving_MeloStaffM10SATBTests, ratioLineExtentSurvivesWhileLatticeCoverag
 
 TEST(Engraving_MeloStaffM10SATBTests, melodyDesignationDefaultsOverridesAndUndoRedoDrivesOneSongWideAmbit)
 {
-    MasterScore* score = ScoreRW::readScore(u"jimstaff_data/m9-satb-hymn.mscx");
+    MasterScore* score = ScoreRW::readScore(u"melostaff_data/m9-satb-hymn.mscx");
     ASSERT_TRUE(score);
     ASSERT_EQ(score->meloMelodyPart(), melo::MelodyPart::Soprano);
     std::vector<Note*> soprano = notesOn(score, 0);
@@ -1069,7 +1069,7 @@ TEST(Engraving_MeloStaffM10SATBTests, melodyDesignationDefaultsOverridesAndUndoR
 
 TEST(Engraving_MeloStaffM10SATBTests, tonalChangesDoNotTruncateTheDesignatedMelodyForAmbit)
 {
-    MasterScore* score = ScoreRW::readScore(u"jimstaff_data/m9-satb-hymn.mscx");
+    MasterScore* score = ScoreRW::readScore(u"melostaff_data/m9-satb-hymn.mscx");
     ASSERT_TRUE(score);
     Measure* second = score->firstMeasure()->nextMeasure();
     ASSERT_TRUE(second);

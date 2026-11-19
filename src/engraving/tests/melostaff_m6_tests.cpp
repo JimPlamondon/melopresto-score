@@ -20,7 +20,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-// JiMStaff Milestone 6 — editing workflow (owner decision 1a, 2026-08-16):
+// MeloStaff Milestone 6 — editing workflow (owner decision 1a, 2026-08-16):
 // keyboard pitch editing moves on the lattice through the Kernel; every
 // copy/paste/clone keeps the lattice identity; key/mode/scale changes are
 // authored through a controller that transports Kernel states into the
@@ -134,7 +134,7 @@ int compatPitch(const melo::PitchHit& hit)
 
 Score* syntheticCommonToneScore()
 {
-    Score* score = ScoreRW::readScore(u"jimstaff_data/jims-template.mscz");
+    Score* score = ScoreRW::readScore(u"melostaff_data/melo-template.mscz");
     if (!score) {
         return nullptr;
     }
@@ -189,7 +189,7 @@ Score* syntheticCommonToneScore()
 // compatibility pitch changed together, undoable.
 TEST(MeloStaffTests, m6KeyboardStepsMoveOnTheLatticeThroughTheKernel)
 {
-    Score* score = ScoreRW::readScore(u"jimstaff_data/collision.mscx");
+    Score* score = ScoreRW::readScore(u"melostaff_data/collision.mscx");
     ASSERT_TRUE(score);
     score->doLayout();
     const StaffType* st = meloStaffType(score);
@@ -251,7 +251,7 @@ TEST(MeloStaffTests, m6KeyboardStepsMoveOnTheLatticeThroughTheKernel)
 // every identity in order.
 TEST(MeloStaffTests, m6CopiedAndPastedNotesKeepTheirLatticeIdentity)
 {
-    Score* score = ScoreRW::readScore(u"jimstaff_data/collision.mscx");
+    Score* score = ScoreRW::readScore(u"melostaff_data/collision.mscx");
     ASSERT_TRUE(score);
     score->doLayout();
     auto notes = meloNotes(score);
@@ -317,7 +317,7 @@ TEST(MeloStaffTests, m6CopiedAndPastedNotesKeepTheirLatticeIdentity)
 // removes the measure's carrier from Kernel-returned states only.
 TEST(MeloStaffTests, m6ChangeControllerAuthorsCarriersFromKernelStates)
 {
-    Score* score = ScoreRW::readScore(u"jimstaff_data/collision.mscx");
+    Score* score = ScoreRW::readScore(u"melostaff_data/collision.mscx");
     ASSERT_TRUE(score);
     score->doLayout();
     Measure* m2 = measureNo(score, 2);
@@ -415,7 +415,7 @@ TEST(MeloStaffTests, m6ChangeControllerAuthorsCarriersFromKernelStates)
 
 TEST(MeloStaffTests, midBarChangeStartsAtTheSelectedExactTick)
 {
-    Score* score = ScoreRW::readScore(u"jimstaff_data/collision.mscx");
+    Score* score = ScoreRW::readScore(u"melostaff_data/collision.mscx");
     ASSERT_TRUE(score);
     Measure* measure = measureNo(score, 2);
     ASSERT_TRUE(measure);
@@ -491,7 +491,7 @@ TEST(MeloStaffTests, midBarChangeStartsAtTheSelectedExactTick)
 
 TEST(MeloStaffTests, twoMidBarChangesCanOccupyOneMeasure)
 {
-    Score* score = ScoreRW::readScore(u"jimstaff_data/collision.mscx");
+    Score* score = ScoreRW::readScore(u"melostaff_data/collision.mscx");
     ASSERT_TRUE(score);
     Measure* measure = measureNo(score, 1);
     ASSERT_TRUE(measure);
@@ -528,7 +528,7 @@ TEST(MeloStaffTests, twoMidBarChangesCanOccupyOneMeasure)
 
 TEST(MeloStaffTests, silentMidBarChangeCreatesATimingOnlyLayoutAnchor)
 {
-    Score* score = ScoreRW::readScore(u"jimstaff_data/collision.mscx");
+    Score* score = ScoreRW::readScore(u"melostaff_data/collision.mscx");
     ASSERT_TRUE(score);
     Measure* measure = measureNo(score, 1);
     ASSERT_TRUE(measure);
@@ -550,7 +550,7 @@ TEST(MeloStaffTests, silentMidBarChangeCreatesATimingOnlyLayoutAnchor)
 
 TEST(MeloStaffTests, midBarIndicatorHasTwoGreyDashedBarWidthFlanks)
 {
-    Score* score = ScoreRW::readScore(u"jimstaff_data/collision.mscx");
+    Score* score = ScoreRW::readScore(u"melostaff_data/collision.mscx");
     ASSERT_TRUE(score);
     Measure* measure = measureNo(score, 2);
     ASSERT_TRUE(measure);
@@ -600,7 +600,7 @@ TEST(MeloStaffTests, midBarIndicatorHasTwoGreyDashedBarWidthFlanks)
 
 TEST(MeloStaffTests, midBarIndicatorElementsAlignWithTheDisplayedStaffNoteLines)
 {
-    Score* score = ScoreRW::readScore(u"jimstaff_data/collision.mscx");
+    Score* score = ScoreRW::readScore(u"melostaff_data/collision.mscx");
     ASSERT_TRUE(score);
     Measure* firstMeasure = measureNo(score, 1);
     Measure* measure = measureNo(score, 2);
@@ -700,7 +700,7 @@ TEST(MeloStaffTests, midBarIndicatorElementsAlignWithTheDisplayedStaffNoteLines)
 // (kinds key, mode; one arrow up; La wrapped) fall out unchanged.
 TEST(MeloStaffTests, m6WorkedExampleAuthoredThroughTheControllerMatchesM5)
 {
-    Score* score = ScoreRW::readScore(u"jimstaff_data/collision.mscx");
+    Score* score = ScoreRW::readScore(u"melostaff_data/collision.mscx");
     ASSERT_TRUE(score);
     score->doLayout();
     Measure* m1 = measureNo(score, 1);
@@ -727,7 +727,7 @@ TEST(MeloStaffTests, m6WorkedExampleAuthoredThroughTheControllerMatchesM5)
 
 TEST(MeloStaffTests, stateChangeAtomicallyReinterpretsAFullTieAtExactFrequency)
 {
-    Score* score = ScoreRW::readScore(u"jimstaff_data/m5-key-up.mscx");
+    Score* score = ScoreRW::readScore(u"melostaff_data/m5-key-up.mscx");
     ASSERT_TRUE(score);
     auto notes = meloNotes(score);
     ASSERT_GE(notes.size(), 5u);
@@ -792,7 +792,7 @@ TEST(MeloStaffTests, stateChangeAtomicallyReinterpretsAFullTieAtExactFrequency)
 
 TEST(MeloStaffTests, stateChangeKeepsAnExistingFullTieIdentityAtTheSameReference)
 {
-    Score* score = ScoreRW::readScore(u"jimstaff_data/m5-key-up.mscx");
+    Score* score = ScoreRW::readScore(u"melostaff_data/m5-key-up.mscx");
     ASSERT_TRUE(score);
     Measure* m2 = measureNo(score, 2);
     ASSERT_TRUE(m2);
@@ -931,9 +931,9 @@ TEST(MeloStaffTests, syntheticTwoMeasureCommonTonePersistsItsExactContinuation)
 
 TEST(MeloStaffTests, writeSyntheticCommonToneAcceptanceScore)
 {
-    const char* outDir = std::getenv("JIMS_NOTE_CONFORMANCE_OUT");
+    const char* outDir = std::getenv("MELO_NOTE_CONFORMANCE_OUT");
     if (!outDir) {
-        GTEST_SKIP() << "set JIMS_NOTE_CONFORMANCE_OUT to write the common-tone acceptance score";
+        GTEST_SKIP() << "set MELO_NOTE_CONFORMANCE_OUT to write the common-tone acceptance score";
     }
     Score* score = syntheticCommonToneScore();
     ASSERT_TRUE(score);
@@ -944,7 +944,7 @@ TEST(MeloStaffTests, writeSyntheticCommonToneAcceptanceScore)
 
 TEST(MeloStaffTests, consecutiveStateChangesKeepAMultiSegmentTieExact)
 {
-    Score* score = ScoreRW::readScore(u"jimstaff_data/m5-key-up.mscx");
+    Score* score = ScoreRW::readScore(u"melostaff_data/m5-key-up.mscx");
     ASSERT_TRUE(score);
     std::vector<Note*> notes = meloNotes(score);
     ASSERT_GE(notes.size(), 9u);
@@ -986,7 +986,7 @@ TEST(MeloStaffTests, consecutiveStateChangesKeepAMultiSegmentTieExact)
 
 TEST(MeloStaffTests, projectionFailureRollsBackStateAndEveryStoredField)
 {
-    Score* score = ScoreRW::readScore(u"jimstaff_data/m5-key-up.mscx");
+    Score* score = ScoreRW::readScore(u"melostaff_data/m5-key-up.mscx");
     ASSERT_TRUE(score);
     Measure* changed = measureNo(score, 2);
     std::vector<Note*> notes = notesInMeasure(changed);
@@ -1006,7 +1006,7 @@ TEST(MeloStaffTests, projectionFailureRollsBackStateAndEveryStoredField)
 
 TEST(MeloStaffTests, linkedNotesReceiveOneCoherentProjection)
 {
-    Score* score = ScoreRW::readScore(u"jimstaff_data/m5-key-up.mscx");
+    Score* score = ScoreRW::readScore(u"melostaff_data/m5-key-up.mscx");
     ASSERT_TRUE(score);
     std::vector<Note*> notes = notesInMeasure(measureNo(score, 2));
     ASSERT_GE(notes.size(), 2u);
@@ -1026,7 +1026,7 @@ TEST(MeloStaffTests, linkedNotesReceiveOneCoherentProjection)
 
 TEST(MeloStaffTests, relativeKeyRevisionPropagatesThroughALaterModeCarrier)
 {
-    Score* score = ScoreRW::readScore(u"jimstaff_data/m5-key-up.mscx");
+    Score* score = ScoreRW::readScore(u"melostaff_data/m5-key-up.mscx");
     ASSERT_TRUE(score);
     Measure* m2 = measureNo(score, 2);
     Measure* m3 = measureNo(score, 3);
@@ -1054,7 +1054,7 @@ TEST(MeloStaffTests, relativeKeyRevisionPropagatesThroughALaterModeCarrier)
 
 TEST(MeloStaffTests, ambiguousPartialTieAcrossStateBoundaryIsRefusedWithoutMutation)
 {
-    Score* score = ScoreRW::readScore(u"jimstaff_data/m5-key-up.mscx");
+    Score* score = ScoreRW::readScore(u"melostaff_data/m5-key-up.mscx");
     ASSERT_TRUE(score);
     std::vector<Note*> notes = meloNotes(score);
     ASSERT_GE(notes.size(), 5u);
@@ -1089,7 +1089,7 @@ TEST(MeloStaffTests, ambiguousPartialTieAcrossStateBoundaryIsRefusedWithoutMutat
 // apart). D-sharp typed = D#4 = identity (-4, 7); E-flat = (3, -5); C = (1, -2).
 TEST(MeloStaffTests, m6LetterEntryEstablishesTheKernelIdentityOfTheNamedNote)
 {
-    Score* score = ScoreRW::readScore(u"jimstaff_data/jims-template.mscx");
+    Score* score = ScoreRW::readScore(u"melostaff_data/melo-template.mscx");
     ASSERT_TRUE(score);
     score->doLayout();
     ASSERT_TRUE(meloStaffType(score)->isMelo());
@@ -1134,7 +1134,7 @@ TEST(MeloStaffTests, m6LetterEntryEstablishesTheKernelIdentityOfTheNamedNote)
 
 TEST(MeloStaffTests, accidentalEditingKeepsKernelIdentityAndPlaybackTogether)
 {
-    Score* score = ScoreRW::readScore(u"jimstaff_data/jims-template.mscx");
+    Score* score = ScoreRW::readScore(u"melostaff_data/melo-template.mscx");
     ASSERT_TRUE(score);
     score->doLayout();
     InputState& input = score->inputState();
@@ -1174,7 +1174,7 @@ TEST(MeloStaffTests, accidentalEditingKeepsKernelIdentityAndPlaybackTogether)
 
 TEST(MeloStaffTests, explicitNaturalEntryOverridesEarlierSharpInTheMeasure)
 {
-    Score* score = ScoreRW::readScore(u"jimstaff_data/jims-template.mscx");
+    Score* score = ScoreRW::readScore(u"melostaff_data/melo-template.mscx");
     ASSERT_TRUE(score);
     score->doLayout();
     InputState& input = score->inputState();
@@ -1203,7 +1203,7 @@ TEST(MeloStaffTests, explicitNaturalEntryOverridesEarlierSharpInTheMeasure)
 
 TEST(MeloStaffTests, conventionalEntryUsesTheEffectivePostChangeState)
 {
-    Score* score = ScoreRW::readScore(u"jimstaff_data/jims-template.mscx");
+    Score* score = ScoreRW::readScore(u"melostaff_data/melo-template.mscx");
     ASSERT_TRUE(score);
     String error;
     ASSERT_TRUE(melo::validateState(score->staff(0)->staffType(Fraction(0, 1))->meloStateJson(), error)) << error.toStdString();
@@ -1241,16 +1241,16 @@ TEST(MeloStaffTests, conventionalEntryUsesTheEffectivePostChangeState)
 // jims-evidence/m5-acceptance/m5-key-mode/initial-1.png.
 TEST(MeloStaffTests, m6WriteEditingScenario)
 {
-    const char* gate = std::getenv("JIMS_M6_SCENARIO");
+    const char* gate = std::getenv("MELO_M6_SCENARIO");
     if (!gate || std::string(gate) != "1") {
-        GTEST_SKIP() << "set JIMS_M6_SCENARIO=1 and JIMS_SWEEP_OUT to write the M6 editing scenario";
+        GTEST_SKIP() << "set MELO_M6_SCENARIO=1 and MELO_SWEEP_OUT to write the M6 editing scenario";
     }
-    const char* outDir = std::getenv("JIMS_SWEEP_OUT");
+    const char* outDir = std::getenv("MELO_SWEEP_OUT");
     ASSERT_TRUE(outDir);
     const muse::String out = muse::String::fromUtf8(outDir);
 
     // The template as the wizard installs it (.mscz: score + its style).
-    Score* score = ScoreRW::readScore(u"jimstaff_data/jims-template.mscz");
+    Score* score = ScoreRW::readScore(u"melostaff_data/melo-template.mscz");
     ASSERT_TRUE(score);
     score->doLayout();
     ASSERT_TRUE(meloStaffType(score)->isMelo());
@@ -1347,7 +1347,7 @@ TEST(MeloStaffTests, changeTerrainLabelsOnlyTheNewTonicAndSeparatesCompoundArrow
                                Case { "key-only", true, false, 1, u"La" },
                                Case { "mode-only", false, true, 1, u"Do" } }) {
             SCOPED_TRACE(c.name);
-            Score* score = ScoreRW::readScore(u"jimstaff_data/collision.mscx");
+            Score* score = ScoreRW::readScore(u"melostaff_data/collision.mscx");
             ASSERT_TRUE(score);
             Measure* first = measureNo(score, 1);
             Measure* measure = measureNo(score, 2);

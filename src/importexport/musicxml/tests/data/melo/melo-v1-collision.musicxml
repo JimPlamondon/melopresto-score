@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0" xmlns:melo="urn:melopresto:musicxml:1">
+  <work><work-title>Sharp-Flat Collision and Second Cluster</work-title></work>
+  <part-list><score-part id="P1"><part-name>Jimmy</part-name></score-part></part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes><divisions>1</divisions>
+      <melo:staff-state>
+        <melo:scale><melo:step>M2</melo:step><melo:step>m2</melo:step><melo:step>M2</melo:step><melo:step>M2</melo:step><melo:step>M2</melo:step><melo:step>m2</melo:step><melo:step>M2</melo:step></melo:scale>
+        <melo:collection-rotation>0</melo:collection-rotation>
+        <melo:mode-rotation>0</melo:mode-rotation>
+        <melo:generator-cents>700</melo:generator-cents>
+        <melo:period-cents>1200</melo:period-cents>
+        <melo:embedding large-steps="5" small-steps="2"/>
+        <melo:extent lower-n-per="1" lower-n-gen="-2" upper-n-per="2" upper-n-gen="-2"/>
+      </melo:staff-state><time><beats>4</beats><beat-type>4</beat-type></time></attributes>
+      <note><pitch><step>D</step><alter>1</alter><octave>4</octave></pitch>
+        <melo:pitch n-per="-4" n-gen="7"/><duration>1</duration><type>quarter</type></note>
+      <note><pitch><step>E</step><alter>-1</alter><octave>4</octave></pitch>
+        <melo:pitch n-per="3" n-gen="-5"/><duration>1</duration><type>quarter</type></note>
+      <note><pitch><step>D</step><alter>1</alter><octave>4</octave></pitch>
+        <melo:pitch n-per="-4" n-gen="7"/><duration>1</duration><type>quarter</type></note>
+      <note><pitch><step>E</step><alter>-1</alter><octave>4</octave></pitch>
+        <melo:pitch n-per="3" n-gen="-5"/><duration>1</duration><type>quarter</type></note>
+    </measure>
+    <measure number="2">
+      <note><pitch><step>D</step><alter>1</alter><octave>4</octave></pitch>
+        <melo:pitch n-per="-4" n-gen="7"/><duration>2</duration><type>half</type></note>
+      <note><chord/><pitch><step>E</step><alter>-1</alter><octave>4</octave></pitch>
+        <melo:pitch n-per="3" n-gen="-5"/><duration>2</duration><type>half</type></note>
+      <note><pitch><step>C</step><octave>4</octave></pitch>
+        <melo:pitch n-per="1" n-gen="-2"/><duration>2</duration><type>half</type></note>
+      <note><chord/><pitch><step>D</step><octave>4</octave></pitch>
+        <melo:pitch n-per="0" n-gen="0"/><duration>2</duration><type>half</type></note>
+      <note><chord/><pitch><step>E</step><octave>4</octave></pitch>
+        <melo:pitch n-per="-1" n-gen="2"/><duration>2</duration><type>half</type></note>
+      <note><chord/><pitch><step>F</step><octave>4</octave></pitch>
+        <melo:pitch n-per="2" n-gen="-3"/><duration>2</duration><type>half</type></note>
+    </measure>
+    <measure number="3">
+      <note><pitch><step>C</step><octave>4</octave></pitch>
+        <melo:pitch n-per="1" n-gen="-2"/><duration>2</duration><type>half</type></note>
+      <note><pitch><step>C</step><octave>5</octave></pitch>
+        <melo:pitch n-per="2" n-gen="-2"/><duration>2</duration><type>half</type></note>
+    </measure>
+  </part>
+</score-partwise>

@@ -72,7 +72,7 @@ public:
     ParamsMapping paramsMapping(const std::set<Steinberg::Vst::CtrlNumber>& controllers) const;
     PluginParamId midiControllerParam(Steinberg::Vst::CtrlNumber controller, int16_t channel) const;
 
-    //! JiMSynth VST3 workstream: what the plug-in advertises through
+    //! MeloSynth VST3 workstream: what the plug-in advertises through
     //! INoteExpressionController on event bus 0 / channel 0 (standard
     //! per-note tuning, and both frozen JiMS lattice types with their
     //! declared discrete-step domains). Absent interface → everything false.

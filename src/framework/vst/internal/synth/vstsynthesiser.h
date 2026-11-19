@@ -115,7 +115,7 @@ public:
     bool isValid() const override;
     bool setHostParameterPlain(uint32_t paramId, double plain) override;
 
-    //! JiMSynth VST3 workstream: a VST instrument is ready to play only once
+    //! MeloSynth VST3 workstream: a VST instrument is ready to play only once
     //! its module has loaded and the audio client/sequencer have been set up
     //! on the audio-engine thread (or the load has failed for good), so play
     //! and offline export wait for it instead of dropping the first notes or

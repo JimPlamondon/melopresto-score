@@ -102,7 +102,6 @@ def workflow_environment(workspace: Path, cargo_bin: Path) -> dict[str, str]:
     environment_file = workspace / "github-env"
     environment = os.environ.copy()
     environment.pop("MELO_ROOT", None)
-    environment.pop("JIMS_ROOT", None)
     environment["GITHUB_ENV"] = str(environment_file)
     environment["PATH"] = str(cargo_bin) + os.pathsep + environment.get("PATH", "")
     result = subprocess.run(["bash", "-eu", "-c", script], env=environment, text=True,

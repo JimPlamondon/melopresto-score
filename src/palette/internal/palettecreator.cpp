@@ -565,7 +565,7 @@ PalettePtr PaletteCreator::newLayoutPalette(bool defaultPalette)
     sp->appendActionIcon(ActionIconType::TFRAME, "insert-textframe", FRAME_MAG);
     sp->appendActionIcon(ActionIconType::FFRAME, "insert-fretframe", FRAME_MAG);
     sp->appendActionIcon(ActionIconType::STAFF_TYPE_CHANGE, "insert-staff-type-change");
-    sp->appendActionIcon(ActionIconType::STAFF_TYPE_CHANGE, "jims-change");
+    sp->appendActionIcon(ActionIconType::STAFF_TYPE_CHANGE, "melo-change");
     sp->appendActionIcon(ActionIconType::MEASURE, "insert-measure");
 
     return sp;

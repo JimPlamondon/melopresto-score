@@ -108,7 +108,7 @@ double ShadowNote::segmentSkylineTopY() const
 
 bool ShadowNote::ledgerLinesVisible() const
 {
-    // JiMStaff Milestone 4 (owner decision 3a): the note-input preview
+    // MeloStaff Milestone 4 (owner decision 3a): the note-input preview
     // never shows ledger lines on a JiMS staff — the staff stack grows
     // instead. Suppressed here, at the source, so neither layout nor
     // paint ever schedules a preview ledger.

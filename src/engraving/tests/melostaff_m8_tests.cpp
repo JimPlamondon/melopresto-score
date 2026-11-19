@@ -20,7 +20,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-// JiMStaff Milestone 8 — octave-band elision ("hollow stacks"; owner-approved
+// MeloStaff Milestone 8 — octave-band elision ("hollow stacks"; owner-approved
 // plan Plans/Add_JiMS_to_MuseScore/M8_OctaveBandElision_Plan.md, 2026-08-18).
 // The Kernel decides which periods survive, each band's bounds and label,
 // and the omitted count; the fork slices the melody per system, resolves the
@@ -63,9 +63,9 @@ using namespace muse;
 using namespace muse::draw;
 
 namespace {
-const String TWO_HAND(u"jimstaff_data/m8-two-hand.mscx");
-const String TWO_STAVES(u"jimstaff_data/m8-two-staves.mscx");
-const String SINGLE_OCTAVE(u"jimstaff_data/collision.mscx");
+const String TWO_HAND(u"melostaff_data/m8-two-hand.mscx");
+const String TWO_STAVES(u"melostaff_data/m8-two-staves.mscx");
+const String SINGLE_OCTAVE(u"melostaff_data/collision.mscx");
 
 const double EPS = 1e-9;
 
@@ -170,11 +170,11 @@ protected:
         for (int p : periods) {
             // Re in period p: lattice (p, 0); MIDI D(p+4) = 62 + 12*p, tpc 16.
             extra += String(u"\n            <Note>\n              <pitch>%1</pitch>\n              <tpc>16</tpc>\n"
-                            u"              <jimsNPer>%2</jimsNPer>\n              <jimsNGen>0</jimsNGen>\n              </Note>")
+                            u"              <meloNPer>%2</meloNPer>\n              <meloNGen>0</meloNGen>\n              </Note>")
                      .arg(62 + 12 * p).arg(p);
         }
         text.insert(chordEnd, extra);
-        const String dir = ScoreRW::rootPath() + u"/../../../build.release/jims-m8-scratch";
+        const String dir = ScoreRW::rootPath() + u"/../../../build.release/melo-m8-scratch";
         io::Dir::mkpath(dir);
         const String path = dir + u"/" + String::fromUtf8(name);
         io::File out(path);
@@ -689,7 +689,7 @@ TEST_F(Engraving_MeloStaffM8BandElisionTests, m8BraceJoinsTheBandsOfAHollowStack
     delete score;
 }
 
-// Owner finding 1 (2026-08-18): a JiMStaff's height on a system is its frame
+// Owner finding 1 (2026-08-18): a MeloStaff's height on a system is its frame
 // view's height (bands + gaps), so systems keep the minimum system distance
 // and a following staff keeps the staff distance — instead of collapsing to
 // the skyline minimum as with the nominal one-period height.
@@ -816,7 +816,7 @@ TEST_F(Engraving_MeloStaffM8BandElisionTests, m8OctaveLabelsNameTheirRowEverywhe
     delete score;
     // Change indicator terrain (M6/M7 gate: bar 2 moves to reference 53, La-mode):
     // the terrain's "[PitchN]:" is the Kernel label of ITS row's period.
-    MasterScore* gate = ScoreRW::readScore(u"jimstaff_data/m7-gate.mscz");
+    MasterScore* gate = ScoreRW::readScore(u"melostaff_data/m7-gate.mscz");
     ASSERT_TRUE(gate);
     gate->doLayout();
     Measure* m2 = measureNo(gate, 2);
@@ -1131,11 +1131,11 @@ TEST_F(Engraving_MeloStaffM8BandElisionTests, m8DoRowsCarryRedLinesCrescentHorns
     // Off-Do partial staves (La-mode, tonic-bounded, with a mid-piece
     // change back to Do-mode) at three generator widths.
     for (double g : { 686.0, 700.0, 720.0 }) {
-        io::File f(ScoreRW::rootPath() + u"/jimstaff_data/m5-syshead.mscx");
+        io::File f(ScoreRW::rootPath() + u"/melostaff_data/m5-syshead.mscx");
         ASSERT_TRUE(f.open(io::IODevice::ReadOnly));
         String text = String::fromUtf8(f.readAll());
         text.replace(u"\"generator_cents\":700.0", u"\"generator_cents\":" + String::number(g, 1));
-        const String dir = ScoreRW::rootPath() + u"/../../../build.release/jims-m8-scratch";
+        const String dir = ScoreRW::rootPath() + u"/../../../build.release/melo-m8-scratch";
         io::Dir::mkpath(dir);
         const String path = dir + u"/m8-do-row-net-" + String::number(g, 0) + u".mscx";
         io::File out(path);
@@ -1159,7 +1159,7 @@ TEST_F(Engraving_MeloStaffM8BandElisionTests, m8DoRowsCarryRedLinesCrescentHorns
     }
     // The M7 gate terrain (bar 2: La-mode, reference 53).
     {
-        MasterScore* gate = ScoreRW::readScore(u"jimstaff_data/m7-gate.mscz");
+        MasterScore* gate = ScoreRW::readScore(u"melostaff_data/m7-gate.mscz");
         ASSERT_TRUE(gate);
         gate->doLayout();
         bool sawPartial = false;
@@ -1184,13 +1184,13 @@ TEST_F(Engraving_MeloStaffM8BandElisionTests, m8DoRowsCarryRedLinesCrescentHorns
 }
 
 // Regression for the two-staff dynamic-tuning video (owner finding
-// 2026-08-30): every visible JiMStaff segment has an explicit top and bottom
+// 2026-08-30): every visible MeloStaff segment has an explicit top and bottom
 // boundary throughout tuning motion, and a clipped crescent's closure belongs
 // only to the staff-local occurrence whose period is actually cut.
 TEST_F(Engraving_MeloStaffM8BandElisionTests, m8PartialStaffEdgesPreserveRealRatioLinesAndLocalCrescentClosures)
 {
     for (const String& fixture :
-         { TWO_STAVES, String::fromUtf8(engraving_tests_DATA_ROOT) + u"/jimstaff_data/empty-half-staves-14.mscx" }) {
+         { TWO_STAVES, String::fromUtf8(engraving_tests_DATA_ROOT) + u"/melostaff_data/empty-half-staves-14.mscx" }) {
         MasterScore* score = ScoreRW::readScore(fixture, fixture != TWO_STAVES);
         ASSERT_TRUE(score);
         score->doLayout();
@@ -1315,7 +1315,7 @@ TEST_F(Engraving_MeloStaffM8BandElisionTests, fixedRatioEdgeKeepsSoDotAndLabelAn
     StaffType* type = mutSt(score);
     ASSERT_TRUE(type && type->isMelo());
     type->setMeloStateJson(test::canonicalRequest(
-                               u"{\"schema\":\"jimstaff-v3\",\"scale\":[\"M2\",\"m2\",\"M2\",\"M2\",\"M2\",\"m2\",\"M2\"],"
+                               u"{\"schema\":\"melostaff-v3\",\"scale\":[\"M2\",\"m2\",\"M2\",\"M2\",\"M2\",\"m2\",\"M2\"],"
                                u"\"collection_rotation\":0,\"mode_rotation\":0,\"generator_cents\":700.0,"
                                u"\"period_cents\":1200.0,\"embedding\":{\"large_steps\":5,\"small_steps\":2},"
                                u"\"extent\":{\"lower\":{\"nPer\":-2,\"nGen\":-1},"
@@ -1463,7 +1463,7 @@ TEST_F(Engraving_MeloStaffM8BandElisionTests, changeIndicatorAnchorsOnTheDoLineT
     // Paint check on the accepted M5 piece: Do-mode -> La-mode at bar 2 on a
     // one-period staff. The new tonic's label must be the UPPER register
     // ("A4: La", not "A3: La") and every terrain text must lie on the staff.
-    MasterScore* score = ScoreRW::readScore(u"jimstaff_data/m5-mode.mscx");
+    MasterScore* score = ScoreRW::readScore(u"melostaff_data/m5-mode.mscx");
     ASSERT_TRUE(score);
     score->doLayout();
     Measure* m2 = measureNo(score, 2);
@@ -1542,7 +1542,7 @@ TEST_F(Engraving_MeloStaffM8BandElisionTests, m8RoundTripPreservesSwitchesAndAbs
     score->style().set(Sid::meloElideEmptyOctaves, true);
     score->style().set(Sid::meloShowAllOctavesInFirstSystem, false);
     mutSt(score)->setMeloElideOctaves(MeloElideOctaves::On);
-    const String dir = ScoreRW::rootPath() + u"/../../../build.release/jims-m8-scratch";
+    const String dir = ScoreRW::rootPath() + u"/../../../build.release/melo-m8-scratch";
     io::Dir::mkpath(dir);
     // A real .mscz container (MscSaver -> MscWriter zip), read back through
     // the ordinary reader.
@@ -1583,8 +1583,8 @@ TEST_F(Engraving_MeloStaffM8BandElisionTests, m8RoundTripPreservesSwitchesAndAbs
     ASSERT_TRUE(f.open(io::IODevice::ReadOnly));
     String text = String::fromUtf8(f.readAll());
     f.close();
-    ASSERT_TRUE(text.contains(u"<jimsElideOctaves>off</jimsElideOctaves>"));
-    text.replace(u"<jimsElideOctaves>off</jimsElideOctaves>", u"<jimsElideOctaves>banana</jimsElideOctaves>");
+    ASSERT_TRUE(text.contains(u"<meloElideOctaves>off</meloElideOctaves>"));
+    text.replace(u"<meloElideOctaves>off</meloElideOctaves>", u"<meloElideOctaves>banana</meloElideOctaves>");
     const String out3 = dir + u"/m8-roundtrip-unknown.mscx";
     io::File w(out3);
     ASSERT_TRUE(w.open(io::IODevice::WriteOnly));
@@ -1605,7 +1605,7 @@ TEST_F(Engraving_MeloStaffM8BandElisionTests, fixedRatioLineExtentRoundTripsPerS
         = u"{\"lower\":{\"period\":-2,\"ratio\":\"3/2\"},"
           u"\"upper\":{\"period\":6,\"ratio\":\"3/2\"}}";
     mutSt(score)->setMeloRatioLineExtentJson(extent);
-    const String out = ScoreRW::rootPath() + u"/../../../build.release/jims-m8-scratch/ratio-extent-roundtrip.mscx";
+    const String out = ScoreRW::rootPath() + u"/../../../build.release/melo-m8-scratch/ratio-extent-roundtrip.mscx";
     ASSERT_TRUE(ScoreRW::saveScore(score, out));
     delete score;
     MasterScore* again = ScoreRW::readScore(out, true);
@@ -1796,7 +1796,7 @@ TEST_F(Engraving_MeloStaffM8BandElisionTests, legacyTonicExtentSpellingIsNotAnAl
 // octave, which then holds the whole indicator.
 TEST_F(Engraving_MeloStaffM8BandElisionTests, changeIndicatorExtendsTheStaffWhenNoDoLineKeepsItOn)
 {
-    MasterScore* score = ScoreRW::readScore(u"jimstaff_data/m5-mode.mscx");
+    MasterScore* score = ScoreRW::readScore(u"melostaff_data/m5-mode.mscx");
     ASSERT_TRUE(score);
     bool alternate = false;
     for (Measure* m = score->firstMeasure(); m; m = m->nextMeasure()) {
@@ -1876,7 +1876,7 @@ TEST_F(Engraving_MeloStaffM8BandElisionTests, tonicAmbitIsNeverDerivedAsALayoutS
 // The bounding guide and crescent cut must share that exact ordinate.
 TEST_F(Engraving_MeloStaffM8BandElisionTests, odeToJoyEndsOnItsVisibleSoRatioLine)
 {
-    MasterScore* score = ScoreRW::readScore(u"jimstaff_data/ode-to-joy.mscx");
+    MasterScore* score = ScoreRW::readScore(u"melostaff_data/ode-to-joy.mscx");
     ASSERT_TRUE(score);
     score->doLayout();
     const StaffType* type = st(score);
@@ -1917,7 +1917,7 @@ TEST_F(Engraving_MeloStaffM8BandElisionTests, odeToJoyEndsOnItsVisibleSoRatioLin
 TEST_F(Engraving_MeloStaffM8BandElisionTests, emptyHalfStaffFixtureCoversEveryModeAndAmbit)
 {
     MasterScore* score = ScoreRW::readScore(String::fromUtf8(engraving_tests_DATA_ROOT)
-                                            + u"/jimstaff_data/empty-half-staves-14.mscx", true);
+                                            + u"/melostaff_data/empty-half-staves-14.mscx", true);
     ASSERT_TRUE(score);
     for (double generator : { 700.0, 686.0, 696.0, 710.0, 720.0, 700.0 }) {
         for (staff_idx_t i = 0; i < score->nstaves(); ++i) {
@@ -1997,7 +1997,7 @@ TEST_F(Engraving_MeloStaffM8BandElisionTests, emptyHalfStaffFixtureCoversEveryMo
 TEST_F(Engraving_MeloStaffM8BandElisionTests, emptyHalfStaffHeadersUseTonicSpecificLabelSidesWithoutRatioLegend)
 {
     MasterScore* score = ScoreRW::readScore(String::fromUtf8(engraving_tests_DATA_ROOT)
-                                            + u"/jimstaff_data/empty-half-staves-14.mscx", true);
+                                            + u"/melostaff_data/empty-half-staves-14.mscx", true);
     ASSERT_TRUE(score);
     System* system = measureSystems(score).front();
     // Owner 2026-09-15 (1a) with the Kernel's 25-cent tempering snap: a

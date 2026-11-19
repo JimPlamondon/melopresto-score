@@ -21,7 +21,7 @@ def validate_source(source):
     root = ET.parse(source).getroot()
     namespaces = {element.tag[1:].split("}", 1)[0] for element in root.iter()
                   if isinstance(element.tag, str) and element.tag.startswith("{")
-                  and (element.tag.startswith("{urn:jims:") or element.tag.startswith("{urn:melopresto:"))}
+                  and element.tag.startswith("{urn:melopresto:")}
     if namespaces != {NAMESPACE}:
         raise ValueError("Use canonical V5 MusicXML with a spelled initial reference and relative key-change history.")
     references = list(root.iter(f"{{{NAMESPACE}}}reference-timeline"))
@@ -35,9 +35,6 @@ def convert(executable, source, destination):
         raise ValueError("The output must be a separate .mscx file.")
     if destination.suffix.lower() != ".mscx":
         raise ValueError("The output filename must end in .mscx.")
-    overrides = [key for key in ("JIMS_REFERENCE", "JIMS_KEY_CHANGE", "JIMS_MODE_CHANGE", "JIMS_SCALE_CHANGE", "JIMS_TONIC_TOKEN", "JIMS_TONIC_TOKEN2") if os.environ.get(key)]
-    if overrides:
-        raise ValueError("Author the canonical input instead of supplying overrides: " + ", ".join(overrides))
     validate_source(source)
     destination.parent.mkdir(parents=True, exist_ok=True)
     # A failed import cannot truncate a previously generated score.

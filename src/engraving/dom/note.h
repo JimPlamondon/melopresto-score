@@ -218,7 +218,7 @@ public:
     int fixedLine() const { return m_fixedLine; }
     void setFixedLine(int v) { m_fixedLine = v; }
 
-    // JiMStaff lattice identity (Milestone 1).
+    // MeloStaff lattice identity (Milestone 1).
     bool hasMeloPitch() const { return m_meloNPer != MELO_UNSET && m_meloNGen != MELO_UNSET; }
     int meloNPer() const { return m_meloNPer; }
     int meloNGen() const { return m_meloNGen; }
@@ -551,8 +551,8 @@ private:
     int m_subchannel = 0;       // articulation
     int m_line = INVALID_LINE;  // y-Position; 0 - top line.
 
-    // JiMStaff lattice identity (Milestone 1): authoritative per-note
-    // nPer/nGen, persisted; JIMS_UNSET when the note carries none. The
+    // MeloStaff lattice identity (Milestone 1): authoritative per-note
+    // nPer/nGen, persisted; MELO_UNSET when the note carries none. The
     // Do-relative cents value is a derived layout cache obtained from the
     // Kernel through the FFI seam — never serialized, never computed here.
     static constexpr int MELO_UNSET = INT_MIN;

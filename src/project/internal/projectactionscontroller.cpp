@@ -1502,7 +1502,7 @@ void ProjectActionsController::warnCloudIsNotAvailable()
 
 void ProjectActionsController::warnMeloStockLossOnce(const INotationProjectPtr& project)
 {
-    // JiMStaff (M1 follow-up 7, owner 2026-08-19): the first time a score
+    // MeloStaff (M1 follow-up 7, owner 2026-08-19): the first time a score
     // that carries JiMS notation is saved in a session, say once that a stock
     // MuseScore build silently discards that data on resave — informational,
     // never blocking the save; "don't show again" is a preference.

@@ -6,10 +6,10 @@ from pathlib import Path
 import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[2]
-DATA = ROOT / 'src/importexport/musicxml/tests/data/jims/v5'
+DATA = ROOT / 'src/importexport/musicxml/tests/data/melo/v5'
 NS = 'urn:melopresto:musicxml:5'
 ET.register_namespace('melo', NS)
-tree = ET.parse(DATA / 'jims-multi-part-perstaff-differs.musicxml')
+tree = ET.parse(DATA / 'melo-multi-part-perstaff-differs.musicxml')
 root = tree.getroot()
 root.find('work/work-title').text = 'Unequal staff counts share one musical timeline'
 part = root.findall('part')[1]

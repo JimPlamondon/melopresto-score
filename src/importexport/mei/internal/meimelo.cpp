@@ -547,7 +547,7 @@ void MeloMeiExporter::onHarm(pugi::xml_node harmNode, const Harmony* harmony, co
     pugi::xml_attribute type = harmNode.attribute("type");
     const std::string current = type ? type.value() : "";
     const std::string padded = " " + current + " ";
-    if (padded.find(" melo-chord-name ") == std::string::npos && padded.find(" jims-chord-name ") == std::string::npos) {
+    if (padded.find(" melo-chord-name ") == std::string::npos) {
         const std::string merged = current.empty() ? "melo-chord-name" : current + " melo-chord-name";
         if (type) {
             type.set_value(merged.c_str());
@@ -1024,7 +1024,7 @@ void MeloMeiImporter::capture(pugi::xml_node root)
     m_staffDefN.clear();
     pugi::xml_node record = root.select_node("//extMeta/*").node();
     if (!record || String(record.name()) != u"jm:record") {
-        // Also accept an arbitrary prefix for urn:jims:mei:1 by local name.
+        // Also accept an arbitrary prefix by local name.
         record = pugi::xml_node();
         for (pugi::xpath_node candidate : root.select_nodes("//extMeta/*")) {
             String name = String(candidate.node().name());
@@ -1066,7 +1066,7 @@ void MeloMeiImporter::capture(pugi::xml_node root)
         m_staffDefN[sd.node().attribute("xml:id").value()] = sd.node().attribute("n").as_int();
     }
     m_provResources.clear();
-    for (pugi::xpath_node src : root.select_nodes("//sourceDesc/source[@type='melo-provenance' or @type='jims-provenance']")) {
+    for (pugi::xpath_node src : root.select_nodes("//sourceDesc/source[@type='melo-provenance']")) {
         engraving::melo::ProvenanceResource resource;
         for (pugi::xpath_node ident : src.node().select_nodes(".//identifier")) {
             const std::string type = ident.node().attribute("type").value();
@@ -1082,7 +1082,7 @@ void MeloMeiImporter::capture(pugi::xml_node root)
         m_provResources.push_back(resource);
     }
     m_melodyToken.clear();
-    pugi::xml_node melody = root.select_node("//score/annot[@type='melo-melody-part' or @type='jims-melody-part']").node();
+    pugi::xml_node melody = root.select_node("//score/annot[@type='melo-melody-part']").node();
     if (melody) {
         m_melodyToken = String(melody.text().as_string());
     }
@@ -1091,19 +1091,19 @@ void MeloMeiImporter::capture(pugi::xml_node root)
     // reasons, and each adjudication's native annotation (its class,
     // prose, pointers, and exact timing).
     m_reviewerById.clear();
-    for (pugi::xpath_node pn : root.select_nodes("//respStmt/persName[@role='melo-reviewer' or @role='jims-reviewer']")) {
+    for (pugi::xpath_node pn : root.select_nodes("//respStmt/persName[@role='melo-reviewer']")) {
         m_reviewerById[pn.node().attribute("xml:id").value()] = String(pn.node().text().as_string());
     }
     m_reviewAgent = String(root.select_node("//respStmt/name[@role='melo-review-agent']").node().text().as_string());
     m_focusedReviewReasons.clear();
-    pugi::xml_node fr = root.select_node("//score/annot[@type='melo-focused-review' or @type='jims-focused-review']").node();
+    pugi::xml_node fr = root.select_node("//score/annot[@type='melo-focused-review']").node();
     if (fr) {
         for (pugi::xml_node p : fr.children("p")) {
             m_focusedReviewReasons.push_back(String(p.text().as_string()));
         }
     }
     m_adjAnnots.clear();
-    for (pugi::xpath_node a : root.select_nodes("//measure/annot[@type='melo-adjudication' or @type='jims-adjudication']")) {
+    for (pugi::xpath_node a : root.select_nodes("//measure/annot[@type='melo-adjudication']")) {
         m_adjAnnots[a.node().attribute("xml:id").value()] = a.node();
     }
     m_changeById.clear();
@@ -1117,7 +1117,7 @@ void MeloMeiImporter::capture(pugi::xml_node root)
     m_adjMeasureIndex.clear();
     int mi = 0;
     for (pugi::xpath_node m : root.select_nodes("//section/measure")) {
-        for (pugi::xpath_node a : m.node().select_nodes("./annot[@type='melo-adjudication' or @type='jims-adjudication']")) {
+        for (pugi::xpath_node a : m.node().select_nodes("./annot[@type='melo-adjudication']")) {
             m_adjMeasureIndex[a.node().attribute("xml:id").value()] = mi;
         }
         ++mi;
@@ -1125,7 +1125,7 @@ void MeloMeiImporter::capture(pugi::xml_node root)
 }
 
 /// jx local name of a node whose prefix is unknown ("jx:staff-state",
-/// "jims:staff-state", or unprefixed).
+/// "melo:staff-state", or unprefixed).
 static std::string localName(pugi::xml_node node)
 {
     std::string name = node.name();

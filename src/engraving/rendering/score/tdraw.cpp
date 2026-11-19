@@ -669,7 +669,7 @@ static void drawDots(const BarLine* item, Painter* painter, double x,
 {
     double spatium = item->spatium();
 
-    if (dotRows) {                          // Milestone 8: a JiMStaff band's own dot rows, per band
+    if (dotRows) {                          // Milestone 8: a MeloStaff band's own dot rows, per band
         for (const BarLine::LayoutData::MeloDotRows& rows : *dotRows) {
             item->drawSymbol(SymId::repeatDot, painter, PointF(x, rows.y1));
             item->drawSymbol(SymId::repeatDot, painter, PointF(x, rows.y2));
@@ -720,7 +720,7 @@ static void drawTips(const BarLine* item, double y1, double y2, Painter* painter
     }
 }
 
-// One barline FORM between y1 and y2 (Milestone 8: a JiMStaff barline
+// One barline FORM between y1 and y2 (Milestone 8: a MeloStaff barline
 // draws every form once per band, never across the gap between bands;
 // dotRows, when given, are the repeat-dot rows of that band).
 static void drawBarLineForm(const BarLine* item, double y1, double y2,
@@ -894,7 +894,7 @@ void TDraw::draw(const BarLine* item, Painter* painter, const PaintOptions& opt)
 
     setMask(item, painter);
 
-    // Milestone 8, owner ruling 3b: on a banded JiMStaff every barline form
+    // Milestone 8, owner ruling 3b: on a banded MeloStaff every barline form
     // runs continuously from the top band to the bottom band — through the
     // gap, as a keyboard instrument's barlines run between its staves — with
     // repeat dots at each band's middle rows; a stock staff (or a one-band
@@ -3051,7 +3051,7 @@ void TDraw::draw(const StaffLines* item, Painter* painter, const PaintOptions& o
     setMask(item, painter);
 
     if (!item->meloGuideLines().empty()) {
-        // JiMStaff (Milestone 1): each guide line carries its own style —
+        // MeloStaff (Milestone 1): each guide line carries its own style —
         // the one deliberate exception to the single-pen staff-line rule,
         // reached only when the JiMS layout branch populated guides.
         for (const StaffLines::MeloGuideLine& guide : item->meloGuideLines()) {

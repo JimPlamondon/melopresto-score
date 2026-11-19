@@ -23,13 +23,13 @@
 
 // Native JiMS MusicXML import (owner decision 1a, 2026-08-16).
 //
-// The MeloPresto extension (urn:melopresto:musicxml:1 through :4; the retired urn:jims: stem is still read) transports the Kernel's
-// JiMStaffStateV2 as jims:staff-state (in attributes) and each note's lattice
-// identity as jims:pitch (in note). This unit is pure format transcription —
+// The MeloPresto extension (urn:melopresto:musicxml:1 through :4) transports the Kernel's
+// MeloStaffStateV2 as melo:staff-state (in attributes) and each note's lattice
+// identity as melo:pitch (in note). This unit is pure format transcription —
 // the same mapping the fixture converter tools/melo/enriched_to_melo_mscx.py
 // performs — and computes no musical fact: every state is validated by the
 // Kernel (bridge op `validate`) and stored verbatim as the staff type's state
-// JSON; the Kernel-written jims:change summary is never read (the renderer
+// JSON; the Kernel-written melo:change summary is never read (the renderer
 // derives the change indicator from the two STATES through the Kernel).
 //
 // muse::XmlStreamReader is pugixml-backed and not namespace-aware: element
@@ -80,7 +80,7 @@ public:
     /// True when `qualifiedName` is `<prefix>:<local>` for the resolved prefix.
     bool isMeloElement(const muse::AsciiStringView& qualifiedName, const char* local) const;
 
-    /// Parse a jims:staff-state element (reader on its start tag; the reader
+    /// Parse a melo:staff-state element (reader on its start tag; the reader
     /// is left after its end tag) into the Kernel's compact state JSON —
     /// converter byte-shape: fixed key order, no spaces, tonic_ambit last.
     /// `staffNumber` is the optional `number` attribute (0 when absent).
@@ -113,12 +113,12 @@ public:
     /// contract (owner decision 1b, 2026-08-16); not a musical fact.
     static int linesForPeriodCount(int periodCount) { return 12 * periodCount + 1; }
 
-    /// Parse a jims:provenance element (reader on its start tag; left after
+    /// Parse a melo:provenance element (reader on its start tag; left after
     /// its end tag) into the transported carrier. Returns false with `error`
     /// set when a resource lacks role/uri/media-type or an unknown JiMS child
     /// appears. Values are carried verbatim (owner decision 2026-08-19).
     bool parseProvenance(muse::XmlStreamReader& e, engraving::melo::Provenance& out, muse::String& error) const;
-    /// Parse a jims:tuning-trajectory element (reader on its start tag; left
+    /// Parse a melo:tuning-trajectory element (reader on its start tag; left
     /// after its end tag). `ticksOf` converts a duration-divisions integer to
     /// score time (the pass-1 divisions calculator). Tick, staff and placement
     /// come from the enclosing direction and are set by the caller.

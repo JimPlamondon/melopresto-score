@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: GPL-3.0-only
  * MuseScore-Studio-CLA-applies
  *
- * JiMStaff Milestone 5 — the change-indicator seam. Finds the JiMS staff-
+ * MeloStaff Milestone 5 — the change-indicator seam. Finds the JiMS staff-
  * type change a measure carries for a staff, hands the OLD and NEW state
  * to the Kernel (`change_indicator`), and answers "is there a mid-system
  * indicator to reserve room for and paint here?". No musical fact is

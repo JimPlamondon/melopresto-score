@@ -15,7 +15,7 @@ using namespace mu::engraving;
 
 TEST(Engraving_MeloNativeValidation, unsupportedStateIsExplainedEvenWithoutNotesOrMeloBase)
 {
-    QFile fixture((ScoreRW::rootPath() + u"/jimstaff_data/mode-change.mscx").toQString());
+    QFile fixture((ScoreRW::rootPath() + u"/melostaff_data/mode-change.mscx").toQString());
     ASSERT_TRUE(fixture.open(QIODevice::ReadOnly));
     const QString original = QString::fromUtf8(fixture.readAll());
     QTemporaryDir scratch;
@@ -28,11 +28,11 @@ TEST(Engraving_MeloNativeValidation, unsupportedStateIsExplainedEvenWithoutNotes
                                            QRegularExpression::DotMatchesEverythingOption),
                         "<Rest><durationType>\\1</durationType></Rest>");
         }
-        const QString openTag = "<jimsStateJson>";
+        const QString openTag = "<meloStateJson>";
         int from = scenario < 2 ? xml.indexOf(openTag) : xml.lastIndexOf(openTag);
         ASSERT_GE(from, 0);
         from += openTag.size();
-        const int to = xml.indexOf("</jimsStateJson>", from);
+        const int to = xml.indexOf("</meloStateJson>", from);
         ASSERT_GT(to, from);
         QString json = xml.mid(from, to - from).replace("&quot;", "\"");
         QJsonObject state = QJsonDocument::fromJson(json.toUtf8()).object();
@@ -41,9 +41,9 @@ TEST(Engraving_MeloNativeValidation, unsupportedStateIsExplainedEvenWithoutNotes
         const QString unsupportedJson = QString::fromUtf8(QJsonDocument(state).toJson(QJsonDocument::Compact));
         xml.replace(from, to - from, unsupportedJson);
         if (scenario == 3) {
-            const int baseFlag = xml.indexOf("<jims>1</jims>");
+            const int baseFlag = xml.indexOf("<melo>1</melo>");
             ASSERT_GE(baseFlag, 0);
-            xml.replace(baseFlag, 14, "<jims>0</jims>");
+            xml.replace(baseFlag, 14, "<melo>0</melo>");
         }
         const QString path = scratch.filePath(QString("old-state-%1.mscx").arg(scenario));
         QString validXml = xml;

@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: GPL-3.0-only
  * MuseScore-Studio-CLA-applies
  *
- * JiMStaff Milestone 1 — fork-side wrapper over the melo-musescore-bridge
+ * MeloStaff Milestone 1 — fork-side wrapper over the melo-musescore-bridge
  * C ABI. See melobridge.h.
  */
 #include "melobridge.h"
@@ -851,7 +851,7 @@ bool frameBandsForMelody(const String& stateJson, const String& melodyJson,
         return false;
     }
     JsonObject o = result.toObject();
-    if (o.value("schema").toString() != u"jims.frame-bands.v1") {
+    if (o.value("schema").toString() != u"melo.frame-bands.v1") {
         return false;
     }
     return readFrameBands(result, out);

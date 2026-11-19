@@ -218,7 +218,7 @@ private:
     /** The uid register */
     UIDRegister* m_uids;
 
-    /// MeloPresto MEI carriage (mei-jims profile)
+    /// MeloPresto MEI carriage (mei-melo profile)
     MeloMeiImporter m_melo;
     std::map<std::string, engraving::Note*> m_meloNoteIds;
 
@@ -233,7 +233,7 @@ private:
     std::map<int, engraving::ClefTypeList> m_clefs;
     std::map<int, std::pair<engraving::Fraction, engraving::TimeSigType> > m_timeSigs;
     std::map<int, engraving::Key> m_keySigs;
-    std::map<int, engraving::KeyMode> m_keyModes;    // keySig/@mode (mei-jims)
+    std::map<int, engraving::KeyMode> m_keyModes;    // keySig/@mode (mei-melo)
     /** the current time signature */
     engraving::Fraction m_currentTimeSig = engraving::Fraction(4, 4);
 
