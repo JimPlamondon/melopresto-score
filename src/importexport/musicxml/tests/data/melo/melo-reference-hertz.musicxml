@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="4.1" xmlns:melo="urn:melopresto:musicxml:3">
+  <work><work-title>melo-reference-hertz</work-title></work>
+  <identification>
+    <encoding><software>MeloPresto melo-staff conformance fixtures</software></encoding>
+  </identification>
+  <part-list>
+    <score-part id="P1"><part-name>MeloStaff</part-name></score-part>
+  </part-list>
+  <part id="P1">
+  <measure number="1">
+    <attributes>
+      <divisions>4</divisions>      <melo:staff-state>
+        <melo:scale>
+          <melo:step>M2</melo:step><melo:step>m2</melo:step><melo:step>M2</melo:step>
+          <melo:step>M2</melo:step><melo:step>M2</melo:step><melo:step>m2</melo:step>
+          <melo:step>M2</melo:step>
+        </melo:scale>
+        <melo:collection-rotation>0</melo:collection-rotation>
+        <melo:mode-rotation>0</melo:mode-rotation>
+        <melo:generator-cents>700.0</melo:generator-cents>
+        <melo:period-cents>1200.0</melo:period-cents>
+        <melo:embedding large-steps="5" small-steps="2"/>
+        <melo:extent lower-n-per="1" lower-n-gen="-2" upper-n-per="2" upper-n-gen="-2"/>
+        <melo:reference><melo:frequency-hz>293.665</melo:frequency-hz></melo:reference>
+      </melo:staff-state>
+    </attributes>
+    <note>
+      <pitch>
+        <step>D</step>
+        <octave>4</octave>
+      </pitch>
+      <melo:pitch n-per="0" n-gen="0"/>
+      <duration>4</duration>
+      <type>whole</type>
+    </note>
+  </measure>
+  </part>
+</score-partwise>

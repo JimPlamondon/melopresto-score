@@ -242,7 +242,7 @@ private:
     MusicXmlLogger* m_logger = nullptr;              // Error logger
     muse::String m_errors;                             // Errors to present to the user
     MeloImportContext m_melo;
-    bool m_meloProvenanceError = false;   // a malformed jims:provenance is a fatal import error                    // MeloPresto namespace resolution (native MeloPresto import)
+    bool m_meloProvenanceError = false;   // a malformed melo:provenance is a fatal import error                    // MeloPresto namespace resolution (native MeloPresto import)
     bool m_hasBeamingInfo = false;               // Whether the score supports or contains beaming info
     bool m_hasInferredHeaderText = false;
 

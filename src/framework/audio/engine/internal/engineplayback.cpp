@@ -635,7 +635,7 @@ async::Promise<Ret> EnginePlayback::saveSoundTrack(const TrackSequenceId sequenc
         const bool lazyProcessingWasEnabled = configuration()->isLazyProcessingOfOnlineSoundsEnabled();
         configuration()->setIsLazyProcessingOfOnlineSoundsEnabled(false);
 
-        // JiMSynth VST3 workstream: wait until every track's input is ready to
+        // MeloSynth VST3 workstream: wait until every track's input is ready to
         // play (the same gate SequencePlayer::play uses) before rendering, so
         // an instrument that is still loading/setting up — a VST3 module
         // loads asynchronously on the main thread — is not rendered as

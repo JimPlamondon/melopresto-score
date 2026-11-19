@@ -49,7 +49,7 @@ public:
 class ShortcutRegisterTestModule : public muse::modularity::IModuleSetup
 {
 public:
-    std::string moduleName() const override { return "jims_tuning_test_shortcuts"; }
+    std::string moduleName() const override { return "melo_tuning_test_shortcuts"; }
     void registerExports() override
     {
         ioc()->registerExport<muse::shortcuts::IShortcutsRegister>(moduleName(), new muse::shortcuts::ShortcutsRegisterStub());
@@ -59,7 +59,7 @@ public:
 class NavigationTestModule : public muse::modularity::IModuleSetup
 {
 public:
-    std::string moduleName() const override { return "jims_tuning_test_navigation"; }
+    std::string moduleName() const override { return "melo_tuning_test_navigation"; }
     void registerExports() override
     {
         ioc()->registerExport<muse::ui::INavigationController>(moduleName(), new muse::ui::NavigationController(nullptr));

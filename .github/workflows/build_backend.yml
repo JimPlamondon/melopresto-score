@@ -1,6 +1,6 @@
 name: 'Build: Backend'
 
-# musescore-jims: upstream schedule removed — this fork has no upstream deploy/translation secrets.
+# melopresto-score: upstream schedule removed — this fork has no upstream deploy/translation secrets.
 on:
 
   workflow_dispatch:

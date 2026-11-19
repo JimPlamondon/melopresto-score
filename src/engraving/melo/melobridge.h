@@ -2,9 +2,9 @@
  * SPDX-License-Identifier: GPL-3.0-only
  * MuseScore-Studio-CLA-applies
  *
- * JiMStaff Milestone 1 — the fork-side wrapper over the melo-musescore-bridge
+ * MeloStaff Milestone 1 — the fork-side wrapper over the melo-musescore-bridge
  * C ABI (Apache-2.0 staticlib built from the JiMS Kernel repository). Every
- * musical fact used by JiMStaff rendering crosses this seam as JSON derived
+ * musical fact used by MeloStaff rendering crosses this seam as JSON derived
  * by the Kernel; nothing here computes note classes, memberships, cents, or
  * notehead classes itself.
  */
@@ -34,7 +34,7 @@ bool relativeKeyEditor(const muse::String& source, const muse::String& destinati
 bool available();
 
 // Native MusicXML import (owner decision 1a, 2026-08-16): ask the Kernel
-// whether a transcribed state JSON is a valid JiMStaffStateV2 (bridge op
+// whether a transcribed state JSON is a valid MeloStaffStateV2 (bridge op
 // `validate`); on rejection `error` carries the Kernel's message. The
 // importer computes no musical fact — the Kernel is the only gate.
 bool validateState(const muse::String& stateJson, muse::String& error);

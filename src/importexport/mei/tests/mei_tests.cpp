@@ -167,7 +167,7 @@ TEST_F(Mei_Tests, meloSourceRangesSurviveMeiRoundTrip)
         MeiWriter writer;
         return writer.writeScore(score, path);
     };
-    std::unique_ptr<MasterScore> source(ScoreRW::readScore(MEI_DIR + u"jims/v5/jims-synthetic.mei", false, importFunc));
+    std::unique_ptr<MasterScore> source(ScoreRW::readScore(MEI_DIR + u"melo/v5/melo-synthetic.mei", false, importFunc));
     ASSERT_TRUE(source);
     source->parts().front()->instrument()->setMinPitchA(41);
     source->parts().front()->instrument()->setMaxPitchA(60);
@@ -192,7 +192,7 @@ TEST_F(Mei_Tests, hiddenHarmonySurvivesMeiRoundTrip)
         return writer.writeScore(score, path);
     };
     for (HarmonyType type : { HarmonyType::STANDARD, HarmonyType::ROMAN, HarmonyType::MELO }) {
-        std::unique_ptr<MasterScore> source(ScoreRW::readScore(MEI_DIR + u"jims/v5/jims-synthetic.mei", false, importFunc));
+        std::unique_ptr<MasterScore> source(ScoreRW::readScore(MEI_DIR + u"melo/v5/melo-synthetic.mei", false, importFunc));
         ASSERT_TRUE(source);
         size_t expected = 0;
         for (Segment* segment = source->firstSegment(SegmentType::All); segment; segment = segment->next1()) {
@@ -391,7 +391,7 @@ TEST_F(Mei_Tests, mei_melo_roundtrip_01) {
         return meiWriter.writeScore(score, path);
     };
 
-    MasterScore* score = ScoreRW::readScore(MEI_DIR + u"jims/v5/jims-synthetic.mei", false, importFunc);
+    MasterScore* score = ScoreRW::readScore(MEI_DIR + u"melo/v5/melo-synthetic.mei", false, importFunc);
     ASSERT_TRUE(score);
 
     // Typed staff state: MeloPresto staff type at tick 0 plus two later states.
@@ -430,9 +430,9 @@ TEST_F(Mei_Tests, mei_melo_roundtrip_01) {
     // MIDI mapping the way the application does on load; writeInstrDef needs
     // playback channels to exist.
     score->masterScore()->rebuildMidiMapping();
-    bool output = ScoreRW::saveScore(score, u"jims-synthetic.test.mei", exportFunc);
+    bool output = ScoreRW::saveScore(score, u"melo-synthetic.test.mei", exportFunc);
     EXPECT_TRUE(output);
-    muse::io::File out(muse::io::path_t(u"jims-synthetic.test.mei"));
+    muse::io::File out(muse::io::path_t(u"melo-synthetic.test.mei"));
     ASSERT_TRUE(out.open(muse::io::IODevice::ReadOnly));
     const muse::ByteArray meiBytes = out.readAll();
     const String mei = String::fromUtf8(meiBytes.constChar());
@@ -472,15 +472,15 @@ TEST_F(Mei_Tests, mei_melo_melody_part_needs_its_staff)
         return meiWriter.writeScore(score, path);
     };
 
-    MasterScore* score = ScoreRW::readScore(MEI_DIR + u"jims/v5/jims-synthetic.mei", false, importFunc);
+    MasterScore* score = ScoreRW::readScore(MEI_DIR + u"melo/v5/melo-synthetic.mei", false, importFunc);
     ASSERT_TRUE(score);
     for (Part* part : score->parts()) {
         part->setPartName(u"Voice");
         part->setLongNameAll(u"Voice");
     }
     score->masterScore()->rebuildMidiMapping();
-    ASSERT_TRUE(ScoreRW::saveScore(score, u"jims-no-melody-staff.test.mei", exportFunc));
-    muse::io::File out(muse::io::path_t(u"jims-no-melody-staff.test.mei"));
+    ASSERT_TRUE(ScoreRW::saveScore(score, u"melo-no-melody-staff.test.mei", exportFunc));
+    muse::io::File out(muse::io::path_t(u"melo-no-melody-staff.test.mei"));
     ASSERT_TRUE(out.open(muse::io::IODevice::ReadOnly));
     const muse::ByteArray meiBytes = out.readAll();
     const String mei = String::fromUtf8(meiBytes.constChar());
@@ -500,7 +500,7 @@ TEST_F(Mei_Tests, generated_chord_evidence_roundtrip_and_stale_export)
         MeiWriter writer;
         return writer.writeScore(score, path);
     };
-    std::unique_ptr<MasterScore> score(ScoreRW::readScore(MEI_DIR + u"jims/v5/generated-chord-evidence.mei", false, importFunc));
+    std::unique_ptr<MasterScore> score(ScoreRW::readScore(MEI_DIR + u"melo/v5/generated-chord-evidence.mei", false, importFunc));
     ASSERT_TRUE(score);
     Harmony* harmony = nullptr;
     Note* note = nullptr;
@@ -828,7 +828,7 @@ TEST_F(Mei_Tests, unrelatedTypeTokenDoesNotClaimTheFileUsesTheProfile)
     QFile source(QString::fromUtf8(iex_mei_tests_DATA_ROOT) + "/data/label-01.mei");
     ASSERT_TRUE(source.open(QIODevice::ReadOnly));
     QByteArray xml = source.readAll();
-    xml.replace("<score>", "<score type=\"unrelated-jims-tag\">");
+    xml.replace("<score>", "<score type=\"unrelated-melo-tag\">");
     QTemporaryDir directory;
     QFile output(directory.filePath("unrelated.mei"));
     ASSERT_TRUE(output.open(QIODevice::WriteOnly));
@@ -845,7 +845,7 @@ TEST_F(Mei_Tests, unrelatedTypeTokenDoesNotClaimTheFileUsesTheProfile)
 TEST_F(Mei_Tests, latticeExportRefusesMissingIdentityAndDivergentReferencesBeforeWriting)
 {
     for (bool missingIdentity : { true, false }) {
-        std::unique_ptr<MasterScore> score(ScoreRW::readScore(u"../../../engraving/tests/jimstaff_data/m9-satb-hymn.mscx"));
+        std::unique_ptr<MasterScore> score(ScoreRW::readScore(u"../../../engraving/tests/melostaff_data/m9-satb-hymn.mscx"));
         ASSERT_TRUE(score);
         score->rebuildMidiMapping();
         QTemporaryDir directory;
@@ -908,7 +908,7 @@ TEST_F(Mei_Tests, latticeImportRefusesOmittedIdentityWithoutChangingInput)
 
 TEST_F(Mei_Tests, latticeImportRefusesDivergentReferencesWithoutChangingInput)
 {
-    std::unique_ptr<MasterScore> score(ScoreRW::readScore(u"../../../engraving/tests/jimstaff_data/m9-satb-hymn.mscx"));
+    std::unique_ptr<MasterScore> score(ScoreRW::readScore(u"../../../engraving/tests/melostaff_data/m9-satb-hymn.mscx"));
     ASSERT_TRUE(score);
     score->rebuildMidiMapping();
     QTemporaryDir directory;
@@ -946,16 +946,16 @@ TEST_F(Mei_Tests, CanonicalV5ReferenceRoundTripInAllThreeTunings)
 {
     for (double generator : { 700.0, 4800.0 / 7.0, 720.0 }) {
         SCOPED_TRACE(generator);
-        std::unique_ptr<MasterScore> score(ScoreRW::readScore(u"../../../engraving/tests/jimstaff_data/m9-satb-hymn.mscx"));
+        std::unique_ptr<MasterScore> score(ScoreRW::readScore(u"../../../engraving/tests/melostaff_data/m9-satb-hymn.mscx"));
         ASSERT_TRUE(score);
         const String initial
-            = u"{\"schema\":\"jimstaff-reference-v1\",\"initial\":{\"step\":\"D\",\"alter\":-1,\"octave\":4},\"events\":[]}";
+            = u"{\"schema\":\"melostaff-reference-v1\",\"initial\":{\"step\":\"D\",\"alter\":-1,\"octave\":4},\"events\":[]}";
         score->setMetaTag(melo::REFERENCE_TIMELINE_TAG, initial);
         for (Staff* staff : score->staves()) {
             StaffType* type = staff->staffType(Fraction(0, 1));
             auto configuration
                 = QJsonDocument::fromJson(type->meloStateJson().toQString().toUtf8()).object().value("configuration").toObject();
-            configuration["schema"] = "jimstaff-v3";
+            configuration["schema"] = "melostaff-v3";
             type->setMeloStateJson(String::fromUtf8(QJsonDocument(configuration).toJson(QJsonDocument::Compact).constData()));
         }
         String error;
@@ -1054,7 +1054,7 @@ TEST_F(Mei_Tests, exactEqualTemperamentRoundTripRestoresDerivedTuning)
 {
     for (double generator : { 700.0, 1200.0 * 4.0 / 7.0, 720.0 }) {
         SCOPED_TRACE(generator);
-        std::unique_ptr<MasterScore> score(ScoreRW::readScore(u"../../../engraving/tests/jimstaff_data/m9-satb-hymn.mscx"));
+        std::unique_ptr<MasterScore> score(ScoreRW::readScore(u"../../../engraving/tests/melostaff_data/m9-satb-hymn.mscx"));
         ASSERT_TRUE(score);
         melo::TuningController tuning(score.get(), 0);
         ASSERT_TRUE(tuning.beginPreview());
@@ -1133,7 +1133,7 @@ TEST_F(Mei_Tests, mei_melo_tone_diamond_point_round_trips_and_pulls_sounding_pit
         MeiWriter meiWriter;
         return meiWriter.writeScore(score, path);
     };
-    MasterScore* score = ScoreRW::readScore(MEI_DIR + u"jims/v5/melo-tone-diamond.mei", false, importFunc);
+    MasterScore* score = ScoreRW::readScore(MEI_DIR + u"melo/v5/melo-tone-diamond.mei", false, importFunc);
     ASSERT_TRUE(score);
     const String state = score->staff(0)->staffType(Fraction(0, 1))->meloStateJson();
     EXPECT_TRUE(state.contains(u"\"tone_diamond\":{\"x\":50.0,\"y\":-80.0}")) << state.toStdString();
@@ -1141,7 +1141,7 @@ TEST_F(Mei_Tests, mei_melo_tone_diamond_point_round_trips_and_pulls_sounding_pit
     ASSERT_FALSE(pulled.empty());
 
     // The same piece without the point sounds at other pitches.
-    MasterScore* plainScore = ScoreRW::readScore(MEI_DIR + u"jims/v5/jims-synthetic.mei", false, importFunc);
+    MasterScore* plainScore = ScoreRW::readScore(MEI_DIR + u"melo/v5/melo-synthetic.mei", false, importFunc);
     ASSERT_TRUE(plainScore);
     const std::vector<double> plain = meloSoundingFrequencies(plainScore);
     ASSERT_EQ(plain.size(), pulled.size());

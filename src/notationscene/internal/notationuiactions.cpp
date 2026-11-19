@@ -403,14 +403,14 @@ const UiActionList NotationUiActions::s_actions = {
              TranslatableString("action", "More…"),
              TranslatableString("action", "Select similar elements with more options")
              ),
-    UiAction("jims-tuning-readout",
+    UiAction("melo-tuning-readout",
              mu::context::UiCtxProjectOpened,
              mu::context::CTX_NOTATION_OPENED,
              TranslatableString("action", "Tuning readout (M5)"),
              TranslatableString("action", "Show the current tuning in the note input toolbar"),
              IconCode::Code::STAFF_TYPE_CHANGE
              ),
-    UiAction("jims-change",
+    UiAction("melo-change",
              mu::context::UiCtxProjectOpened,
              mu::context::CTX_NOTATION_OPENED,
              engraving::melo::changeActionName(),
@@ -1401,7 +1401,7 @@ const UiActionList NotationUiActions::s_actions = {
              TranslatableString("action", "C&hord symbol"),
              TranslatableString("action", "Add text: chord symbol")
              ),
-    UiAction("jims-chord-name-text",
+    UiAction("melo-chord-name-text",
              mu::context::UiCtxProjectOpened,
              mu::context::CTX_NOTATION_OPENED,
              mu::engraving::melo::chordNameAction(),
@@ -3080,7 +3080,7 @@ const muse::ui::ToolConfig& NotationUiActions::defaultNoteInputBarConfig()
     static ToolConfig config;
     if (!config.isValid()) {
         config.items = {
-            { "jims-tuning-readout", true },
+            { "melo-tuning-readout", true },
             { "note-input-by-note-name", true },
             { "note-input-by-duration", true },
             { "note-input-rhythm", false },

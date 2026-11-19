@@ -19,17 +19,17 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[2]
 MANIFEST = Path(__file__).with_name("reference_fixture_authoring.json")
-STATE = re.compile(r"(<jimsStateJson>)(.*?)(</jimsStateJson>)", re.S)
+STATE = re.compile(r"(<meloStateJson>)(.*?)(</meloStateJson>)", re.S)
 REFERENCE = re.compile(r'<metaTag name="meloReferenceTimelineV1">.*?</metaTag>', re.S)
 
 
 def author_xml(text, timeline):
     def configuration(match):
         source = json.loads(html.unescape(match[2]))
-        if source.get("schema") == "jimstaff-request-v3":
+        if source.get("schema") == "melostaff-request-v3":
             raise ValueError("A disposable request is not fixture source")
         source.pop("reference", None)
-        source["schema"] = "jimstaff-v3"
+        source["schema"] = "melostaff-v3"
         return match[1] + html.escape(json.dumps(source, separators=(",", ":")), quote=False) + match[3]
 
     text, count = STATE.subn(configuration, text)

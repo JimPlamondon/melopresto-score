@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # SPDX-FileCopyrightText: 2026 Jim Plamondon
 # SPDX-License-Identifier: Apache-2.0
-"""Deterministic JiMS SMuFL-subset font generator (JiMStaff Milestone 1).
+"""Deterministic JiMS SMuFL-subset font generator (MeloStaff Milestone 1).
 
 Consumes ONLY the rights-clean generated glyph SVGs from the JiMS Kernel
-(jims-staff/assets/glyphs, themselves GEN-003 generated artifacts) and
+(melo-staff/assets/glyphs, themselves GEN-003 generated artifacts) and
 emits a small OpenType font plus SMuFL-style metadata. No third-party
 outline is read, traced, or embedded. Deterministic: fixed epoch dates,
 sorted tables, no randomness — rebuilds are byte-identical.
@@ -286,7 +286,7 @@ def build(svg_dir, out_dir):
         "engravingDefaults": {"staffLineThickness": 0.1},
         "glyphsWithAnchors": glyphs_with_anchors,
         "glyphs": metadata_glyphs,
-        "provenance": "Generated from jims-staff/assets/glyphs (GEN-003); no third-party outlines.",
+        "provenance": "Generated from melo-staff/assets/glyphs (GEN-003); no third-party outlines.",
     }
     meta_path = os.path.join(out_dir, "JiMSMusic-metadata.json")
     with open(meta_path, "w", encoding="utf-8") as f:

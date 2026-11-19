@@ -1870,7 +1870,7 @@ libmei::Harm Convert::harmToMEI(const engraving::Harmony* harmony, StringList& m
             harmonyType = std::string(HARMONY_TYPE) + "roman";
             break;
         case (engraving::HarmonyType::MELO):
-            // mei-jims profile: the canonical MeloPresto chord name as typed harm
+            // mei-melo profile: the canonical MeloPresto chord name as typed harm
             harmonyType = "melo-chord-name";
             break;
         default: break;

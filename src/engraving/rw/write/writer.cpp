@@ -70,7 +70,7 @@ static void writeMeloReviewValue(XmlWriter& xml, const melo::ReviewValue& v)
 /// opaque string, with every adjudication carrying its exact tick anchor.
 static void writeMeloReview(XmlWriter& xml, const melo::ReviewRecord& review)
 {
-    xml.startElement("jimsReview", { { "schema", review.schema } });
+    xml.startElement("meloReview", { { "schema", review.schema } });
     if (!review.reviewAgent.isEmpty()) {
         xml.tag("reviewAgent", review.reviewAgent);
     }
@@ -261,7 +261,7 @@ void Writer::write(Score* score, XmlWriter& xml, WriteContext& ctx, compat::Writ
         if (score->m_meloProvenance.strictFallback) {
             attrs.push_back({ "strict", 1 });
         }
-        xml.startElement("jimsProvenance", attrs);
+        xml.startElement("meloProvenance", attrs);
         for (const melo::ProvenanceResource& r : score->m_meloProvenance.resources) {
             XmlWriter::Attributes rattrs = { { "role", r.role }, { "uri", r.uri }, { "mediaType", r.mediaType } };
             if (!r.sha256.isEmpty()) {
@@ -276,7 +276,7 @@ void Writer::write(Score* score, XmlWriter& xml, WriteContext& ctx, compat::Writ
         xml.endElement();
     }
     if (score->m_meloMelodyPart != melo::MelodyPart::Soprano) {
-        xml.tag("jimsMelodyPart", melo::melodyPartToken(score->m_meloMelodyPart));
+        xml.tag("meloMelodyPart", melo::melodyPartToken(score->m_meloMelodyPart));
     }
     if (!score->m_meloReview.empty()) {
         writeMeloReview(xml, score->m_meloReview);

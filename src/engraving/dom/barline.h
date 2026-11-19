@@ -164,7 +164,7 @@ public:
     struct LayoutData : public EngravingItem::LayoutData {
         double y1 = 0.0;
         double y2 = 0.0;
-        // Milestone 8 (octave-band elision, owner ruling 3b): on a JiMStaff
+        // Milestone 8 (octave-band elision, owner ruling 3b): on a MeloStaff
         // whose frame is banded on this system the barline itself runs
         // continuously y1..y2 over the whole stack (through the gap, like a
         // keyboard instrument's barlines); repeat dots sit at each band's

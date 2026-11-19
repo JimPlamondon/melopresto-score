@@ -141,7 +141,7 @@ void VstPluginInstance::load()
             m_module = modulesRepo()->pluginModule(m_resourceId);
         }
 
-        // JiMSynth VST3 workstream: every failure path below still fires
+        // MeloSynth VST3 workstream: every failure path below still fires
         // loadingCompleted (with isLoaded() == false) so waiters such as
         // VstSynthesiser::readyToPlay() can settle instead of waiting forever.
         if (!m_module) {

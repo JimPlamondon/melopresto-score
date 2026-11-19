@@ -168,7 +168,7 @@ class MeloUiModelTests : public ::testing::Test
 protected:
     void SetUp() override
     {
-        score.reset(ScoreRW::readScore(muse::String::fromUtf8(MELO_UI_TEST_DATA_ROOT) + u"/jimstaff_data/mode-change.mscx", true));
+        score.reset(ScoreRW::readScore(muse::String::fromUtf8(MELO_UI_TEST_DATA_ROOT) + u"/melostaff_data/mode-change.mscx", true));
         ASSERT_TRUE(score);
         global = std::make_shared<context::GlobalContext>();
         notation = std::make_shared<TestNotation>(score.get());
@@ -199,11 +199,11 @@ protected:
             for (Staff* staff : related->staves()) {
                 const auto authorConfiguration = [](StaffType* type) {
                     QJsonObject config = QJsonDocument::fromJson(type->meloStateJson().toQString().toUtf8()).object();
-                    if (config["schema"].toString() == "jimstaff-request-v3") {
+                    if (config["schema"].toString() == "melostaff-request-v3") {
                         config = config["configuration"].toObject();
                     }
                     config.remove("reference");
-                    config["schema"] = "jimstaff-v3";
+                    config["schema"] = "melostaff-v3";
                     type->setMeloStateJson(muse::String::fromUtf8(QJsonDocument(config).toJson(QJsonDocument::Compact).constData()));
                 };
                 authorConfiguration(staff->staffType(Fraction(0, 1)));
@@ -230,7 +230,7 @@ TEST_F(MeloUiModelTests, ReferenceBridgeKeepsHeaderEditingSeparateFromRelativeEv
     const auto object = [](const muse::String& value) { return QJsonDocument::fromJson(value.toQString().toUtf8()).object(); };
     const QJsonObject configuration
         = QJsonDocument::fromJson(
-              R"({"schema":"jimstaff-v3","scale":["M2","m2","M2","M2","M2","m2","M2"],"collection_rotation":0,"mode_rotation":0,"generator_cents":700.0,"period_cents":1200.0,"embedding":{"large_steps":5,"small_steps":2},"extent":{"lower":{"nPer":1,"nGen":-2},"upper":{"nPer":2,"nGen":-2}},"tonic_ambit":"tonic-bounded"})")
+              R"({"schema":"melostaff-v3","scale":["M2","m2","M2","M2","M2","m2","M2"],"collection_rotation":0,"mode_rotation":0,"generator_cents":700.0,"period_cents":1200.0,"embedding":{"large_steps":5,"small_steps":2},"extent":{"lower":{"nPer":1,"nGen":-2},"upper":{"nPer":2,"nGen":-2}},"tonic_ambit":"tonic-bounded"})")
           .object();
     const muse::String zero = u"{\"numerator\":0,\"denominator\":1}";
     const muse::String time = u"{\"numerator\":7,\"denominator\":8}";
@@ -564,7 +564,7 @@ TEST_F(MeloUiModelTests, RelativeKeyPreviewUsesProductionTerrainIn12Tet7TetAnd5T
 TEST_F(MeloUiModelTests, NativeReferenceStorageHasOneRootAndNoDisposableStaffContext)
 {
     global->setCurrentNotation(nullptr);
-    score.reset(ScoreRW::readScore(muse::String::fromUtf8(MELO_UI_TEST_DATA_ROOT) + u"/jimstaff_data/m9-satb-hymn.mscx", true));
+    score.reset(ScoreRW::readScore(muse::String::fromUtf8(MELO_UI_TEST_DATA_ROOT) + u"/melostaff_data/m9-satb-hymn.mscx", true));
     ASSERT_TRUE(score);
     ASSERT_TRUE(TestUtils::createPart(score.get()));
     authorKnownD4Reference();
@@ -591,9 +591,9 @@ TEST_F(MeloUiModelTests, NativeReferenceStorageHasOneRootAndNoDisposableStaffCon
         if (xml.name() == u"metaTag" && xml.attributes().value("name") == u"meloReferenceTimelineV1") {
             ++roots;
             EXPECT_EQ(xml.readElementText(), root.toQString());
-        } else if (xml.name() == u"jimsStateJson") {
+        } else if (xml.name() == u"meloStateJson") {
             const auto value = QJsonDocument::fromJson(xml.readElementText().toUtf8()).object();
-            EXPECT_EQ(value["schema"].toString(), "jimstaff-v3");
+            EXPECT_EQ(value["schema"].toString(), "melostaff-v3");
             EXPECT_FALSE(value.contains("reference_timeline"));
             EXPECT_FALSE(value.contains("reference"));
             EXPECT_FALSE(value.contains("at"));
@@ -616,8 +616,8 @@ TEST_F(MeloUiModelTests, NativeReferenceStorageHasOneRootAndNoDisposableStaffCon
 
     // A disposable request is not a second allowed native representation.
     QByteArray disguised = bytes;
-    const int start = disguised.indexOf("<jimsStateJson>") + int(QByteArray("<jimsStateJson>").size());
-    const int end = disguised.indexOf("</jimsStateJson>", start);
+    const int start = disguised.indexOf("<meloStateJson>") + int(QByteArray("<meloStateJson>").size());
+    const int end = disguised.indexOf("</meloStateJson>", start);
     ASSERT_GT(end, start);
     disguised.replace(start, end - start, state.toQString().toHtmlEscaped().toUtf8());
     const QString invalidPath = temporary.path() + "/disposable-request.mscx";
@@ -666,7 +666,7 @@ TEST_F(MeloUiModelTests, AddingAnInstrumentInheritsExistingRelativeAndConfigurat
     for (const double generator : { 700.0, 4800.0 / 7.0, 720.0 }) {
         SCOPED_TRACE(generator);
         global->setCurrentNotation(nullptr);
-        score.reset(ScoreRW::readScore(muse::String::fromUtf8(MELO_UI_TEST_DATA_ROOT) + u"/jimstaff_data/m9-satb-hymn.mscx", true));
+        score.reset(ScoreRW::readScore(muse::String::fromUtf8(MELO_UI_TEST_DATA_ROOT) + u"/melostaff_data/m9-satb-hymn.mscx", true));
         ASSERT_TRUE(score);
         ASSERT_TRUE(TestUtils::createPart(score.get()));
         authorKnownD4Reference();
@@ -894,7 +894,8 @@ TEST_F(MeloUiModelTests, DoAndLaHeaderPitchInkAndEditTargetClearTheClefInAllThre
                 SCOPED_TRACE(alteration);
                 SCOPED_TRACE(ambit);
                 global->setCurrentNotation(nullptr);
-                score.reset(ScoreRW::readScore(muse::String::fromUtf8(MELO_UI_TEST_DATA_ROOT) + u"/jimstaff_data/m9-satb-hymn.mscx", true));
+                score.reset(ScoreRW::readScore(muse::String::fromUtf8(MELO_UI_TEST_DATA_ROOT) + u"/melostaff_data/m9-satb-hymn.mscx",
+                                               true));
                 ASSERT_TRUE(score);
                 authorKnownD4Reference();
                 melo::StateChangeOptions options;
@@ -1135,7 +1136,7 @@ TEST_F(MeloUiModelTests, PaintedKeyChangePitchMatchingHeaderRejectsDoubleClickAn
 {
     for (const double generator : { 700.0, 4800.0 / 7.0, 720.0 }) {
         SCOPED_TRACE(generator);
-        score.reset(ScoreRW::readScore(muse::String::fromUtf8(MELO_UI_TEST_DATA_ROOT) + u"/jimstaff_data/m9-satb-hymn.mscx", true));
+        score.reset(ScoreRW::readScore(muse::String::fromUtf8(MELO_UI_TEST_DATA_ROOT) + u"/melostaff_data/m9-satb-hymn.mscx", true));
         ASSERT_TRUE(score);
         authorKnownD4Reference();
         melo::TuningController tuning(score.get(), 0);
@@ -1265,7 +1266,7 @@ TEST_F(MeloUiModelTests, InitialModeChangePropagatesAcrossRelativeOnlyEventsAndR
     for (const double generator : { 700.0, 4800.0 / 7.0, 720.0 }) {
         SCOPED_TRACE(generator);
         global->setCurrentNotation(nullptr);
-        score.reset(ScoreRW::readScore(muse::String::fromUtf8(MELO_UI_TEST_DATA_ROOT) + u"/jimstaff_data/m9-satb-hymn.mscx", true));
+        score.reset(ScoreRW::readScore(muse::String::fromUtf8(MELO_UI_TEST_DATA_ROOT) + u"/melostaff_data/m9-satb-hymn.mscx", true));
         ASSERT_TRUE(score);
         ASSERT_TRUE(TestUtils::createPart(score.get()));
         authorKnownD4Reference();
@@ -1319,7 +1320,7 @@ TEST_F(MeloUiModelTests, CanonicalReferenceRevisionIsWholePieceRepeatableAndUndo
 {
     // Newly author the known C-major SATB fixture's reference as D4 on Re0.
     // This is explicit test provenance, not a legacy-file conversion policy.
-    score.reset(ScoreRW::readScore(muse::String::fromUtf8(MELO_UI_TEST_DATA_ROOT) + u"/jimstaff_data/m9-satb-hymn.mscx", true));
+    score.reset(ScoreRW::readScore(muse::String::fromUtf8(MELO_UI_TEST_DATA_ROOT) + u"/melostaff_data/m9-satb-hymn.mscx", true));
     ASSERT_TRUE(score);
     ASSERT_EQ(score->nstaves(), 4);
     Score* linkedPart = TestUtils::createPart(score.get());
@@ -1667,7 +1668,7 @@ TEST_F(MeloUiModelTests, InspectorOpensOnlyTheSeparateRelativeIntervalAction) {
 }
 TEST_F(MeloUiModelTests, ScaleChoiceChangesAllPartsAndReportsTheMutation) {
     global->setCurrentNotation(nullptr);
-    score.reset(ScoreRW::readScore(muse::String::fromUtf8(MELO_UI_TEST_DATA_ROOT) + u"/jimstaff_data/m9-satb-hymn.mscx", true));
+    score.reset(ScoreRW::readScore(muse::String::fromUtf8(MELO_UI_TEST_DATA_ROOT) + u"/melostaff_data/m9-satb-hymn.mscx", true));
     ASSERT_TRUE(score);
     ASSERT_EQ(score->nstaves(), 4);
     notation = std::make_shared<TestNotation>(score.get());
@@ -1903,7 +1904,7 @@ TEST_F(MeloUiModelTests, TuningControlMouseDragPreviewsCommitsOneUndoAndEscCance
     window.show();
     QCoreApplication::processEvents();
 
-    auto* slider = control->findChild<QQuickItem*>("jimsTuningSlider");
+    auto* slider = control->findChild<QQuickItem*>("meloTuningSlider");
     ASSERT_TRUE(slider);
     ASSERT_GT(slider->height(), 20.0);
     const double original = model.cents();
@@ -1987,7 +1988,7 @@ TEST_F(MeloUiModelTests, RealDragCancellationAndReleaseRestoreWholeTie)
     for (double generator : { 700.0, 1200.0 * 4.0 / 7.0, 720.0 }) {
         SCOPED_TRACE(generator);
         for (bool fromPart : { false, true }) {
-            score.reset(ScoreRW::readScore(muse::String::fromUtf8(MELO_UI_TEST_DATA_ROOT) + u"/jimstaff_data/m5-key-up.mscx", true));
+            score.reset(ScoreRW::readScore(muse::String::fromUtf8(MELO_UI_TEST_DATA_ROOT) + u"/melostaff_data/m5-key-up.mscx", true));
             ASSERT_TRUE(score);
             String setupError;
             auto* second = score->firstMeasure()->nextMeasure();
@@ -2182,7 +2183,7 @@ TEST_F(MeloUiModelTests, RelativeChangesProduceIndependentVoiceAudioProbes)
 {
     for (double generator : { 700.0, 4800.0 / 7.0, 720.0 }) {
         SCOPED_TRACE(generator);
-        score.reset(ScoreRW::readScore(String::fromUtf8(MELO_UI_TEST_DATA_ROOT) + u"/jimstaff_data/m9-satb-hymn.mscx", true));
+        score.reset(ScoreRW::readScore(String::fromUtf8(MELO_UI_TEST_DATA_ROOT) + u"/melostaff_data/m9-satb-hymn.mscx", true));
         ASSERT_TRUE(score);
         std::vector<Note*> probes;
         const int periods[] = { 2, 1, 1, 0 };
@@ -2259,7 +2260,7 @@ TEST_F(MeloUiModelTests, RelativeChangesProduceIndependentVoiceAudioProbes)
 
 TEST_F(MeloUiModelTests, VocalDragCancellationRestoresEveryStaffAmbit)
 {
-    score.reset(ScoreRW::readScore(muse::String::fromUtf8(MELO_UI_TEST_DATA_ROOT) + u"/jimstaff_data/m9-satb-hymn.mscx", true));
+    score.reset(ScoreRW::readScore(muse::String::fromUtf8(MELO_UI_TEST_DATA_ROOT) + u"/melostaff_data/m9-satb-hymn.mscx", true));
     ASSERT_TRUE(score);
     Note* first=nullptr;
     for (Segment* segment=score->firstSegment(SegmentType::ChordRest); segment; segment=segment->next1(SegmentType::ChordRest)) {

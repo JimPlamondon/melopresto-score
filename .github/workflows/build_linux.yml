@@ -1,7 +1,7 @@
 name: 'Build: Linux'
 
 on:
-  # musescore-jims: no pull_request trigger — this upstream workflow needs MuseScore's secrets and cannot run in the fork; workflow_dispatch only.
+  # melopresto-score: no pull_request trigger — this upstream workflow needs MuseScore's secrets and cannot run in the fork; workflow_dispatch only.
   workflow_dispatch:
     inputs:
       platforms:

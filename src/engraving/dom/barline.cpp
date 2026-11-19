@@ -273,7 +273,7 @@ void BarLine::calcY()
     double y1 = offset + from * lineDistance * .5 - lineWidth;
     double y2 = offset + (staffType1->lines() * 2 - 2 + to) * lineDistance * .5 + lineWidth;
 
-    // JiMStaff (owner correction 2026-08-14): barlines span the DERIVED
+    // MeloStaff (owner correction 2026-08-14): barlines span the DERIVED
     // frame, not the nominal line count — a partial stave is shorter
     // than the preset's lines, and a barline must never overshoot it.
     // Milestone 8, owner ruling 3b (keyboard precedent): on a banded system

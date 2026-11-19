@@ -439,7 +439,7 @@ target_include_directories(engraving PRIVATE
 
 target_link_libraries(engraving PRIVATE muse::draw)
 
-# JiMStaff Milestone 1: build and link the melo-musescore-bridge C ABI
+# MeloStaff Milestone 1: build and link the melo-musescore-bridge C ABI
 # staticlib (Apache-2.0, from the JiMS Kernel repository) — the license/ABI
 # seam through which every JiMS musical fact reaches this fork.
 include(${CMAKE_CURRENT_LIST_DIR}/melo/SetupMeloBridge.cmake)

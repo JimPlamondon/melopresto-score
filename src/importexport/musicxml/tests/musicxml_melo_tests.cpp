@@ -84,7 +84,7 @@ using namespace mu::engraving::rendering;
 using namespace mu::iex::musicxml;
 using namespace muse::draw;
 
-static const String MELO_DATA_DIR(u"data/jims/");
+static const String MELO_DATA_DIR(u"data/melo/");
 
 namespace {
 String exportToScratch(MasterScore* score, const char* name);
@@ -166,12 +166,12 @@ public:
 static const char* KEY_MODE_STATE_1
     = "{\"scale\":[\"M2\",\"m2\",\"M2\",\"M2\",\"M2\",\"m2\",\"M2\"],\"collection_rotation\":0,\"mode_rotation\":0,"
       "\"generator_cents\":700.0,\"period_cents\":1200.0,\"embedding\":{\"large_steps\":5,\"small_steps\":2},"
-      "\"extent\":{\"lower\":{\"nPer\":1,\"nGen\":-2},\"upper\":{\"nPer\":2,\"nGen\":-2}},\"schema\":\"jimstaff-v3\","
+      "\"extent\":{\"lower\":{\"nPer\":1,\"nGen\":-2},\"upper\":{\"nPer\":2,\"nGen\":-2}},\"schema\":\"melostaff-v3\","
       "\"tonic_ambit\":\"tonic-bounded\"}";
 static const char* KEY_MODE_STATE_2
     = "{\"scale\":[\"M2\",\"m2\",\"M2\",\"M2\",\"M2\",\"m2\",\"M2\"],\"collection_rotation\":0,\"mode_rotation\":5,"
       "\"generator_cents\":700.0,\"period_cents\":1200.0,\"embedding\":{\"large_steps\":5,\"small_steps\":2},"
-      "\"extent\":{\"lower\":{\"nPer\":1,\"nGen\":-2},\"upper\":{\"nPer\":2,\"nGen\":-2}},\"schema\":\"jimstaff-v3\","
+      "\"extent\":{\"lower\":{\"nPer\":1,\"nGen\":-2},\"upper\":{\"nPer\":2,\"nGen\":-2}},\"schema\":\"melostaff-v3\","
       "\"tonic_ambit\":\"tonic-bounded\"}";
 
 static String sharedState(const String& state)
@@ -186,13 +186,13 @@ static String sharedState(const String& state)
 
 TEST_F(MusicXml_Melo_Tests, v5ImportBuildsCanonicalStaffConfigurationsAndRelativeTimeline)
 {
-    MasterScore* score = readMelo("v5/jims-v3-m5-key-mode.musicxml");
+    MasterScore* score = readMelo("v5/melo-v3-m5-key-mode.musicxml");
     ASSERT_TRUE(score);
     ASSERT_EQ(score->nstaves(), 1u);
     const StaffType* st = staffTypeAtStart(score);
     ASSERT_TRUE(st);
     EXPECT_TRUE(st->isMelo());
-    EXPECT_EQ(st->xmlName(), String(u"jims12tet"));
+    EXPECT_EQ(st->xmlName(), String(u"melo12tet"));
     EXPECT_EQ(st->lines(), 13);
     // Load-time reconciliation replaces the serialized extent with the exact
     // written-note bounds. All song-wide content remains the converter's.
@@ -228,7 +228,7 @@ TEST_F(MusicXml_Melo_Tests, v5ImportBuildsCanonicalStaffConfigurationsAndRelativ
 
 TEST_F(MusicXml_Melo_Tests, midBarStateChangeImportsAndExportsAtItsExactTick)
 {
-    MasterScore* score = readMelo("v5/jims-mid-bar-state-change.musicxml");
+    MasterScore* score = readMelo("v5/melo-mid-bar-state-change.musicxml");
     ASSERT_TRUE(score);
     const std::vector<const Note*> notes = notesInOrder(score);
     ASSERT_EQ(notes.size(), 4u);
@@ -248,8 +248,8 @@ TEST_F(MusicXml_Melo_Tests, midBarStateChangeImportsAndExportsAtItsExactTick)
     EXPECT_TRUE(notes[1]->staff()->staffTypeForElement(notes[1])->meloStateJson().contains(u"\"mode_rotation\":0"));
     EXPECT_TRUE(newStaffType->meloStateJson().contains(u"\"mode_rotation\":5"));
     EXPECT_TRUE(notes[3]->staff()->staffTypeForElement(notes[3])->meloStateJson().contains(u"\"mode_rotation\":5"));
-    EXPECT_TRUE(oldStaffType->meloStateJson().contains(u"jimstaff-request-v3"));
-    EXPECT_TRUE(newStaffType->meloStateJson().contains(u"jimstaff-request-v3"));
+    EXPECT_TRUE(oldStaffType->meloStateJson().contains(u"melostaff-request-v3"));
+    EXPECT_TRUE(newStaffType->meloStateJson().contains(u"melostaff-request-v3"));
 
     melo::ChangeIndicator indicator;
     ASSERT_TRUE(melo::midBarChangeIndicator(carrier, indicator));
@@ -262,7 +262,7 @@ TEST_F(MusicXml_Melo_Tests, midBarStateChangeImportsAndExportsAtItsExactTick)
     EXPECT_EQ(indicator.arrows[0].kind, u"mode");
     EXPECT_TRUE(indicator.arrows[0].trumps.isEmpty());
 
-    const String out = exportToScratch(score, "jims-mid-bar-state-change-roundtrip.musicxml");
+    const String out = exportToScratch(score, "melo-mid-bar-state-change-roundtrip.musicxml");
     const String xml = readAll(out);
     EXPECT_EQ(xml.count(u"<melo:staff-state"), 2u);
     const size_t firstNote = xml.indexOf(u"<note");
@@ -289,7 +289,7 @@ TEST_F(MusicXml_Melo_Tests, midBarStateChangeImportsAndExportsAtItsExactTick)
 
 TEST_F(MusicXml_Melo_Tests, explicitTonicAmbitsSurviveNativeScoreReload)
 {
-    MasterScore* score = readMelo("v5/jims-mid-bar-state-change.musicxml");
+    MasterScore* score = readMelo("v5/melo-mid-bar-state-change.musicxml");
     ASSERT_TRUE(score);
     StaffType* base = score->staff(0)->staffType(Fraction(0, 1));
     ASSERT_TRUE(base);
@@ -298,7 +298,7 @@ TEST_F(MusicXml_Melo_Tests, explicitTonicAmbitsSurviveNativeScoreReload)
     base->setMeloStateJson(baseState);
     ASSERT_EQ(base->meloTonicAmbit(), u"tonic-centered");
 
-    const String dir(u"jims-export-scratch");
+    const String dir(u"melo-export-scratch");
     muse::io::Dir::mkpath(dir);
     const String mscz = dir + u"/explicit-tonic-ambit-roundtrip.mscz";
     muse::io::File::remove(mscz);
@@ -334,7 +334,7 @@ TEST_F(MusicXml_Melo_Tests, explicitTonicAmbitsSurviveNativeScoreReload)
 
 TEST_F(MusicXml_Melo_Tests, midBarIndicatorElementsAlignWithTheirDisplayedStaffNoteLines)
 {
-    MasterScore* score = readMelo("v5/jims-mid-bar-state-change.musicxml");
+    MasterScore* score = readMelo("v5/melo-mid-bar-state-change.musicxml");
     ASSERT_TRUE(score);
     score->doLayout();
     Measure* measure = measureNo(score, 1);
@@ -445,9 +445,9 @@ TEST_F(MusicXml_Melo_Tests, midBarIndicatorElementsAlignWithTheirDisplayedStaffN
 
 TEST_F(MusicXml_Melo_Tests, numericAndMissingReferencesAreRefusedWithoutChangingInput)
 {
-    for (const char* file : { "jims-reference-none.musicxml", "jims-reference-none-explicit.musicxml",
-                              "jims-reference-pitch.musicxml", "jims-reference-pitch-class.musicxml", "jims-reference-hertz.musicxml",
-                              "jims-v1-collision.musicxml", "jims-v2-mode-change.musicxml", "jims-v3-m5-key-mode.musicxml" }) {
+    for (const char* file : { "melo-reference-none.musicxml", "melo-reference-none-explicit.musicxml",
+                              "melo-reference-pitch.musicxml", "melo-reference-pitch-class.musicxml", "melo-reference-hertz.musicxml",
+                              "melo-v1-collision.musicxml", "melo-v2-mode-change.musicxml", "melo-v3-m5-key-mode.musicxml" }) {
         const String path = ScoreRW::rootPath() + u"/" + MELO_DATA_DIR + String::fromUtf8(file);
         const String before = readAll(path);
         std::unique_ptr<MasterScore> refused(readMelo(file));
@@ -458,8 +458,8 @@ TEST_F(MusicXml_Melo_Tests, numericAndMissingReferencesAreRefusedWithoutChanging
 
 TEST_F(MusicXml_Melo_Tests, namespaceIsResolvedByUriNotByPrefix)
 {
-    MasterScore* a = readMelo("v5/jims-v3-m5-mode.musicxml");
-    MasterScore* b = readMelo("v5/jims-v3-other-prefix.musicxml");
+    MasterScore* a = readMelo("v5/melo-v3-m5-mode.musicxml");
+    MasterScore* b = readMelo("v5/melo-v3-other-prefix.musicxml");
     ASSERT_TRUE(a && b);
     EXPECT_EQ(staffTypeAtStart(a)->meloStateJson(), staffTypeAtStart(b)->meloStateJson());
     ASSERT_TRUE(melo::changeCarrier(measureNo(b, 2), 0));
@@ -475,14 +475,14 @@ TEST_F(MusicXml_Melo_Tests, unknownMeloNamespaceVersionIsAFatalImportError)
 {
     // A document that declares itself MeloPresto with a version this fork does not
     // know must not silently import as a plain five-line staff.
-    MasterScore* score = readMelo("jims-unknown-version-invalid.musicxml");
+    MasterScore* score = readMelo("melo-unknown-version-invalid.musicxml");
     EXPECT_FALSE(score);
     delete score;
 }
 
 TEST_F(MusicXml_Melo_Tests, ChordNameV4ImportsAsOpaquePerObjectHarmonyBesideStandardHarmony)
 {
-    MasterScore* score = readMelo("v5/jims-chord-name-v4.musicxml");
+    MasterScore* score = readMelo("v5/melo-chord-name-v4.musicxml");
     ASSERT_TRUE(score);
     ASSERT_EQ(score->nstaves(), 2u);
     ASSERT_TRUE(staffTypeAtStart(score, 0));
@@ -538,7 +538,7 @@ TEST_F(MusicXml_Melo_Tests, ChordNameV4ImportsAsOpaquePerObjectHarmonyBesideStan
 
 TEST_F(MusicXml_Melo_Tests, ChordNameEditingKeepsTheWholeOpaqueStringAndRefusesTilde)
 {
-    MasterScore* score = readMelo("v5/jims-chord-name-v4.musicxml");
+    MasterScore* score = readMelo("v5/melo-chord-name-v4.musicxml");
     ASSERT_TRUE(score);
     const std::vector<Harmony*> harmonies = harmoniesOnStaff(score, 0);
     ASSERT_EQ(harmonies.size(), 2u);
@@ -559,7 +559,7 @@ TEST_F(MusicXml_Melo_Tests, ChordNameEditingKeepsTheWholeOpaqueStringAndRefusesT
 
 TEST_F(MusicXml_Melo_Tests, ChordNameTranspositionLeavesMeloOpaqueAndTransposesStandardHarmony)
 {
-    MasterScore* score = readMelo("v5/jims-chord-name-v4.musicxml");
+    MasterScore* score = readMelo("v5/melo-chord-name-v4.musicxml");
     ASSERT_TRUE(score);
     const std::vector<Harmony*> beforeMelo = harmoniesOnStaff(score, 0);
     const std::vector<Harmony*> beforeStock = harmoniesOnStaff(score, 1);
@@ -591,13 +591,13 @@ TEST_F(MusicXml_Melo_Tests, ChordNameTranspositionLeavesMeloOpaqueAndTransposesS
 
 TEST_F(MusicXml_Melo_Tests, ChordNameV4SurvivesNativeAndMusicXmlRoundTripsExactly)
 {
-    MasterScore* score = readMelo("v5/jims-chord-name-v4.musicxml");
+    MasterScore* score = readMelo("v5/melo-chord-name-v4.musicxml");
     ASSERT_TRUE(score);
-    const String dir(u"jims-export-scratch");
+    const String dir(u"melo-export-scratch");
     muse::io::Dir::mkpath(dir);
     MasterScore* native = nullptr;
     for (const String& extension : { String(u"mscx"), String(u"mscz") }) {
-        const String nativePath = dir + u"/jims-chord-name-native." + extension;
+        const String nativePath = dir + u"/melo-chord-name-native." + extension;
         if (extension == u"mscz") {
             muse::io::File::remove(nativePath);
             muse::io::File file(nativePath);
@@ -633,7 +633,7 @@ TEST_F(MusicXml_Melo_Tests, ChordNameV4SurvivesNativeAndMusicXmlRoundTripsExactl
     }
     ASSERT_TRUE(native);
 
-    const String out = exportToScratch(native, "jims-chord-name-roundtrip.musicxml");
+    const String out = exportToScratch(native, "melo-chord-name-roundtrip.musicxml");
     const String xml = readAll(out);
     EXPECT_TRUE(xml.contains(u"xmlns:melo=\"urn:melopresto:musicxml:5\""));
     EXPECT_EQ(xml.count(u"<melo:chord-name>!So7/3</melo:chord-name>"), 1);
@@ -664,7 +664,7 @@ TEST_F(MusicXml_Melo_Tests, ChordNameV4SurvivesNativeAndMusicXmlRoundTripsExactl
 
 TEST_F(MusicXml_Melo_Tests, ChordNameV4PreservesOffsetStaffAndSupportedFormatting)
 {
-    MasterScore* score = readMelo("v5/jims-chord-name-offset-staff-format-v4.musicxml");
+    MasterScore* score = readMelo("v5/melo-chord-name-offset-staff-format-v4.musicxml");
     ASSERT_TRUE(score);
     ASSERT_EQ(score->nstaves(), 2u);
     EXPECT_FALSE(staffTypeAtStart(score, 0)->isMelo());
@@ -690,7 +690,7 @@ TEST_F(MusicXml_Melo_Tests, ChordNameV4PreservesOffsetStaffAndSupportedFormattin
     auto musicXmlConfiguration = muse::modularity::globalIoc()->resolve<IMusicXmlConfiguration>("iex_musicxml");
     ASSERT_TRUE(musicXmlConfiguration);
     musicXmlConfiguration->setExportLayout(true);
-    const String out = exportToScratch(score, "jims-chord-name-offset-staff-format-roundtrip.musicxml");
+    const String out = exportToScratch(score, "melo-chord-name-offset-staff-format-roundtrip.musicxml");
     musicXmlConfiguration->setExportLayout(false);
     const String xml = readAll(out);
     EXPECT_TRUE(xml.contains(u"<offset>"));
@@ -724,7 +724,7 @@ TEST_F(MusicXml_Melo_Tests, ChordNameV4PreservesOffsetStaffAndSupportedFormattin
     EXPECT_NEAR(roundTrip->offset().x() / roundTrip->spatium(), 2.0, 0.01);
     EXPECT_NEAR(roundTrip->offset().y() / roundTrip->spatium(), 1.0, 0.01);
 
-    const String nativePath = u"jims-export-scratch/jims-chord-name-offset-staff-format-roundtrip.mscz";
+    const String nativePath = u"melo-export-scratch/melo-chord-name-offset-staff-format-roundtrip.mscz";
     muse::io::File::remove(nativePath);
     muse::io::File nativeFile(nativePath);
     ASSERT_TRUE(nativeFile.open(muse::io::IODevice::WriteOnly));
@@ -764,14 +764,14 @@ TEST_F(MusicXml_Melo_Tests, ChordNameV4PreservesOffsetStaffAndSupportedFormattin
 
 TEST_F(MusicXml_Melo_Tests, ChordNameV4PreservesOffsetBetweenNoteOnsets)
 {
-    MasterScore* score = readMelo("v5/jims-chord-name-unaligned-offset-v4.musicxml");
+    MasterScore* score = readMelo("v5/melo-chord-name-unaligned-offset-v4.musicxml");
     ASSERT_TRUE(score);
     const std::vector<Harmony*> imported = harmoniesInOrder(score);
     ASSERT_EQ(imported.size(), 2u);
     EXPECT_EQ(imported[1]->harmonyName(), u"So5");
     EXPECT_EQ(imported[1]->tick(), Fraction(7, 16));
 
-    const String out = exportToScratch(score, "jims-chord-name-unaligned-offset-roundtrip.musicxml");
+    const String out = exportToScratch(score, "melo-chord-name-unaligned-offset-roundtrip.musicxml");
     auto importXml = [](MasterScore* s, const muse::io::path_t& path) -> engraving::Err {
         return importMusicXml(s, path.toQString(), false);
     };
@@ -787,7 +787,7 @@ TEST_F(MusicXml_Melo_Tests, ChordNameV4PreservesOffsetBetweenNoteOnsets)
 
 TEST_F(MusicXml_Melo_Tests, ChordNameV4RejectsSupersededTildeMarker)
 {
-    MasterScore* score = readMelo("v5/jims-chord-name-tilde-invalid.musicxml");
+    MasterScore* score = readMelo("v5/melo-chord-name-tilde-invalid.musicxml");
     EXPECT_FALSE(score);
     delete score;
 }
@@ -813,7 +813,7 @@ TEST_F(MusicXml_Melo_Tests, ChordNameV4RefusesNestedFretDiagramCarrierOnExport)
 
 TEST_F(MusicXml_Melo_Tests, numberedStatesLandOnTheirStavesAndMidScoreStatesRideChangeCarriers)
 {
-    MasterScore* multi = readMelo("v5/jims-multi-staff.musicxml");
+    MasterScore* multi = readMelo("v5/melo-multi-staff.musicxml");
     ASSERT_TRUE(multi);
     ASSERT_EQ(multi->nstaves(), 2u);
     const StaffType* s1 = staffTypeAtStart(multi, 0);
@@ -824,7 +824,7 @@ TEST_F(MusicXml_Melo_Tests, numberedStatesLandOnTheirStavesAndMidScoreStatesRide
     EXPECT_NE(s1->meloStateJson(), s2->meloStateJson());
     delete multi;
 
-    MasterScore* mid = readMelo("v5/jims-mid-score-state-change.musicxml");
+    MasterScore* mid = readMelo("v5/melo-mid-score-state-change.musicxml");
     ASSERT_TRUE(mid);
     const StaffTypeChange* stc = melo::changeCarrier(measureNo(mid, 2), 0);
     ASSERT_TRUE(stc);
@@ -842,12 +842,12 @@ TEST_F(MusicXml_Melo_Tests, allSixAuthoredPiecesImportTheirConfigurationAndRelat
         const char* interval;
     };
     const Case cases[] = {
-        { "v5/jims-v3-m5-mode.musicxml", 2, "\"mode_rotation\":5", nullptr },
-        { "v5/jims-v3-m5-key-up.musicxml", 2, "\"mode_rotation\":0", "{\"nPer\":0,\"nGen\":1}" },
-        { "v5/jims-v3-m5-key-down.musicxml", 2, "\"mode_rotation\":0", "{\"nPer\":-1,\"nGen\":1}" },
-        { "v5/jims-v3-m5-scale.musicxml", 2, "\"collection_rotation\":-3", nullptr },
-        { "v5/jims-v3-m5-key-mode.musicxml", 2, "\"mode_rotation\":5", "{\"nPer\":-1,\"nGen\":3}" },
-        { "v5/jims-v3-m5-syshead.musicxml", 6, "\"mode_rotation\":0", nullptr }
+        { "v5/melo-v3-m5-mode.musicxml", 2, "\"mode_rotation\":5", nullptr },
+        { "v5/melo-v3-m5-key-up.musicxml", 2, "\"mode_rotation\":0", "{\"nPer\":0,\"nGen\":1}" },
+        { "v5/melo-v3-m5-key-down.musicxml", 2, "\"mode_rotation\":0", "{\"nPer\":-1,\"nGen\":1}" },
+        { "v5/melo-v3-m5-scale.musicxml", 2, "\"collection_rotation\":-3", nullptr },
+        { "v5/melo-v3-m5-key-mode.musicxml", 2, "\"mode_rotation\":5", "{\"nPer\":-1,\"nGen\":3}" },
+        { "v5/melo-v3-m5-syshead.musicxml", 6, "\"mode_rotation\":0", nullptr }
     };
     for (const Case& c : cases) {
         std::unique_ptr<MasterScore> score(readMelo(c.file));
@@ -871,7 +871,7 @@ TEST_F(MusicXml_Melo_Tests, allSixAuthoredPiecesImportTheirConfigurationAndRelat
 
 TEST_F(MusicXml_Melo_Tests, authoritativeMeloIdentityNormalizesContradictoryStandardPitchOnImport)
 {
-    MasterScore* score = readMelo("v5/jims-v3-m5-key-down.musicxml");
+    MasterScore* score = readMelo("v5/melo-v3-m5-key-down.musicxml");
     ASSERT_TRUE(score);
     int disagreements = 0;
     for (const Note* note : notesInOrder(score)) {
@@ -959,7 +959,7 @@ String exportToScratch(MasterScore* score, const char* name)
     score->connectTies();
     score->masterScore()->rebuildMidiMapping();
     score->doLayout();
-    const String dir(u"jims-export-scratch");
+    const String dir(u"melo-export-scratch");
     muse::io::Dir::mkpath(dir);
     const String path = dir + u"/" + String::fromUtf8(name).replace(u"/", u"-");
     muse::io::File::remove(path);
@@ -979,16 +979,16 @@ TEST_F(MusicXml_Melo_Tests, CanonicalV5RoundTripPreservesSpellingRelativeEventsA
 {
     for (double generator : { 700.0, 4800.0 / 7.0, 720.0 }) {
         SCOPED_TRACE(generator);
-        std::unique_ptr<MasterScore> score(readMelo("v5/jims-12tet-diatonic.musicxml"));
+        std::unique_ptr<MasterScore> score(readMelo("v5/melo-12tet-diatonic.musicxml"));
         ASSERT_TRUE(score);
         // Re-author this known test's musical intent explicitly; this is not a legacy import conversion.
-        const String root = u"{\"schema\":\"jimstaff-reference-v1\",\"initial\":{\"step\":\"D\",\"alter\":-1,\"octave\":4},\"events\":[]}";
+        const String root = u"{\"schema\":\"melostaff-reference-v1\",\"initial\":{\"step\":\"D\",\"alter\":-1,\"octave\":4},\"events\":[]}";
         score->setMetaTag(melo::REFERENCE_TIMELINE_TAG, root);
         for (Staff* staff : score->staves()) {
             StaffType* type = staff->staffType(Fraction(0, 1));
             auto configuration
                 = QJsonDocument::fromJson(type->meloStateJson().toQString().toUtf8()).object().value("configuration").toObject();
-            configuration["schema"] = "jimstaff-v3";
+            configuration["schema"] = "melostaff-v3";
             configuration["tonic_ambit"] = "tonic-bounded";
             type->setMeloStateJson(String::fromUtf8(QJsonDocument(configuration).toJson(QJsonDocument::Compact).constData()));
         }
@@ -1068,10 +1068,10 @@ TEST_F(MusicXml_Melo_Tests, CanonicalV5RoundTripPreservesSpellingRelativeEventsA
 TEST_F(MusicXml_Melo_Tests, exportWritesV5AndRoundTripsThroughTheNativeImporter)
 {
     const char* corpus[] = {
-        "v5/jims-v3-m5-mode.musicxml", "v5/jims-v3-m5-key-up.musicxml", "v5/jims-v3-m5-key-down.musicxml",
-        "v5/jims-v3-m5-scale.musicxml", "v5/jims-v3-m5-key-mode.musicxml", "v5/jims-v3-m5-syshead.musicxml",
-        "v5/jims-mid-score-state-change.musicxml",
-        "v5/jims-multi-staff.musicxml", "v5/jims-12tet-diatonic.musicxml", "v5/jims-mode-change-v2.musicxml",
+        "v5/melo-v3-m5-mode.musicxml", "v5/melo-v3-m5-key-up.musicxml", "v5/melo-v3-m5-key-down.musicxml",
+        "v5/melo-v3-m5-scale.musicxml", "v5/melo-v3-m5-key-mode.musicxml", "v5/melo-v3-m5-syshead.musicxml",
+        "v5/melo-mid-score-state-change.musicxml",
+        "v5/melo-multi-staff.musicxml", "v5/melo-12tet-diatonic.musicxml", "v5/melo-mode-change-v2.musicxml",
     };
     for (const char* file : corpus) {
         MasterScore* original = readMelo(file);
@@ -1152,7 +1152,7 @@ TEST_F(MusicXml_Melo_Tests, exportOfANativeMeloScoreCarriesStatesChangesAndIdent
 
 TEST_F(MusicXml_Melo_Tests, multiStaffExportNumbersStatesThroughTheKernel)
 {
-    MasterScore* score = readMelo("v5/jims-multi-staff.musicxml");
+    MasterScore* score = readMelo("v5/melo-multi-staff.musicxml");
     ASSERT_TRUE(score);
     score->doLayout();
     const String out = exportToScratch(score, "export-multi-staff.musicxml");
@@ -1242,8 +1242,8 @@ TEST_F(MusicXml_Melo_Tests, trustedRawFragmentWriterInsertsVerbatimAndKeepsBalan
     EXPECT_TRUE(out.contains(u"</attributes>"));
 }
 
-// JiMStaff Milestone 8 (octave-band elision): the three presentation switches
-// (score style jimsElideEmptyOctaves / jimsShowAllOctavesInFirstSystem, staff
+// MeloStaff Milestone 8 (octave-band elision): the three presentation switches
+// (score style meloElideEmptyOctaves / meloShowAllOctavesInFirstSystem, staff
 // type Auto/On/Off) never reach MusicXML — export is byte-identical with
 // elision off and on, and no melo:staff-state carries them.
 TEST_F(MusicXml_Melo_Tests, m8ElisionSwitchesNeverChangeMusicXmlExport)
@@ -1288,7 +1288,7 @@ TEST_F(MusicXml_Melo_Tests, m8ElisionSwitchesNeverChangeMusicXmlExport)
 
 TEST_F(MusicXml_Melo_Tests, provenanceIsImportedSavedAndExportedVerbatim)
 {
-    MasterScore* score = readMelo("v5/jims-provenance.musicxml");
+    MasterScore* score = readMelo("v5/melo-provenance.musicxml");
     ASSERT_TRUE(score);
     score->doLayout();
     const melo::Provenance prov = score->meloProvenance();   // by value: the score is deleted before the reload check
@@ -1327,7 +1327,7 @@ TEST_F(MusicXml_Melo_Tests, provenanceIsImportedSavedAndExportedVerbatim)
     EXPECT_TRUE(again->meloProvenance() == prov);
     delete again;
     // Score-file persistence (.mscz): survives save + reload, then exports the same.
-    const String dir(u"jims-export-scratch");
+    const String dir(u"melo-export-scratch");
     muse::io::Dir::mkpath(dir);
     const String mscz = dir + u"/provenance-roundtrip.mscz";
     muse::io::File::remove(mscz);
@@ -1363,8 +1363,8 @@ TEST_F(MusicXml_Melo_Tests, tuningTrajectoriesAreImportedSavedAndExportedVerbati
         const char* interpolation;
         size_t controls;
     };
-    const Case cases[] = { { "v5/jims-trajectory-linear.musicxml", "linear", 0 },
-        { "v5/jims-trajectory-cubic.musicxml", "cubic-bezier", 2 } };
+    const Case cases[] = { { "v5/melo-trajectory-linear.musicxml", "linear", 0 },
+        { "v5/melo-trajectory-cubic.musicxml", "cubic-bezier", 2 } };
     for (const Case& c : cases) {
         MasterScore* score = readMelo(c.file);
         ASSERT_TRUE(score) << c.file;
@@ -1416,7 +1416,7 @@ TEST_F(MusicXml_Melo_Tests, tuningTrajectoriesAreImportedSavedAndExportedVerbati
         EXPECT_TRUE(again->staff(0)->meloTuningTrajectories()[0] == t) << c.file;
         delete again;
         // Score-file persistence (.mscz).
-        const String dir(u"jims-export-scratch");
+        const String dir(u"melo-export-scratch");
         muse::io::Dir::mkpath(dir);
         const String mscz = dir + u"/" + String::fromUtf8(c.file).replace(u"/", u"-") + u".mscz";
         muse::io::File::remove(mscz);
@@ -1449,7 +1449,7 @@ TEST_F(MusicXml_Melo_Tests, malformedCarriersAreFatalImportErrors)
     // A trajectory segment without interpolation, and a provenance resource
     // without a role: a MeloPresto document never imports with part of its MeloPresto
     // content silently dropped.
-    const String dir(u"jims-export-scratch");
+    const String dir(u"melo-export-scratch");
     muse::io::Dir::mkpath(dir);
     struct Bad {
         const char* base;
@@ -1458,8 +1458,8 @@ TEST_F(MusicXml_Melo_Tests, malformedCarriersAreFatalImportErrors)
         const char* name;
     };
     const Bad bads[] = {
-        { "v5/jims-trajectory-linear.musicxml", " interpolation=\"linear\"", "", "bad-trajectory.musicxml" },
-        { "v5/jims-provenance.musicxml", "role=\"master\" ", "", "bad-provenance.musicxml" },
+        { "v5/melo-trajectory-linear.musicxml", " interpolation=\"linear\"", "", "bad-trajectory.musicxml" },
+        { "v5/melo-provenance.musicxml", "role=\"master\" ", "", "bad-provenance.musicxml" },
     };
     for (const Bad& b : bads) {
         String text = readAll(ScoreRW::rootPath() + u"/" + MELO_DATA_DIR + String::fromUtf8(b.base));
@@ -1481,7 +1481,7 @@ TEST_F(MusicXml_Melo_Tests, malformedCarriersAreFatalImportErrors)
 
 TEST_F(MusicXml_Melo_Tests, severalMeloPartsSharingOneTimelineImportAndRoundTrip)
 {
-    MasterScore* score = readMelo("v5/jims-multi-part-shared.musicxml");
+    MasterScore* score = readMelo("v5/melo-multi-part-shared.musicxml");
     ASSERT_TRUE(score);
     score->doLayout();
     ASSERT_EQ(score->nstaves(), 2u);
@@ -1543,7 +1543,7 @@ TEST_F(MusicXml_Melo_Tests, unequalStaffCountsShareOneMusicalTimeline)
 // change the whole element was compared and such a document was refused.
 TEST_F(MusicXml_Melo_Tests, partsDifferingOnlyInPerStaffFieldsImportAndRoundTrip)
 {
-    MasterScore* score = readMelo("v5/jims-multi-part-perstaff-differs.musicxml");
+    MasterScore* score = readMelo("v5/melo-multi-part-perstaff-differs.musicxml");
     ASSERT_TRUE(score);
     score->doLayout();
     ASSERT_EQ(score->nstaves(), 2u);
@@ -1556,10 +1556,10 @@ TEST_F(MusicXml_Melo_Tests, partsDifferingOnlyInPerStaffFieldsImportAndRoundTrip
     // The Kernel's shared projection is blind only to extent.
     const String centered
         =
-            uR"({"scale":["M2","m2","M2","M2","M2","m2","M2"],"collection_rotation":0,"mode_rotation":0,"generator_cents":700.0,"period_cents":1200.0,"embedding":{"large_steps":5,"small_steps":2},"extent":{"lower":{"nPer":1,"nGen":-2},"upper":{"nPer":2,"nGen":-2}},"tonic_ambit":"tonic-centered","schema":"jimstaff-v3"})";
+            uR"({"scale":["M2","m2","M2","M2","M2","m2","M2"],"collection_rotation":0,"mode_rotation":0,"generator_cents":700.0,"period_cents":1200.0,"embedding":{"large_steps":5,"small_steps":2},"extent":{"lower":{"nPer":1,"nGen":-2},"upper":{"nPer":2,"nGen":-2}},"tonic_ambit":"tonic-centered","schema":"melostaff-v3"})";
     const String otherExtent
         =
-            uR"({"scale":["M2","m2","M2","M2","M2","m2","M2"],"collection_rotation":0,"mode_rotation":0,"generator_cents":700.0,"period_cents":1200.0,"embedding":{"large_steps":5,"small_steps":2},"extent":{"lower":{"nPer":0,"nGen":-2},"upper":{"nPer":1,"nGen":-2}},"tonic_ambit":"tonic-centered","schema":"jimstaff-v3"})";
+            uR"({"scale":["M2","m2","M2","M2","M2","m2","M2"],"collection_rotation":0,"mode_rotation":0,"generator_cents":700.0,"period_cents":1200.0,"embedding":{"large_steps":5,"small_steps":2},"extent":{"lower":{"nPer":0,"nGen":-2},"upper":{"nPer":1,"nGen":-2}},"tonic_ambit":"tonic-centered","schema":"melostaff-v3"})";
     String sharedCentered, sharedOtherExtent, err;
     ASSERT_TRUE(melo::musicxmlConfigurationV5Xml(centered, 0, true, sharedCentered, err)) << err.toStdString();
     ASSERT_TRUE(melo::musicxmlConfigurationV5Xml(otherExtent, 0, true, sharedOtherExtent, err)) << err.toStdString();
@@ -1599,7 +1599,7 @@ TEST_F(MusicXml_Melo_Tests, partsDifferingOnlyInPerStaffFieldsImportAndRoundTrip
 
 TEST_F(MusicXml_Melo_Tests, aMeloPartBesideAStockPartImportsAndRoundTrips)
 {
-    MasterScore* score = readMelo("v5/jims-multi-part-mixed.musicxml");
+    MasterScore* score = readMelo("v5/melo-multi-part-mixed.musicxml");
     ASSERT_TRUE(score);
     score->doLayout();
     ASSERT_EQ(score->nstaves(), 2u);
@@ -1632,10 +1632,10 @@ TEST_F(MusicXml_Melo_Tests, aMeloPartBesideAStockPartImportsAndRoundTrips)
 TEST_F(MusicXml_Melo_Tests, meloPartsWithDifferentTimelinesAreRefusedOnImportAndOnExport)
 {
     // Import: the divergent fixture is refused outright.
-    EXPECT_FALSE(readMelo("jims-multi-part-divergent-invalid.musicxml"));
+    EXPECT_FALSE(readMelo("melo-multi-part-divergent-invalid.musicxml"));
     // Export: a document whose MeloPresto parts have drifted apart in the editor
     // is refused, and nothing is written.
-    MasterScore* score = readMelo("v5/jims-multi-part-shared.musicxml");
+    MasterScore* score = readMelo("v5/melo-multi-part-shared.musicxml");
     ASSERT_TRUE(score);
     score->doLayout();
     StaffType* st = score->staff(1)->staffType(Fraction(0, 1));
@@ -1653,7 +1653,7 @@ TEST_F(MusicXml_Melo_Tests, meloPartsWithDifferentTimelinesAreRefusedOnImportAnd
 }
 
 // ---------------------------------------------------------------------------
-// Milestone 9 — the SATB (JiMStaff) template through the current JiMS namespace
+// Milestone 9 — the SATB (MeloStaff) template through the current JiMS namespace
 // ---------------------------------------------------------------------------
 
 namespace {
@@ -1789,11 +1789,11 @@ TEST_F(MusicXml_Melo_Tests, m9SATBScoreWideChangeKeepsOneSharedTimelineOnExport)
 // directions.
 TEST_F(MusicXml_Melo_Tests, m9SATBExtentOnlyDivergenceIsAcceptedAndMusicalDivergenceIsStillRefused)
 {
-    MasterScore* accepted = readMelo("v5/jims-multi-part-perstaff-differs.musicxml");
+    MasterScore* accepted = readMelo("v5/melo-multi-part-perstaff-differs.musicxml");
     ASSERT_TRUE(accepted) << "parts differing only in per-staff fields must import";
     delete accepted;
 
-    EXPECT_FALSE(readMelo("jims-multi-part-divergent-invalid.musicxml"))
+    EXPECT_FALSE(readMelo("melo-multi-part-divergent-invalid.musicxml"))
         << "a musical-field divergence must still be refused on import";
 
     MasterScore* score = ScoreRW::readScore(satbTemplatePath(), true);
@@ -1855,7 +1855,7 @@ TEST_F(MusicXml_Melo_Tests, MelodyPartTenorOverrideRoundTripsAndInvalidValueIsRe
 
     xml.replace(u"<melo:melody-part>tenor</melo:melody-part>",
                 u"<melo:melody-part>descant</melo:melody-part>");
-    const String invalid(u"jims-export-scratch/m10-melody-invalid.musicxml");
+    const String invalid(u"melo-export-scratch/m10-melody-invalid.musicxml");
     muse::io::File file(invalid);
     ASSERT_TRUE(file.open(muse::io::IODevice::WriteOnly));
     file.write(xml.toUtf8());
@@ -1874,7 +1874,7 @@ TEST_F(MusicXml_Melo_Tests, GeneratedChordEvidenceSurvivesNativeAndXmlAndDetects
     ASSERT_FALSE(proof.empty());
     EXPECT_EQ(harmony->meloEvidenceOrigin(), u"generated");
     EXPECT_TRUE(harmony->meloEvidenceError().empty()) << harmony->meloEvidenceError().toStdString();
-    const String dir(u"jims-export-scratch");
+    const String dir(u"melo-export-scratch");
     muse::io::Dir::mkpath(dir);
     const String nativePath = dir + u"/generated-chord-evidence.mscx";
     ASSERT_TRUE(ScoreRW::saveScore(score, nativePath));
@@ -2641,7 +2641,7 @@ TEST_F(MusicXml_Melo_Tests, HarmonicSpanKeepsOneNameAcrossDelayedMember)
 
 TEST_F(MusicXml_Melo_Tests, RedundantCarrierPreservesSharedEffectiveTimeline)
 {
-    MasterScore* score=readMelo("v5/jims-multi-part-shared.musicxml");
+    MasterScore* score=readMelo("v5/melo-multi-part-shared.musicxml");
     ASSERT_TRUE(score);
     Measure* measure=score->firstMeasure();
     StaffTypeChange* carrier=Factory::createStaffTypeChange(measure);
@@ -2739,7 +2739,7 @@ TEST_F(MusicXml_Melo_Tests, ToneDiamondPointSurvivesNativeAndMusicXmlRoundTripsA
     // The same score without the point sounds at the regular temperament's
     // pitches; the point moves the notes. Re0 (D4) is the Kernel's pulled
     // value for generator 700 and the point (50, -80).
-    MasterScore* plainScore = readMelo("v5/jims-12tet-diatonic.musicxml");
+    MasterScore* plainScore = readMelo("v5/melo-12tet-diatonic.musicxml");
     ASSERT_TRUE(plainScore);
     const std::vector<double> plain = meloSoundingFrequencies(notesInOrder(plainScore));
     ASSERT_EQ(plain.size(), pulled.size());
@@ -2773,7 +2773,7 @@ TEST_F(MusicXml_Melo_Tests, ToneDiamondPointSurvivesNativeAndMusicXmlRoundTripsA
     delete again;
 
     // Native save and load keeps the Kernel's JSON verbatim.
-    const String dir(u"jims-export-scratch");
+    const String dir(u"melo-export-scratch");
     muse::io::Dir::mkpath(dir);
     const String mscz = dir + u"/tone-diamond-roundtrip.mscz";
     muse::io::File::remove(mscz);

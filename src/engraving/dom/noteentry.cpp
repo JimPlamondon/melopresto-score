@@ -145,7 +145,7 @@ NoteVal Score::noteValForPosition(Position pos, AccidentalType at, bool& error)
     }
 
     case StaffGroup::STANDARD: {
-        // JiMStaff (Milestone 2 Phase 3): on a JiMS staff a click's
+        // MeloStaff (Milestone 2 Phase 3): on a JiMS staff a click's
         // height converts to cents (line units are half line-distances
         // on the continuous axis) and the Kernel picks the nearest
         // realizable lattice pitch, supplying the compatibility spelling

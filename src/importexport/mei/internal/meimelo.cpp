@@ -1125,7 +1125,7 @@ void MeloMeiImporter::capture(pugi::xml_node root)
 }
 
 /// jx local name of a node whose prefix is unknown ("jx:staff-state",
-/// "jims:staff-state", or unprefixed).
+/// "melo:staff-state", or unprefixed).
 static std::string localName(pugi::xml_node node)
 {
     std::string name = node.name();

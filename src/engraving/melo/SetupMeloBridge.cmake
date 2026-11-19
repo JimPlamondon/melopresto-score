@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-only
 # MuseScore-Studio-CLA-applies
 #
-# JiMStaff Milestone 1 — build and link the melo-musescore-bridge Rust
+# MeloStaff Milestone 1 — build and link the melo-musescore-bridge Rust
 # staticlib from an explicit JiMS Kernel checkout. Fails clearly when the
 # checkout, cargo, or the built ABI is missing; never vendors Rust build
 # outputs into this repository.

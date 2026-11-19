@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: GPL-3.0-only
  * MuseScore-Studio-CLA-applies
  *
- * JiMStaff Milestone 3 — shared continuous-tuning controller.
+ * MeloStaff Milestone 3 — shared continuous-tuning controller.
  * See melotuningcontroller.h.
  */
 #include "engraving/melo/melostrings.h"

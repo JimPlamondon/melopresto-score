@@ -21,7 +21,7 @@
  */
 #pragma once
 
-// The JiMS evidentiary review record (mei-jims profile, spec/MAPPING.md
+// The JiMS evidentiary review record (mei-melo profile, spec/MAPPING.md
 // facts 12-15 and 20-21): the per-work analytical findings that accompany
 // a JiMS score - modulation-versus-tonicization adjudications with their
 // reasons, confidence, uncertainty and responsible agent, focused-review
@@ -46,7 +46,7 @@
 
 namespace mu::engraving::melo {
 /// One node of the typed review value tree (the .mscz and MEI encodings
-/// share this shape; see the jm value elements of the mei-jims profile).
+/// share this shape; see the jm value elements of the mei-melo profile).
 struct ReviewValue {
     enum class Kind : unsigned char {
         Object,

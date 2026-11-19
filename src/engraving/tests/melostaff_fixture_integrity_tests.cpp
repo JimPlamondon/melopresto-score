@@ -95,10 +95,10 @@ struct Mismatch {
     }
 };
 
-/// Every MeloPresto test file under jimstaff_data, discovered rather than listed.
+/// Every MeloPresto test file under melostaff_data, discovered rather than listed.
 std::vector<muse::String> meloFixtures()
 {
-    const muse::String dir = ScoreRW::rootPath() + u"/jimstaff_data";
+    const muse::String dir = ScoreRW::rootPath() + u"/melostaff_data";
     std::vector<muse::String> out;
     auto found = muse::io::Dir::scanFiles(dir, { "*.mscx", "*.mscz" }, muse::io::ScanMode::FilesInCurrentDir);
     if (!found.ret) {
@@ -242,14 +242,14 @@ TEST(Engraving_MeloStaffFixtureIntegrity, everyMeloNoteSoundsAtThePitchItsFileCl
 
 TEST(Engraving_MeloStaffFixtureIntegrity, writeKernelNormalizedProjectionFixtures)
 {
-    const char* output = std::getenv("JIMS_NORMALIZED_FIXTURE_OUT");
+    const char* output = std::getenv("MELO_NORMALIZED_FIXTURE_OUT");
     if (!output) {
-        GTEST_SKIP() << "set JIMS_NORMALIZED_FIXTURE_OUT to generate corrected fixtures";
+        GTEST_SKIP() << "set MELO_NORMALIZED_FIXTURE_OUT to generate corrected fixtures";
     }
     const String outputDir = String::fromUtf8(output);
     ASSERT_TRUE(muse::io::Dir::mkpath(outputDir));
     for (const char* name : { "m5-key-up.mscx", "m5-key-down.mscx", "m5-key-mode.mscx", "m7-gate.mscz" }) {
-        const String source = ScoreRW::rootPath() + u"/jimstaff_data/" + String::fromUtf8(name);
+        const String source = ScoreRW::rootPath() + u"/melostaff_data/" + String::fromUtf8(name);
         MasterScore* score = ScoreRW::readScore(source, true);
         ASSERT_TRUE(score) << name;
         const String destination = outputDir + u"/" + String::fromUtf8(name);
@@ -275,11 +275,11 @@ TEST(Engraving_MeloStaffFixtureIntegrity, writeKernelNormalizedProjectionFixture
 
 TEST(Engraving_MeloStaffFixtureIntegrity, contradictoryNativeLoadRepairsOnceAndMarksDocumentModified)
 {
-    const String scratchDir = ScoreRW::rootPath() + u"/../../../build.release/jims-projection-scratch";
+    const String scratchDir = ScoreRW::rootPath() + u"/../../../build.release/melo-projection-scratch";
     ASSERT_TRUE(muse::io::Dir::mkpath(scratchDir));
     const String contradictoryPath = scratchDir + u"/contradictory.mscx";
     const String normalizedPath = scratchDir + u"/normalized.mscx";
-    MasterScore* source = ScoreRW::readScore(u"jimstaff_data/m5-key-up.mscx");
+    MasterScore* source = ScoreRW::readScore(u"melostaff_data/m5-key-up.mscx");
     ASSERT_TRUE(source);
     Note* corrupted = nullptr;
     for (Segment* segment = source->firstSegment(SegmentType::ChordRest); segment && !corrupted;

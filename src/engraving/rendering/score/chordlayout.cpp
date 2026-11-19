@@ -1248,7 +1248,7 @@ void ChordLayout::layoutStem(Chord* item, const LayoutContext& ctx)
     // because this length is used for tremolos or other things that attach to where the stem WOULD be
     item->setDefaultStemLength(StemLayout::calcDefaultStemLength(item, ctx));
 
-    // JiMStaff (owner correction 2026-08-14, tuning-sweep finding): the
+    // MeloStaff (owner correction 2026-08-14, tuning-sweep finding): the
     // default length assumes diatonic line spacing, but on the
     // continuous cents axis the chord's actual head span is the
     // Kernel-derived ordinate difference — correct by the difference so
@@ -1319,7 +1319,7 @@ void ChordLayout::updateLedgerLines(Chord* item, LayoutContext& ctx)
         staff_idx_t idx = item->staffIdx() + item->staffMove();
         track         = staff2track(idx);
         const Staff* st     = ctx.dom().staff(idx);
-        // JiMStaff Milestone 4 (owner decision 3a, 2026-08-15): a JiMS
+        // MeloStaff Milestone 4 (owner decision 3a, 2026-08-15): a JiMS
         // staff never has ledger lines — out-of-range notes get stacked
         // partial staves instead — and the suppression is by NOT
         // GENERATING the elements, never by hiding them at paint time.
@@ -2269,7 +2269,7 @@ void ChordLayout::layoutChords1(LayoutContext& ctx, Segment* segment, staff_idx_
     const Fraction tick = segment->tick();
     const StaffType* staffType = staff->staffType(segment->tick());
 
-    // JiMStaff Milestone 8: a chord's octave-band offset
+    // MeloStaff Milestone 8: a chord's octave-band offset
     // (SystemLayout::applyMeloBandOffsets) belongs to the SYSTEM the
     // measure ends up in; measure layout always starts from zero so an
     // offset never leaks from one layout pass into the next.
@@ -2408,7 +2408,7 @@ double ChordLayout::layoutChords2(std::vector<Note*>& notes, bool up, LayoutCont
         bool conflict = (std::abs(prevLine - line) < 2) && (prevStaffIdx == staffIdx) && note->visible() && prevVisible
                         && (sameTrack || Chord::combineVoice(chord, prevChord));
 
-        // JiMStaff (owner correction 2026-08-14): heads conflict when
+        // MeloStaff (owner correction 2026-08-14): heads conflict when
         // they VISUALLY overlap on the continuous cents axis — within
         // one head height (100 cents at the drawing density) — never by
         // diatonic-line adjacency, which diverges from the drawn heights
@@ -2799,7 +2799,7 @@ void ChordLayout::layoutChords3(const std::vector<Chord*>& chords,
             }
 
             double ny = (note->line() + stepOffset) * stepDistance;
-            // JiMStaff (Milestone 1): a lattice-identified note on a JiMS
+            // MeloStaff (Milestone 1): a lattice-identified note on a JiMS
             // staff takes its y from the single StaffType cents seam, not
             // from the diatonic step product (audited second-writer site).
             const Staff* displayedStaff = chord->score()->staff(chord->vStaffIdx());

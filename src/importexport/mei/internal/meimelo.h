@@ -21,7 +21,7 @@
  */
 #pragma once
 
-// MeloPresto MEI carriage (the MeloPresto MEI profile, spec/MAPPING.md of the mei-jims
+// MeloPresto MEI carriage (the MeloPresto MEI profile, spec/MAPPING.md of the mei-melo
 // repository). Extends the Pull-Request-19 preservation pattern: native MEI
 // carries what it can express exactly (typed harm, ambitus, typed annots),
 // and the irreducibly JiMS-specific remainder rides as validated typed XML

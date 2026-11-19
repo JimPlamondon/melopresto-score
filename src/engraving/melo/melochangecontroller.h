@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: GPL-3.0-only
  * MuseScore-Studio-CLA-applies
  *
- * JiMStaff Milestone 6 — the change-insertion controller (owner decision
+ * MeloStaff Milestone 6 — the change-insertion controller (owner decision
  * 1a, 2026-08-16). Given a selected staff and measure it reads the
  * effective JiMS state (the measure's own carrier if it has one, else the
  * staff type in force there), asks the Kernel what may change

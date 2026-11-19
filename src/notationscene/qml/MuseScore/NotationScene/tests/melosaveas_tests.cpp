@@ -137,7 +137,7 @@ TEST_F(MeloSaveAsTests, ActualActionOffersANamePreservesSourceAndReopensCanonica
     ASSERT_TRUE(directory.isValid());
     const QString source = directory.filePath("source.meloscore");
     const QString destination = directory.filePath("Named acceptance copy.meloscore");
-    ASSERT_TRUE(QFile::copy(QString::fromUtf8(MELO_UI_TEST_DATA_ROOT) + "/jimstaff_data/m7-gate.mscz", source));
+    ASSERT_TRUE(QFile::copy(QString::fromUtf8(MELO_UI_TEST_DATA_ROOT) + "/melostaff_data/m7-gate.mscz", source));
     QFile original(source);
     ASSERT_TRUE(original.open(QIODevice::ReadOnly));
     const QByteArray bytes = original.readAll();

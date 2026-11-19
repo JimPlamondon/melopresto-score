@@ -308,7 +308,7 @@ void NotationActionController::init()
     registerAction("append-textframe", [this]() { addBoxes(BoxType::Text, 1, AddBoxesTarget::AtEndOfScore); });
     registerAction("append-fretframe", [this]() { addBoxes(BoxType::Fret, 1, AddBoxesTarget::AtEndOfScore); });
 
-    registerAction("jims-change", &Controller::openMeloProperties);
+    registerAction("melo-change", &Controller::openMeloProperties);
     registerAction("melo-edit-initial-pitch", &Controller::openMeloInitialPitch);
     registerAction("melo-edit-key-change", &Controller::openMeloKeyChange);
     registerAction("edit-style", &Controller::openEditStyleDialog);
@@ -360,7 +360,7 @@ void NotationActionController::init()
     registerAction("fingering-text", [this]() { addText(TextStyleType::FINGERING); });
     registerAction("sticking-text", [this]() { addText(TextStyleType::STICKING); });
     registerAction("chord-text", [this]() { addText(TextStyleType::HARMONY_A); });
-    registerAction("jims-chord-name-text", [this]() { addHarmony(engraving::HarmonyType::MELO); });
+    registerAction("melo-chord-name-text", [this]() { addHarmony(engraving::HarmonyType::MELO); });
     registerAction("roman-numeral-text", [this]() { addText(TextStyleType::HARMONY_ROMAN); });
     registerAction("nashville-number-text", [this]() { addText(TextStyleType::HARMONY_NASHVILLE); });
     registerAction("lyrics", [this]() { addText(TextStyleType::LYRICS_ODD); });

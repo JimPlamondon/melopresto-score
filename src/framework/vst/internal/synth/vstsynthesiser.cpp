@@ -33,7 +33,7 @@ using namespace muse::audio::synth;
 using namespace muse::audio;
 using namespace muse::audioplugins;
 
-static constexpr std::string_view MELO_MPE_PITCH_BEND_RANGE_KEY = "jimsMpePitchBendRangeSemitones";
+static constexpr std::string_view MELO_MPE_PITCH_BEND_RANGE_KEY = "meloMpePitchBendRangeSemitones";
 
 static const std::set<Steinberg::Vst::CtrlNumber> SUPPORTED_CONTROLLERS = {
     Steinberg::Vst::kCtrlVolume,

@@ -1293,7 +1293,7 @@ double HorizontalSpacing::shapeSpatium(const Shape& s)
 //    calculate the minimum layout distance to Segment ns
 //---------------------------------------------------------
 
-// JiMStaff Milestone 5: reserve the change-indicator terrain after the
+// MeloStaff Milestone 5: reserve the change-indicator terrain after the
 // barline of a mid-system measure that carries a JiMS staff-type change
 // (owner notation rulings 2026-08-16). Width comes from the ONE shared
 // header-geometry calculation; the decision of whether an indicator exists

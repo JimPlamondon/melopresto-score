@@ -3333,9 +3333,9 @@ bool TRead::readProperties(Note* n, XmlReader& e, ReadContext& ctx)
         n->setFixed(e.readBool());
     } else if (tag == "fixedLine") {
         n->setFixedLine(e.readInt());
-    } else if (tag == "jimsNPer") {
+    } else if (tag == "meloNPer") {
         TRead::readProperty(n, e, ctx, Pid::MELO_NPER);
-    } else if (tag == "jimsNGen") {
+    } else if (tag == "meloNGen") {
         TRead::readProperty(n, e, ctx, Pid::MELO_NGEN);
     } else if (tag == "headScheme") {
         TRead::readProperty(n, e, ctx, Pid::HEAD_SCHEME);
@@ -4022,27 +4022,27 @@ void TRead::read(StaffType* t, XmlReader& e, ReadContext& ctx)
             t->setInvisible(e.readInt());
         } else if (tag == "color") {
             t->setColor(e.readColor());
-        } else if (tag == "jims") {
+        } else if (tag == "melo") {
             t->setMelo(e.readInt());
-        } else if (tag == "jimsStateJson") {
+        } else if (tag == "meloStateJson") {
             t->setMeloStateJson(e.readText());
-        } else if (tag == "jimsTonicAmbit" || tag == "jimsTonicExtent") {   // legacy tag still read
+        } else if (tag == "meloTonicAmbit" || tag == "jimsTonicExtent") {   // legacy tag still read
             t->setMeloTonicAmbit(e.readText());
-        } else if (tag == "jimsJiLines") {
+        } else if (tag == "meloJiLines") {
             t->setMeloJiLines(e.readInt());
-        } else if (tag == "jimsScaleDotLabels") {
+        } else if (tag == "meloScaleDotLabels") {
             const String mode = e.readText();
             t->setMeloScaleDotLabelMode(mode == u"none" ? MeloScaleDotLabelMode::None
                                         : mode == u"left" ? MeloScaleDotLabelMode::Left
                                         : mode == u"split" ? MeloScaleDotLabelMode::Split
                                         : MeloScaleDotLabelMode::Auto);
-        } else if (tag == "jimsElideOctaves") {
+        } else if (tag == "meloElideOctaves") {
             // Milestone 8: on/off; anything else (or absent) is Auto.
             const String mode = e.readText();
             t->setMeloElideOctaves(mode == u"on" ? MeloElideOctaves::On
                                    : mode == u"off" ? MeloElideOctaves::Off
                                    : MeloElideOctaves::Auto);
-        } else if (tag == "jimsRatioLineExtent") {
+        } else if (tag == "meloRatioLineExtent") {
             t->setMeloRatioLineExtentJson(e.readText());
         } else if (tag == "durations") {
             t->setGenDurations(e.readBool());
@@ -4144,7 +4144,7 @@ bool TRead::readProperties(Staff* s, XmlReader& e, ReadContext& ctx)
         s->setMergeMatchingRests(TConv::fromXml(e.readAsciiText(), AutoOnOff::AUTO));
     } else if (tag == "isStaffVisible") {
         s->setVisible(e.readBool());
-    } else if (tag == "jimsTuningTrajectory") {
+    } else if (tag == "meloTuningTrajectory") {
         melo::TuningTrajectory t;
         t.tick = Fraction::fromString(e.attribute("tick"));
         t.placement = e.attribute("placement");

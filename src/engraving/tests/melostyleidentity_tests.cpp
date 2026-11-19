@@ -19,16 +19,16 @@ struct StyleCase {
 };
 
 const std::array<StyleCase, 10> STYLE_CASES { {
-    { Sid::meloDoLineColor, "jimsDoLineColor", muse::Color("#123456") },
-    { Sid::meloMidFrameLineColor, "jimsMidFrameLineColor", muse::Color("#123456") },
-    { Sid::meloJiLimit3Color, "jimsJiLimit3Color", muse::Color("#123456") },
-    { Sid::meloJiLimit5Color, "jimsJiLimit5Color", muse::Color("#123456") },
-    { Sid::meloJiLimit7Color, "jimsJiLimit7Color", muse::Color("#123456") },
-    { Sid::meloJiLimit11Color, "jimsJiLimit11Color", muse::Color("#123456") },
-    { Sid::meloChangeArrowColor, "jimsChangeArrowColor", muse::Color("#123456") },
-    { Sid::meloMidBarFlankColor, "jimsMidBarFlankColor", muse::Color("#123456") },
-    { Sid::meloElideEmptyOctaves, "jimsElideEmptyOctaves", true },
-    { Sid::meloShowAllOctavesInFirstSystem, "jimsShowAllOctavesInFirstSystem", false },
+    { Sid::meloDoLineColor, "meloDoLineColor", muse::Color("#123456") },
+    { Sid::meloMidFrameLineColor, "meloMidFrameLineColor", muse::Color("#123456") },
+    { Sid::meloJiLimit3Color, "meloJiLimit3Color", muse::Color("#123456") },
+    { Sid::meloJiLimit5Color, "meloJiLimit5Color", muse::Color("#123456") },
+    { Sid::meloJiLimit7Color, "meloJiLimit7Color", muse::Color("#123456") },
+    { Sid::meloJiLimit11Color, "meloJiLimit11Color", muse::Color("#123456") },
+    { Sid::meloChangeArrowColor, "meloChangeArrowColor", muse::Color("#123456") },
+    { Sid::meloMidBarFlankColor, "meloMidBarFlankColor", muse::Color("#123456") },
+    { Sid::meloElideEmptyOctaves, "meloElideEmptyOctaves", true },
+    { Sid::meloShowAllOctavesInFirstSystem, "meloShowAllOctavesInFirstSystem", false },
 } };
 }
 

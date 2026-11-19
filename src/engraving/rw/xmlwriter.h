@@ -57,7 +57,7 @@ public:
 
     void writeXml(const String&, String s);
     /// JiMS interchange (2026-08-17): insert a complete, Kernel-serialized
-    /// element (jims:staff-state / jims:change) verbatim — no wrapper, no
+    /// element (melo:staff-state / melo:change) verbatim — no wrapper, no
     /// escaping, no reconstruction. Only for Kernel-produced fragments.
     void writeTrustedRawFragment(const String& fragment) { writeRawFragment(fragment); }
 

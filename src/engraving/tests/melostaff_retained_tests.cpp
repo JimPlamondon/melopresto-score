@@ -18,7 +18,7 @@ using namespace mu::engraving;
 
 TEST(MeloStaffRetained, MovableNoteTransposeKeepsStructuralIdentityAndUndo)
 {
-    std::unique_ptr<MasterScore> score(ScoreRW::readScore(u"jimstaff_data/collision.mscx"));
+    std::unique_ptr<MasterScore> score(ScoreRW::readScore(u"melostaff_data/collision.mscx"));
     ASSERT_TRUE(score);
     Note* note = toChord(score->firstSegment(SegmentType::ChordRest)->element(0))->notes().front();
     ASSERT_TRUE(note->hasMeloPitch());
@@ -45,7 +45,7 @@ TEST(MeloStaffRetained, MovableNoteTransposeKeepsStructuralIdentityAndUndo)
 
 TEST(MeloStaffRetained, MovableReferenceChangeIncludesGraceNotes)
 {
-    std::unique_ptr<MasterScore> score(ScoreRW::readScore(u"jimstaff_data/collision.mscx"));
+    std::unique_ptr<MasterScore> score(ScoreRW::readScore(u"melostaff_data/collision.mscx"));
     ASSERT_TRUE(score);
     Chord* chord = toChord(score->firstSegment(SegmentType::ChordRest)->element(0));
     Chord* grace = Factory::createChord(chord->segment());

@@ -39,7 +39,7 @@ public:
     //! The note-expression capabilities this sequencer was initialised with.
     const VstNoteExpressionCapabilities& noteExpressionCapabilities() const { return m_capabilities; }
 
-    //! JiMSynth VST3 workstream: every new note gets its own nonnegative
+    //! MeloSynth VST3 workstream: every new note gets its own nonnegative
     //! 31-bit VST3 note identifier from this monotonic allocator; the same id
     //! follows its Note Off and every per-note expression event. The counter
     //! wraps only after the callback that flushes all active notes has run.

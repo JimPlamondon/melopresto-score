@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- crescent-clef: canonical MeloPresto Staff glyph source (generated file).
      Rule: An octave-tall outer oval (1200 cents tall, 1600 cents wide, outline at the Do-line pen width, top and bottom overlying the Do-lines) and an inner circle of diameter 1200 cents; right halves deleted; the left semi-ellipse and left semicircle close into a crescent, filled white, stroked black, whose tips lie on and point to the Do-lines.
-     Provenance: Constructed programmatically for the JiMS Foundation, 2026-08-13, from the documented geometric rules in jims-staff/src/glyphs.rs (tool: this Rust source; author of record: Jim Plamondon, JiMS Foundation; construction executed by Claude under owner direction). No third-party outline was traced or copied.
+     Provenance: Constructed programmatically for the JiMS Foundation, 2026-08-13, from the documented geometric rules in melo-staff/src/glyphs.rs (tool: this Rust source; author of record: Jim Plamondon, JiMS Foundation; construction executed by Claude under owner direction). No third-party outline was traced or copied.
      Regenerate: cargo run -p melo-staff --example export_glyphs (writes crates/melo-staff/assets/glyphs/) -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000">
 <rect width="1000" height="1000" fill="white"/>

@@ -49,7 +49,7 @@ public:
     const std::vector<LineF>& lines() const { return m_lines; }
     void setLines(const std::vector<LineF>& l) { m_lines = l; }
 
-    // JiMStaff guide lines (Milestone 1): the only drawn lines on a JiMS
+    // MeloStaff guide lines (Milestone 1): the only drawn lines on a JiMS
     // staff — solid red Do-lines at the period boundaries and the dashed
     // yellow mid-period line. Derived at layout, never serialized. Empty
     // on every non-JiMS staff, which keeps the stock draw path untouched.

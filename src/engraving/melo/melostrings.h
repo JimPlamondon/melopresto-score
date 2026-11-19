@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: GPL-3.0-only
  * MuseScore-Studio-CLA-applies
  *
- * JiMStaff Milestone 1 — the single translatable string table for every
+ * MeloStaff Milestone 1 — the single translatable string table for every
  * user-visible MeloPresto name (owner Q22 answer, 2026-08-13: JiMS-based names
  * are likely to change for trademark reasons within months, so a rename
  * must be one-file work). No user-visible MeloPresto name may appear as a

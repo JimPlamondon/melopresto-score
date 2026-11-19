@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<museScore version="4.70">
+  <programVersion>4.7.4</programVersion>
+  <programRevision>abc123456</programRevision>
+  <Score>
+    <metaTag name="meloReferenceTimelineV1">{"schema":"melostaff-reference-v1","initial":{"step":"D","alter":0,"octave":4},"events":[{"at":{"numerator":1,"denominator":1},"interval":{"nPer":-1,"nGen":3}}]}</metaTag>
+    <Style>
+      <musicalSymbolFont>JiMSMusic</musicalSymbolFont>
+      <hideInstrumentNameIfOneInstrument>0</hideInstrumentNameIfOneInstrument>
+      </Style>
+    <eid>Ta8GriJrtcD_3jnG9yf+xG</eid>
+    <Division>480</Division>
+    <showInvisible>1</showInvisible>
+    <showUnprintable>1</showUnprintable>
+    <showFrames>1</showFrames>
+    <showMargins>0</showMargins>
+    <open>1</open>
+    <metaTag name="arranger"></metaTag>
+    <metaTag name="composer"></metaTag>
+    <metaTag name="copyright"></metaTag>
+    <metaTag name="creationDate">2026-08-16</metaTag>
+    <metaTag name="lyricist"></metaTag>
+    <metaTag name="movementNumber"></metaTag>
+    <metaTag name="movementTitle"></metaTag>
+    <metaTag name="originalFormat">musicxml</metaTag>
+    <metaTag name="platform">Apple Macintosh</metaTag>
+    <metaTag name="source"></metaTag>
+    <metaTag name="translator"></metaTag>
+    <metaTag name="workNumber"></metaTag>
+    <metaTag name="workTitle">Sharp-Flat Collision and Second Cluster</metaTag>
+    <Part id="1">
+      <Staff>
+        <eid>BKbiX1mar5J_/KfEM59z3sM</eid>
+        <StaffType group="pitched">
+        <name>melo12tet</name>
+        <lines>13</lines>
+        <clef>0</clef>
+        <keysig>0</keysig>
+        <ledgerlines>0</ledgerlines>
+        <melo>1</melo>
+        <meloJiLines>1</meloJiLines>
+        <meloStateJson>{"scale":["M2","m2","M2","M2","M2","m2","M2"],"collection_rotation":0,"mode_rotation":0,"generator_cents":700.0,"period_cents":1200.0,"embedding":{"large_steps":5,"small_steps":2},"extent":{"lower":{"nPer":1,"nGen":-2},"upper":{"nPer":2,"nGen":-2}},"tonic_ambit":"tonic-bounded","schema":"melostaff-v3"}</meloStateJson>
+        </StaffType>
+        </Staff>
+      <trackName>Jimmy</trackName>
+      <Instrument id="grand-piano">
+        <longName>Jimmy</longName>
+        <trackName></trackName>
+        <instrumentId>keyboard.piano.grand</instrumentId>
+        <Articulation>
+          <velocity>100</velocity>
+          <gateTime>100</gateTime>
+          </Articulation>
+        <Articulation name="staccatissimo">
+          <velocity>100</velocity>
+          <gateTime>33</gateTime>
+          </Articulation>
+        <Articulation name="staccato">
+          <velocity>100</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="portato">
+          <velocity>100</velocity>
+          <gateTime>67</gateTime>
+          </Articulation>
+        <Articulation name="tenuto">
+          <velocity>100</velocity>
+          <gateTime>100</gateTime>
+          </Articulation>
+        <Articulation name="marcato">
+          <velocity>120</velocity>
+          <gateTime>67</gateTime>
+          </Articulation>
+        <Articulation name="sforzato">
+          <velocity>150</velocity>
+          <gateTime>100</gateTime>
+          </Articulation>
+        <Articulation name="sforzatoStaccato">
+          <velocity>150</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoStaccato">
+          <velocity>120</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoTenuto">
+          <velocity>120</velocity>
+          <gateTime>100</gateTime>
+          </Articulation>
+        <Channel>
+          <program value="0"/>
+          <controller ctrl="10" value="63"/>
+          <synti>Fluid</synti>
+          </Channel>
+        </Instrument>
+      </Part>
+    <Staff id="1">
+      <VBox>
+        <height>10</height>
+        <eid>vUebUVTtaQF_9LQH5rZVqqM</eid>
+        <Text>
+          <eid>5DIPfM+/+sK_a8WSTnoifhE</eid>
+          <style>title</style>
+          <text>Sharp-Flat Collision and Second Cluster</text>
+          </Text>
+        </VBox>
+      <Measure>
+        <eid>ZS2/4x2IrqN_7Qh2sxYYu+</eid>
+        <voice>
+          <TimeSig>
+            <eid>uplUByvMBg_JdZKc+SoW0H</eid>
+            <sigN>4</sigN>
+            <sigD>4</sigD>
+            </TimeSig>
+          <Chord>
+            <eid>AUZzqLo6raC_0rtaD2Pw66D</eid>
+            <durationType>quarter</durationType>
+            <Note>
+              <meloNPer>-4</meloNPer>
+              <meloNGen>7</meloNGen>
+              <eid>mcOUF3CxKcL_kN0fCImvGaP</eid>
+              <Accidental>
+                <subtype>accidentalSharp</subtype>
+                <eid>U1M/l31h2eP_OpdBZAS7N9J</eid>
+                </Accidental>
+              <pitch>63</pitch>
+              <tpc>23</tpc>
+              </Note>
+            </Chord>
+          <Chord>
+            <eid>RwFkLWOWQoJ_5vyNDW0tXVN</eid>
+            <durationType>quarter</durationType>
+            <Note>
+              <meloNPer>3</meloNPer>
+              <meloNGen>-5</meloNGen>
+              <eid>2JFrWtr3awD_XNMgd7y3GRH</eid>
+              <Accidental>
+                <subtype>accidentalFlat</subtype>
+                <eid>JOg7IqC003P_V4l6o7QeK0L</eid>
+                </Accidental>
+              <pitch>63</pitch>
+              <tpc>11</tpc>
+              </Note>
+            </Chord>
+          <Chord>
+            <eid>xRwdvUhaSOE_p19ifh2NIlG</eid>
+            <durationType>quarter</durationType>
+            <Note>
+              <meloNPer>-4</meloNPer>
+              <meloNGen>7</meloNGen>
+              <eid>blD1UzHfh4I_fqcYNYccYCB</eid>
+              <pitch>63</pitch>
+              <tpc>23</tpc>
+              </Note>
+            </Chord>
+          <Chord>
+            <eid>OklZyjStmOP_IEaMlTWcd6</eid>
+            <durationType>quarter</durationType>
+            <Note>
+              <meloNPer>3</meloNPer>
+              <meloNGen>-5</meloNGen>
+              <eid>zBOA5XPmDmM_+BrSImBDoRJ</eid>
+              <pitch>63</pitch>
+              <tpc>11</tpc>
+              </Note>
+            </Chord>
+          </voice>
+        </Measure>
+      <Measure>
+        <StaffTypeChange>
+        <StaffType group="pitched">
+          <name>melo12tet</name>
+          <lines>13</lines>
+          <clef>0</clef>
+          <keysig>0</keysig>
+          <ledgerlines>0</ledgerlines>
+          <melo>1</melo>
+          <meloJiLines>1</meloJiLines>
+          <meloStateJson>{"scale":["M2","m2","M2","M2","M2","m2","M2"],"collection_rotation":0,"mode_rotation":5,"generator_cents":700.0,"period_cents":1200.0,"embedding":{"large_steps":5,"small_steps":2},"extent":{"lower":{"nPer":1,"nGen":-2},"upper":{"nPer":2,"nGen":-2}},"tonic_ambit":"tonic-bounded","schema":"melostaff-v3"}</meloStateJson>
+          </StaffType>
+        </StaffTypeChange>
+      <eid>NJ6K6kyVktE_iq7wm8RLBvJ</eid>
+        <voice>
+          <Chord>
+            <eid>80R7visULj_Lmlid6dJc1B</eid>
+            <durationType>half</durationType>
+            <Note>
+              <meloNPer>-4</meloNPer>
+              <meloNGen>7</meloNGen>
+              <eid>q8ZhqG8Y5DD_4Vcc2RxGJLD</eid>
+              <Accidental>
+                <subtype>accidentalSharp</subtype>
+                <eid>Dp35qeHPqdE_LbJgFSM/siO</eid>
+                </Accidental>
+              <pitch>54</pitch>
+              <tpc>20</tpc>
+              </Note>
+            <Note>
+              <meloNPer>3</meloNPer>
+              <meloNGen>-5</meloNGen>
+              <eid>5sUVO/68XWC_7l+1FKb1eFN</eid>
+              <Accidental>
+                <subtype>accidentalFlat</subtype>
+                <eid>W0ZizQXA7/G_xG+3o5rShLG</eid>
+                </Accidental>
+              <pitch>54</pitch>
+              <tpc>8</tpc>
+              </Note>
+            </Chord>
+          <Chord>
+            <eid>9dyUCjWDuJJ_DgJ0Tx5EUj</eid>
+            <durationType>half</durationType>
+            <Note>
+              <meloNPer>1</meloNPer>
+              <meloNGen>-2</meloNGen>
+              <eid>f7RdkuxPnKH_wzz99zki8LI</eid>
+              <pitch>51</pitch>
+              <tpc>11</tpc>
+              </Note>
+            <Note>
+              <meloNPer>0</meloNPer>
+              <meloNGen>0</meloNGen>
+              <eid>TbyzpEc5P5L_Oz+Krx9M5nK</eid>
+              <Accidental>
+                <subtype>accidentalNatural</subtype>
+                <eid>O1HaJ1XOxnO_oLndnVdtQrB</eid>
+                </Accidental>
+              <pitch>53</pitch>
+              <tpc>13</tpc>
+              </Note>
+            <Note>
+              <meloNPer>-1</meloNPer>
+              <meloNGen>2</meloNGen>
+              <eid>JrO10RM8g1E_bu181xYqgGC</eid>
+              <Accidental>
+                <subtype>accidentalNatural</subtype>
+                <eid>OPjayYtNdnG_/Z2RjoIbrNN</eid>
+                </Accidental>
+              <pitch>55</pitch>
+              <tpc>15</tpc>
+              </Note>
+            <Note>
+              <meloNPer>2</meloNPer>
+              <meloNGen>-3</meloNGen>
+              <eid>EVnRGq8srBJ_IwCiTSnwtMM</eid>
+              <pitch>56</pitch>
+              <tpc>10</tpc>
+              </Note>
+            </Chord>
+          </voice>
+        </Measure>
+      <Measure>
+        <eid>DaC10WohMkB_7BNqJ/WbD</eid>
+        <voice>
+          <Chord>
+            <eid>1TEO7upNqiL_eignNKYjJmL</eid>
+            <durationType>half</durationType>
+            <Note>
+              <meloNPer>1</meloNPer>
+              <meloNGen>-2</meloNGen>
+              <eid>n4xJNwobDNL_uFtJg7HBBbM</eid>
+              <pitch>51</pitch>
+              <tpc>11</tpc>
+              </Note>
+            </Chord>
+          <Chord>
+            <eid>VTnsdArhLOK_JA9IufECKzJ</eid>
+            <durationType>half</durationType>
+            <Note>
+              <meloNPer>2</meloNPer>
+              <meloNGen>-2</meloNGen>
+              <eid>kiAKwJyJqtG_NjuHig9QHmG</eid>
+              <pitch>63</pitch>
+              <tpc>11</tpc>
+              </Note>
+            </Chord>
+          <BarLine>
+            <eid>gHUMaXOB3ZN_ydokHAaZmcM</eid>
+            </BarLine>
+          </voice>
+        </Measure>
+      </Staff>
+    </Score>
+  </museScore>

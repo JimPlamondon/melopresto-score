@@ -1964,7 +1964,7 @@ bool NotationInteraction::dropSingle(const PointF& pos, Qt::KeyboardModifiers mo
         return false;
     }
 
-    if (edd.ed.dropElement->isActionIcon() && toActionIcon(edd.ed.dropElement)->actionCode() == "jims-change") {
+    if (edd.ed.dropElement->isActionIcon() && toActionIcon(edd.ed.dropElement)->actionCode() == "melo-change") {
         staff_idx_t staffIndex = 0;
         MeasureBase* base = score()->pos2measure(pos, &staffIndex, 0, nullptr, 0);
         if (!base || !base->isMeasure() || !score()->staff(staffIndex)->staffType(base->tick())->isMelo()) {
@@ -1974,7 +1974,7 @@ bool NotationInteraction::dropSingle(const PointF& pos, Qt::KeyboardModifiers mo
         select({ base }, SelectType::REPLACE, staffIndex);
         resetDropData();
         setDropTarget(nullptr);
-        dispatcher()->dispatch("jims-change");
+        dispatcher()->dispatch("melo-change");
         return true;
     }
 
@@ -2354,7 +2354,7 @@ bool NotationInteraction::applyPaletteElement(mu::engraving::EngravingItem* elem
         return false;
     }
 
-    if (element->isActionIcon() && toActionIcon(element)->actionCode() == "jims-change") {
+    if (element->isActionIcon() && toActionIcon(element)->actionCode() == "melo-change") {
         // Choosing an actual Kernel option in Properties creates the change as one undo step.
         // Opening the chooser must not create an empty or guessed musical state.
         bool compatible = false;
@@ -2369,7 +2369,7 @@ bool NotationInteraction::applyPaletteElement(mu::engraving::EngravingItem* elem
                                  muse::trc("notation", "Select a note or measure on a compatible staff first."));
             return false;
         }
-        dispatcher()->dispatch("jims-change");
+        dispatcher()->dispatch("melo-change");
         return true;
     }
 
@@ -3302,7 +3302,7 @@ bool NotationInteraction::prepareDropMeasureAnchorElement(const PointF& pos)
         measureRect.adjust(page->x(), page->y(), page->x(), page->y());
         edd.ed.pos = measureRect.center();
 
-        const bool meloChooser = dropElem->isActionIcon() && toActionIcon(dropElem)->actionCode() == "jims-change";
+        const bool meloChooser = dropElem->isActionIcon() && toActionIcon(dropElem)->actionCode() == "melo-change";
         const bool dropAccepted
             = meloChooser ? score()->staff(staffIdx)->staffType(targetMeasure->tick())->isMelo() : targetMeasure->acceptDrop(edd.ed);
         if (dropAccepted) {

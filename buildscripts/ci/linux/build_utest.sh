@@ -55,7 +55,7 @@ fi
 
 echo "=== BUILD ==="
 
-# musescore-jims (JiMSynth VST3 workstream, 2026-08-19): build the VST module
+# melopresto-score (MeloSynth VST3 workstream, 2026-08-19): build the VST module
 # in the unit-test configuration too, so muse_vst_tests (note identity, exact
 # JiMS pitch, note expressions) compile and run in CI.
 

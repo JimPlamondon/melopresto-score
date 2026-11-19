@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: GPL-3.0-only
  * MuseScore-Studio-CLA-applies
  *
- * JiMStaff Milestone 5 — change-indicator seam. See melochange.h.
+ * MeloStaff Milestone 5 — change-indicator seam. See melochange.h.
  */
 #include "melochange.h"
 #include "melopitchlabel.h"

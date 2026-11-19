@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# musescore-jims: run a test binary from a scratch working directory.
+# melopresto-score: run a test binary from a scratch working directory.
 #
 # MuseScore's test suites (engraving_tests, iex_musicxml_tests, ...) write
 # their byproducts (*.mscx, *.xml, *.png, *.json) into whatever directory they
 # are launched from. Run from a repo root or a home directory and they litter
-# it with hundreds of files (this happened three times during the JiMStaff
+# it with hundreds of files (this happened three times during the MeloStaff
 # milestones). This wrapper always runs the binary from
 # <build dir>/test-cwd, which is inside the git-ignored build tree.
 #
@@ -18,7 +18,7 @@
 # compiled-in data roots, so the working directory does not affect them.
 #
 # Examples:
-#   tools/run-tests.sh engraving_tests --gtest_filter='Engraving_JiMStaff*'
+#   tools/run-tests.sh engraving_tests --gtest_filter='Engraving_MeloStaff*'
 #   tools/run-tests.sh iex_musicxml_tests --gtest_filter='MusicXml_Melo_Tests.*'
 
 set -euo pipefail

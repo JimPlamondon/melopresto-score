@@ -20,7 +20,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-// JiMSynth VST3 workstream: the host's active-note record is keyed by the
+// MeloSynth VST3 workstream: the host's active-note record is keyed by the
 // VST3 note identifier, so two overlapping unisons (same pitch, distinct
 // ids) survive each other's Note Off and a flush releases each under its
 // own id; pitch/channel identity applies only to legacy noteId = -1 events.

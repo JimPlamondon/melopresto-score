@@ -64,7 +64,7 @@ static const Settings::Key HAS_ASKED_AUDIO_GENERATION_SETTINGS(module_name, "pro
 static const Settings::Key GENERATE_AUDIO_TIME_PERIOD_TYPE_KEY(module_name, "project/generateAudioTimePeriodType");
 static const Settings::Key NUMBER_OF_SAVES_TO_GENERATE_AUDIO_KEY(module_name, "project/numberOfSavesToGenerateAudio");
 static const Settings::Key SHOW_CLOUD_IS_NOT_AVAILABLE_WARNING(module_name, "project/showCloudIsNotAvailableWarning");
-static const Settings::Key SHOW_MELO_STOCK_LOSS_WARNING(module_name, "project/showJimsStockLossWarning");
+static const Settings::Key SHOW_MELO_STOCK_LOSS_WARNING(module_name, "project/showMeloStockLossWarning");
 static const Settings::Key DISABLE_VERSION_CHECKING(module_name, "project/disableVersionChecking");
 static const Settings::Key CREATE_BACKUP_BEFORE_SAVING(module_name, "project/createBackupBeforeSaving");
 

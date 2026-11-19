@@ -66,7 +66,7 @@ static bool place(Note* n, int p, int g)
 }
 
 TEST(MeloLatticeConformanceTests, NoteValueTransferKeepsCoordinatesAcrossTunings) {
-    auto* s=ScoreRW::readScore(u"jimstaff_data/m9-dense-voices.mscx");
+    auto* s=ScoreRW::readScore(u"melostaff_data/m9-dense-voices.mscx");
     ASSERT_TRUE(s);
     Chord* c=notes(s)[0]->chord();
     int mismatches=0, checked=0;
@@ -122,7 +122,7 @@ TEST(MeloLatticeConformanceTests, NoteValueTransferKeepsCoordinatesAcrossTunings
 
 static void addKnownRe0(double generator)
 {
-    auto* s=ScoreRW::readScore(u"jimstaff_data/m9-dense-voices.mscx");
+    auto* s=ScoreRW::readScore(u"melostaff_data/m9-dense-voices.mscx");
     ASSERT_TRUE(s);
     melo::TuningController tune(s, 0);
     ASSERT_TRUE(tune.beginPreview());
@@ -154,7 +154,7 @@ TEST(MeloLatticeConformanceTests, PublicInsertionAt700Control) {
 
 TEST(MeloLatticeConformanceTests, UnspelledCoordinateLessInsertionIsNonMutating)
 {
-    auto* s = ScoreRW::readScore(u"jimstaff_data/m9-dense-voices.mscx");
+    auto* s = ScoreRW::readScore(u"melostaff_data/m9-dense-voices.mscx");
     ASSERT_TRUE(s);
     melo::TuningController tune(s, 0);
     ASSERT_TRUE(tune.beginPreview());
@@ -201,7 +201,7 @@ TEST(MeloLatticeConformanceTests, TransferEqualityDistinguishesCoincidentCoordin
 TEST(MeloLatticeConformanceTests, UnspelledPublicEntryPreservesInputAndScore)
 {
     for (bool addToChord : { false, true }) {
-        auto* s = ScoreRW::readScore(u"jimstaff_data/m9-dense-voices.mscx");
+        auto* s = ScoreRW::readScore(u"melostaff_data/m9-dense-voices.mscx");
         ASSERT_TRUE(s);
         melo::TuningController tune(s, 0);
         ASSERT_TRUE(tune.beginPreview());
@@ -251,7 +251,7 @@ static void tie(Score* s, Note* a, Note* b)
 }
 
 TEST(MeloLatticeConformanceTests, TiedChordAcceptsDistinctLatticePositionAtCoincidentPitch) {
-    auto* s = ScoreRW::readScore(u"jimstaff_data/m9-dense-voices.mscx");
+    auto* s = ScoreRW::readScore(u"melostaff_data/m9-dense-voices.mscx");
     ASSERT_TRUE(s);
     auto ns=notes(s);
     ASSERT_GE(ns.size(), 2u);
@@ -278,7 +278,7 @@ TEST(MeloLatticeConformanceTests, TiedChordAcceptsDistinctLatticePositionAtCoinc
 }
 
 TEST(MeloLatticeConformanceTests, TiedChordNoncoincidentControl) {
-    auto* s = ScoreRW::readScore(u"jimstaff_data/m9-dense-voices.mscx");
+    auto* s = ScoreRW::readScore(u"melostaff_data/m9-dense-voices.mscx");
     ASSERT_TRUE(s);
     auto ns=notes(s);
     ASSERT_GE(ns.size(), 2u);
@@ -310,7 +310,7 @@ TEST(MeloLatticeConformanceTests, GraceUsesSelectedOccurrenceNotFirstMatchingMid
     ASSERT_TRUE(directory.isValid());
     for (double generator:{ 700.0, 701.0, 1200.0 * 4.0 / 7.0, 720.0 }) {
         for (bool chooseOther:{ false, true }) {
-            auto* s=ScoreRW::readScore(u"jimstaff_data/m9-dense-voices.mscx");
+            auto* s=ScoreRW::readScore(u"melostaff_data/m9-dense-voices.mscx");
             ASSERT_TRUE(s);
             melo::TuningController tuning(s, 0);
             ASSERT_TRUE(tuning.beginPreview());
@@ -362,7 +362,7 @@ TEST(MeloLatticeConformanceTests, GraceUsesSelectedOccurrenceNotFirstMatchingMid
 
 TEST(MeloLatticeConformanceTests, L10ChordLineFollowsOriginalOccurrence)
 {
-    auto* s=ScoreRW::readScore(u"jimstaff_data/m9-dense-voices.mscx");
+    auto* s=ScoreRW::readScore(u"melostaff_data/m9-dense-voices.mscx");
     ASSERT_TRUE(s);
     Note* a=notes(s).front();
     ASSERT_TRUE(place(a, 0, 0));
@@ -386,7 +386,7 @@ TEST(MeloLatticeConformanceTests, L10ChordLineFollowsOriginalOccurrence)
 
 static void stepTie(bool different)
 {
-    auto* s=ScoreRW::readScore(u"jimstaff_data/m5-key-up.mscx");
+    auto* s=ScoreRW::readScore(u"melostaff_data/m5-key-up.mscx");
     ASSERT_TRUE(s);
     if (!different) {
         String err;
@@ -428,7 +428,7 @@ TEST(MeloLatticeConformanceTests, KeyboardStepSameReferenceControl) {
 
 TEST(MeloLatticeConformanceTests, L06CrossReferenceDragPreservesSoundAndUndo)
 {
-    auto* s=ScoreRW::readScore(u"jimstaff_data/m5-key-up.mscx");
+    auto* s=ScoreRW::readScore(u"melostaff_data/m5-key-up.mscx");
     ASSERT_TRUE(s);
     auto ns=notes(s);
     ASSERT_GE(ns.size(), 5u);
@@ -469,7 +469,7 @@ TEST(MeloLatticeConformanceTests, L06CrossReferenceDragPreservesSoundAndUndo)
 
 TEST(MeloLatticeConformanceTests, L07ContradictoryNativeTieIsRefusedWithoutCoordinateRewrite)
 {
-    auto* s=ScoreRW::readScore(u"jimstaff_data/m5-key-up.mscx");
+    auto* s=ScoreRW::readScore(u"melostaff_data/m5-key-up.mscx");
     ASSERT_TRUE(s);
     auto ns=notes(s);
     ASSERT_GE(ns.size(), 5u);
@@ -489,7 +489,7 @@ TEST(MeloLatticeConformanceTests, L07ContradictoryNativeTieIsRefusedWithoutCoord
 
 TEST(MeloLatticeConformanceTests, L09TieTargetsTheCorrespondingCoincidentOccurrence)
 {
-    auto* s=ScoreRW::readScore(u"jimstaff_data/m9-dense-voices.mscx");
+    auto* s=ScoreRW::readScore(u"melostaff_data/m9-dense-voices.mscx");
     ASSERT_TRUE(s);
     auto ns=notes(s);
     ASSERT_GE(ns.size(), 2u);
@@ -513,7 +513,7 @@ TEST(MeloLatticeConformanceTests, L09TieTargetsTheCorrespondingCoincidentOccurre
 
 TEST(MeloLatticeConformanceTests, L11ImplodeKeepsDistinctCoincidentPositions)
 {
-    auto* s=ScoreRW::readScore(u"jimstaff_data/m9-dense-voices.mscx");
+    auto* s=ScoreRW::readScore(u"melostaff_data/m9-dense-voices.mscx");
     ASSERT_TRUE(s);
     auto* seg=s->firstSegment(SegmentType::ChordRest);
     auto* ca=toChord(seg->element(0));
@@ -619,7 +619,7 @@ TEST(MeloLatticeConformanceTests, BindingConflictRefusesWithoutChangingAnySinger
 
 TEST(MeloLatticeConformanceTests, LinkedPartInitialPitchPreservesWrittenNotesAndUndoes)
 {
-    auto* s = ScoreRW::readScore(u"jimstaff_data/m9-satb-hymn.mscx");
+    auto* s = ScoreRW::readScore(u"melostaff_data/m9-satb-hymn.mscx");
     ASSERT_TRUE(s);
     std::vector<Note*> written;
     std::vector<NoteVal> before;
@@ -658,7 +658,7 @@ TEST(MeloLatticeConformanceTests, LinkedPartInitialPitchPreservesWrittenNotesAnd
 
 TEST(MeloLatticeConformanceTests, DurationExpansionPreservesEveryFragmentCoordinate)
 {
-    auto* s=ScoreRW::readScore(u"jimstaff_data/m9-dense-voices.mscx");
+    auto* s=ScoreRW::readScore(u"melostaff_data/m9-dense-voices.mscx");
     ASSERT_TRUE(s);
     Note* first=notes(s).front();
     ASSERT_TRUE(place(first, -7, 12));
@@ -677,7 +677,7 @@ TEST(MeloLatticeConformanceTests, DurationExpansionPreservesEveryFragmentCoordin
 
 TEST(MeloLatticeConformanceTests, PointerCreatesAndRemovesTheChosenCoincidentPosition)
 {
-    auto* s=ScoreRW::readScore(u"jimstaff_data/m9-dense-voices.mscx");
+    auto* s=ScoreRW::readScore(u"melostaff_data/m9-dense-voices.mscx");
     ASSERT_TRUE(s);
     Note* first=notes(s).front();
     ASSERT_TRUE(place(first, 1, 0));
@@ -716,7 +716,7 @@ TEST(MeloLatticeConformanceTests, PointerCreatesAndRemovesTheChosenCoincidentPos
 
 TEST(MeloLatticeConformanceTests, TransposeSelectedTieChangesEveryOccurrence)
 {
-    auto* s=ScoreRW::readScore(u"jimstaff_data/m9-dense-voices.mscx");
+    auto* s=ScoreRW::readScore(u"melostaff_data/m9-dense-voices.mscx");
     ASSERT_TRUE(s);
     auto ns=notes(s);
     ASSERT_TRUE(place(ns[0], 0, 0));
@@ -734,7 +734,7 @@ TEST(MeloLatticeConformanceTests, TransposeSelectedTieChangesEveryOccurrence)
 
 TEST(MeloLatticeConformanceTests, TransposeInvalidLaterTieIsNonMutating)
 {
-    auto* s=ScoreRW::readScore(u"jimstaff_data/m9-dense-voices.mscx");
+    auto* s=ScoreRW::readScore(u"melostaff_data/m9-dense-voices.mscx");
     ASSERT_TRUE(s);
     auto ns=notes(s);
     ASSERT_TRUE(place(ns[0], 0, 0));
@@ -756,7 +756,7 @@ TEST(MeloLatticeConformanceTests, TransposeInvalidLaterTieIsNonMutating)
 
 TEST(MeloLatticeConformanceTests, PluginRawUnspelledInsertionRemainsDetached)
 {
-    auto* s=ScoreRW::readScore(u"jimstaff_data/m9-dense-voices.mscx");
+    auto* s=ScoreRW::readScore(u"melostaff_data/m9-dense-voices.mscx");
     ASSERT_TRUE(s);
     melo::TuningController tune(s, 0);
     ASSERT_TRUE(tune.beginPreview());
@@ -783,7 +783,7 @@ TEST(MeloLatticeConformanceTests, PluginRawUnspelledInsertionRemainsDetached)
 
 TEST(MeloLatticeConformanceTests, PluginDerivedSettersCannotChangeLiveLatticeNotes)
 {
-    auto* s=ScoreRW::readScore(u"jimstaff_data/m9-dense-voices.mscx");
+    auto* s=ScoreRW::readScore(u"melostaff_data/m9-dense-voices.mscx");
     ASSERT_TRUE(s);
     Note* note=notes(s).front();
     const auto before=note->noteVal();
@@ -804,7 +804,7 @@ TEST(MeloLatticeConformanceTests, PluginDerivedSettersCannotChangeLiveLatticeNot
 
 TEST(MeloLatticeConformanceTests, NativeWriterRefusesMissingCoordinates)
 {
-    auto* s=ScoreRW::readScore(u"jimstaff_data/m9-dense-voices.mscx");
+    auto* s=ScoreRW::readScore(u"melostaff_data/m9-dense-voices.mscx");
     ASSERT_TRUE(s);
     notes(s).front()->setMeloPitch(INT_MIN, INT_MIN);
     EXPECT_FALSE(ScoreRW::saveScore(s, u"invalid-missing-lattice-note.mscx"));
@@ -813,7 +813,7 @@ TEST(MeloLatticeConformanceTests, NativeWriterRefusesMissingCoordinates)
 
 TEST(MeloLatticeConformanceTests, TieSelectionDoesNotDependOnCoincidentChordOrder)
 {
-    auto* s=ScoreRW::readScore(u"jimstaff_data/m9-dense-voices.mscx");
+    auto* s=ScoreRW::readScore(u"melostaff_data/m9-dense-voices.mscx");
     ASSERT_TRUE(s);
     auto ns=notes(s);
     Note* a=ns[0];
@@ -838,7 +838,7 @@ TEST(MeloLatticeConformanceTests, TieSelectionDoesNotDependOnCoincidentChordOrde
 
 TEST(MeloLatticeConformanceTests, PublicAddTieAcrossReferenceChangeSustainsTheSource)
 {
-    auto* s=ScoreRW::readScore(u"jimstaff_data/m5-key-up.mscx");
+    auto* s=ScoreRW::readScore(u"melostaff_data/m5-key-up.mscx");
     ASSERT_TRUE(s);
     auto ns=notes(s);
     Note* a=ns[3];
@@ -857,7 +857,7 @@ TEST(MeloLatticeConformanceTests, LinkedPartEditsEveryEndpointAndUndoRestoresEac
 {
     for (int selectedIndex : { 0, 1, 2 }) {
         for (bool fromPart : { false, true }) {
-            auto* s=ScoreRW::readScore(u"jimstaff_data/m5-key-up.mscx");
+            auto* s=ScoreRW::readScore(u"melostaff_data/m5-key-up.mscx");
             ASSERT_TRUE(s);
             auto ns=notes(s);
             std::vector<Note*> chain { ns[3], ns[4], ns[6] };
@@ -918,7 +918,7 @@ TEST(MeloLatticeConformanceTests, NativeReaderRefusesStructuralContradictionsWit
 {
     QTemporaryDir directory;
     ASSERT_TRUE(directory.isValid());
-    auto* s=ScoreRW::readScore(u"jimstaff_data/m9-dense-voices.mscx");
+    auto* s=ScoreRW::readScore(u"melostaff_data/m9-dense-voices.mscx");
     ASSERT_TRUE(s);
     auto ns=notes(s);
     ASSERT_TRUE(place(ns[0], 0, 0));
@@ -930,10 +930,10 @@ TEST(MeloLatticeConformanceTests, NativeReaderRefusesStructuralContradictionsWit
     ASSERT_TRUE(file.open(QIODevice::ReadOnly));
     QByteArray content=file.readAll();
     file.close();
-    const QByteArray tag="<jimsNPer>0</jimsNPer>";
+    const QByteArray tag="<meloNPer>0</meloNPer>";
     int index=content.indexOf(tag);
     ASSERT_GE(index, 0);
-    content.replace(index, tag.size(), "<jimsNPer>1</jimsNPer>");
+    content.replace(index, tag.size(), "<meloNPer>1</meloNPer>");
     ASSERT_TRUE(file.open(QIODevice::WriteOnly | QIODevice::Truncate));
     ASSERT_EQ(file.write(content), content.size());
     file.close();
@@ -948,7 +948,7 @@ TEST(MeloLatticeConformanceTests, NativeReaderRefusesStructuralContradictionsWit
 
 TEST(MeloLatticeConformanceTests, TypedShapeUsesKernelClassAndKeepsCrossReferenceTie)
 {
-    auto* s=ScoreRW::readScore(u"jimstaff_data/m5-key-up.mscx");
+    auto* s=ScoreRW::readScore(u"melostaff_data/m5-key-up.mscx");
     ASSERT_TRUE(s);
     auto ns=notes(s);
     Note* a=ns[3];
@@ -982,7 +982,7 @@ TEST(MeloLatticeConformanceTests, TypedShapeUsesKernelClassAndKeepsCrossReferenc
 
 TEST(MeloLatticeConformanceTests, TypedShapeRefusesInvalidLaterTieBeforeAnyMutation)
 {
-    auto* s=ScoreRW::readScore(u"jimstaff_data/m9-dense-voices.mscx");
+    auto* s=ScoreRW::readScore(u"melostaff_data/m9-dense-voices.mscx");
     ASSERT_TRUE(s);
     auto ns=notes(s);
     Note* a=ns[0];
@@ -1008,7 +1008,7 @@ TEST(MeloLatticeConformanceTests, TypedShapeRefusesInvalidLaterTieBeforeAnyMutat
 
 TEST(MeloLatticeConformanceTests, RepitchEntryKeepsAllTiedLatticeCoordinatesCoherent)
 {
-    auto* s=ScoreRW::readScore(u"jimstaff_data/m5-key-up.mscx");
+    auto* s=ScoreRW::readScore(u"melostaff_data/m5-key-up.mscx");
     ASSERT_TRUE(s);
     auto ns=notes(s);
     Note* a=ns[3];
@@ -1045,7 +1045,7 @@ TEST(MeloLatticeConformanceTests, RepitchEntryKeepsAllTiedLatticeCoordinatesCohe
 
 TEST(MeloLatticeConformanceTests, LinkedTieCloneFollowsOccurrenceLinksAfterCoincidentReordering)
 {
-    auto* s=ScoreRW::readScore(u"jimstaff_data/m9-dense-voices.mscx");
+    auto* s=ScoreRW::readScore(u"melostaff_data/m9-dense-voices.mscx");
     ASSERT_TRUE(s);
     auto ns=notes(s);
     Note* a=ns[0];
@@ -1089,7 +1089,7 @@ TEST(MeloLatticeConformanceTests, LinkedTieCloneFollowsOccurrenceLinksAfterCoinc
 
 TEST(MeloLatticeConformanceTests, PluginInsertionValidatesEveryLinkedDestinationBeforeOwnershipTransfer)
 {
-    auto* s=ScoreRW::readScore(u"jimstaff_data/m9-dense-voices.mscx");
+    auto* s=ScoreRW::readScore(u"melostaff_data/m9-dense-voices.mscx");
     ASSERT_TRUE(s);
     Note* a=notes(s).front();
     ASSERT_TRUE(place(a, 0, 0));
@@ -1128,7 +1128,7 @@ TEST(MeloLatticeConformanceTests, PluginInsertionValidatesEveryLinkedDestination
 TEST(MeloLatticeConformanceTests, PartialTieActivationRevalidatesTheSelectedDestination)
 {
     for (bool coherent : { false, true }) {
-        auto* s=ScoreRW::readScore(u"jimstaff_data/m9-dense-voices.mscx");
+        auto* s=ScoreRW::readScore(u"melostaff_data/m9-dense-voices.mscx");
         ASSERT_TRUE(s);
         auto ns=notes(s);
         Note* a=ns[0];
@@ -1162,7 +1162,7 @@ TEST(MeloLatticeConformanceTests, PartialTieActivationRevalidatesTheSelectedDest
 
 TEST(MeloLatticeConformanceTests, ExplodePreservesDistinctCoincidentPositions)
 {
-    auto* s=ScoreRW::readScore(u"jimstaff_data/m9-satb-hymn.mscx");
+    auto* s=ScoreRW::readScore(u"melostaff_data/m9-satb-hymn.mscx");
     ASSERT_TRUE(s);
     Note* first=notes(s).front();
     ASSERT_TRUE(place(first, 0, 0));
@@ -1192,7 +1192,7 @@ TEST(MeloLatticeConformanceTests, ExplodePreservesDistinctCoincidentPositions)
 TEST(MeloLatticeConformanceTests, TiedInsertionRefusesDuplicateAndInvalidLaterStateWithoutMutation)
 {
     for (bool invalidLater : { false, true }) {
-        auto* s = ScoreRW::readScore(u"jimstaff_data/m5-key-up.mscx");
+        auto* s = ScoreRW::readScore(u"melostaff_data/m5-key-up.mscx");
         ASSERT_TRUE(s);
         auto ns = notes(s);
         Note* a = ns[3];
@@ -1239,7 +1239,7 @@ TEST(MeloLatticeConformanceTests, TiedInsertionRefusesDuplicateAndInvalidLaterSt
 
 TEST(MeloLatticeConformanceTests, PrefixOverwritePreservesRetainedTailAcrossReferenceChange)
 {
-    auto* s = ScoreRW::readScore(u"jimstaff_data/m5-key-up.mscx");
+    auto* s = ScoreRW::readScore(u"melostaff_data/m5-key-up.mscx");
     ASSERT_TRUE(s);
     Note* first = notes(s).front();
     ASSERT_TRUE(place(first, 0, 0));
@@ -1274,7 +1274,7 @@ TEST(MeloLatticeConformanceTests, PrefixOverwritePreservesRetainedTailAcrossRefe
 
 TEST(MeloLatticeConformanceTests, PrefixOverwriteRejectsInvalidRetainedTailWithoutMutation)
 {
-    auto* s = ScoreRW::readScore(u"jimstaff_data/m5-key-up.mscx");
+    auto* s = ScoreRW::readScore(u"melostaff_data/m5-key-up.mscx");
     ASSERT_TRUE(s);
     Note* first = notes(s).front();
     ASSERT_TRUE(place(first, 0, 0));
@@ -1351,7 +1351,7 @@ TEST(MeloLatticeConformanceTests, SingleNotePasteUsesExplicitSpellingAtCoinciden
     ASSERT_FALSE(copied->hasMeloPitch());
     auto data = copied->mimeData();
     ASSERT_FALSE(data.empty());
-    auto* s = ScoreRW::readScore(u"jimstaff_data/m9-satb-hymn.mscx");
+    auto* s = ScoreRW::readScore(u"melostaff_data/m9-satb-hymn.mscx");
     ASSERT_TRUE(s);
     melo::TuningController tuning(s, 0);
     ASSERT_TRUE(tuning.beginPreview());
@@ -1388,7 +1388,7 @@ TEST(MeloLatticeConformanceTests, SingleNotePasteUsesExplicitSpellingAtCoinciden
 TEST(MeloLatticeConformanceTests, ReferenceTimelineEditsRefusePartialStaffDisagreement)
 {
     for (int action : { 0, 1, 2 }) {
-        auto* s = ScoreRW::readScore(u"jimstaff_data/m9-satb-hymn.mscx");
+        auto* s = ScoreRW::readScore(u"melostaff_data/m9-satb-hymn.mscx");
         ASSERT_TRUE(s);
         Measure* first = s->firstMeasure();
         Measure* second = first->nextMeasure();
@@ -1432,7 +1432,7 @@ TEST(MeloLatticeConformanceTests, ExactEqualTemperamentSatbTuningPreservesWritte
     for (const auto& [divisions, generator] : std::vector<std::pair<int, double> > { { 12, 700.0 }, { 7, 1200.0 * 4.0 / 7.0 },
              { 5, 720.0 } }) {
         SCOPED_TRACE(divisions);
-        std::unique_ptr<MasterScore> score(ScoreRW::readScore(u"jimstaff_data/m9-satb-hymn.mscx"));
+        std::unique_ptr<MasterScore> score(ScoreRW::readScore(u"melostaff_data/m9-satb-hymn.mscx"));
         ASSERT_TRUE(score);
         std::vector<Note*> written;
         std::vector<std::pair<int, int> > coordinates;

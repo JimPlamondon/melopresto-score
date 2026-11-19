@@ -112,7 +112,7 @@ Err MeloImportContext::resolveFromRoot(const std::vector<XmlStreamReader::Attrib
 }
 
 //---------------------------------------------------------
-//   isJimsElement
+//   isMeloElement
 //---------------------------------------------------------
 
 bool MeloImportContext::isMeloElement(const AsciiStringView& qualifiedName, const char* local) const
@@ -233,7 +233,7 @@ const std::vector<MeloImportContext::BufferedState>* MeloImportContext::statesFo
 
 static StaffType meloStaffTypeFor(const String& json)
 {
-    // The fork's MeloPresto preset (jims12tet: clef/key signature/ledger lines
+    // The fork's MeloPresto preset (melo12tet: clef/key signature/ledger lines
     // suppressed, JI lines on) with THIS state and its presentation line count.
     StaffType st = *StaffType::preset(StaffTypes::MELO_12TET);
     st.setMelo(true);
@@ -284,7 +284,7 @@ bool MeloImportContext::applyToPart(Score* score, Part* part, const String& part
             }
             if (first) {
                 if (!s->tick.isZero()) {
-                    meloFatal(logger, u"the first jims:staff-state of a staff must be declared in the first measure");
+                    meloFatal(logger, u"the first melo:staff-state of a staff must be declared in the first measure");
                     return false;
                 }
                 staff->setStaffType(Fraction(0, 1), meloStaffTypeFor(s->json));
@@ -301,7 +301,7 @@ bool MeloImportContext::applyToPart(Score* score, Part* part, const String& part
                 }
                 const Fraction rtick = s->tick - measure->tick();
                 if (!measure->canAddStaffTypeChange(staffIdx, rtick)) {
-                    meloFatal(logger, u"cannot place a staff type change for this jims:staff-state at its exact tick");
+                    meloFatal(logger, u"cannot place a staff type change for this melo:staff-state at its exact tick");
                     return false;
                 }
                 // File-read style construction (TRead::read for StaffTypeChange):
@@ -351,7 +351,7 @@ bool MeloImportContext::parseProvenance(XmlStreamReader& e, engraving::melo::Pro
             r.text = e.readText();
             out.resources.push_back(r);
         } else {
-            error = String(u"unexpected element in jims:provenance: %1").arg(String::fromAscii(e.name().ascii()));
+            error = String(u"unexpected element in melo:provenance: %1").arg(String::fromAscii(e.name().ascii()));
             e.skipCurrentElement();
             return false;
         }
@@ -369,7 +369,7 @@ bool MeloImportContext::parseTuningTrajectory(XmlStreamReader& e, const std::fun
     out = engraving::melo::TuningTrajectory();
     while (e.readNextStartElement()) {
         if (!isMeloElement(e.name(), "segment")) {
-            error = String(u"unexpected element in jims:tuning-trajectory: %1").arg(String::fromAscii(e.name().ascii()));
+            error = String(u"unexpected element in melo:tuning-trajectory: %1").arg(String::fromAscii(e.name().ascii()));
             e.skipCurrentElement();
             return false;
         }
@@ -393,7 +393,7 @@ bool MeloImportContext::parseTuningTrajectory(XmlStreamReader& e, const std::fun
         }
         while (e.readNextStartElement()) {
             if (!isMeloElement(e.name(), "control")) {
-                error = String(u"unexpected element in jims:segment: %1").arg(String::fromAscii(e.name().ascii()));
+                error = String(u"unexpected element in melo:segment: %1").arg(String::fromAscii(e.name().ascii()));
                 e.skipCurrentElement();
                 return false;
             }
@@ -409,11 +409,11 @@ bool MeloImportContext::parseTuningTrajectory(XmlStreamReader& e, const std::fun
             e.skipCurrentElement();
         }
         if (seg.interpolation == u"cubic-bezier" && seg.controls.size() != 2) {
-            error = u"a cubic-bezier jims:segment carries exactly two controls";
+            error = u"a cubic-bezier melo:segment carries exactly two controls";
             return false;
         }
         if (seg.interpolation == u"linear" && !seg.controls.empty()) {
-            error = u"a linear jims:segment carries no controls";
+            error = u"a linear melo:segment carries no controls";
             return false;
         }
         out.segments.push_back(seg);

@@ -18,7 +18,7 @@ from tools.musicxml_to_melo.ready_time import index_musicxml
 from tools.musicxml_to_melo.ready_writer import convert_package
 from tools.musicxml_to_melo.notation_oracle import build_oracle
 
-data = Path(__file__).resolve().parents[2] / 'src/importexport/musicxml/tests/data/jims/v5'
+data = Path(__file__).resolve().parents[2] / 'src/importexport/musicxml/tests/data/melo/v5'
 package = data / 'cross-staff-voice'
 package.mkdir(exist_ok=True)
 document = complete_package(package)

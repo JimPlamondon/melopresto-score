@@ -254,7 +254,7 @@ TEST_F(Audio_RpcPackerTests, InputParameterPlainPayload)
 {
     const TrackSequenceId sequenceId = 11;
     const TrackId trackId = 22;
-    const AudioResourceId resourceId = "JiMSynth";
+    const AudioResourceId resourceId = "MeloSynth";
     const uint32_t parameterId = 0x4A530020u;
     const double plainValue = 690.125;
 
@@ -503,7 +503,7 @@ TEST_F(Audio_RpcPackerTests, MPE_PitchContext)
     EXPECT_FALSE(unpacked.exactPitch.has_value());
 }
 
-// musescore-jims (JiMSynth VST3 workstream, 2026-08-19): the optional exact
+// melopresto-score (MeloSynth VST3 workstream, 2026-08-19): the optional exact
 // JiMS pitch rides an optional tail that round-trips and leaves stock
 // payloads byte-identical (the four writer/reader directions are exercised
 // in src/framework/vst/tests/vstexactpitchrpc_tests.cpp).

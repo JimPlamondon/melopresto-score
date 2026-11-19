@@ -12,7 +12,7 @@ sys.path.insert(0, str(args.core_root.resolve()))
 from tools.tests.test_melo_ready_complete import held_note_package
 from tools.musicxml_to_melo.ready_writer import convert_package
 
-data = Path(__file__).resolve().parents[2] / 'src/importexport/musicxml/tests/data/jims/v5'
+data = Path(__file__).resolve().parents[2] / 'src/importexport/musicxml/tests/data/melo/v5'
 package = data / 'held-note-reference'
 package.mkdir(exist_ok=True)
 held_note_package(package)
