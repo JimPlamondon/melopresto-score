@@ -793,7 +793,7 @@ TEST_F(Mei_Tests, mei_tuplet_03) {
 }
 TEST_F(Mei_Tests, missingStateIsExplainedAndDoesNotLeakIntoTheNextFileError)
 {
-    QFile source(QString::fromUtf8(iex_mei_tests_DATA_ROOT) + "/data/jims/v5/jims-synthetic.mei");
+    QFile source(QString::fromUtf8(iex_mei_tests_DATA_ROOT) + "/data/melo/v5/melo-synthetic.mei");
     ASSERT_TRUE(source.open(QIODevice::ReadOnly));
     QByteArray xml = source.readAll();
     int start = xml.indexOf("<extMeta>");
@@ -879,7 +879,7 @@ TEST_F(Mei_Tests, latticeExportRefusesMissingIdentityAndDivergentReferencesBefor
 
 TEST_F(Mei_Tests, latticeImportRefusesOmittedIdentityWithoutChangingInput)
 {
-    QFile source(QString::fromUtf8(iex_mei_tests_DATA_ROOT) + "/data/jims/v5/jims-synthetic.mei");
+    QFile source(QString::fromUtf8(iex_mei_tests_DATA_ROOT) + "/data/melo/v5/melo-synthetic.mei");
     ASSERT_TRUE(source.open(QIODevice::ReadOnly));
     QByteArray xml = source.readAll();
     const int start = xml.indexOf("<jm:note ref=");

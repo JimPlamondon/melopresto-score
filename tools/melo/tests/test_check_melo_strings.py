@@ -37,7 +37,7 @@ class StringTableGuardTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout)
 
     def test_diagnostics_also_require_the_central_table(self):
-        existing = 'LOGE() << "MeloStaff: Kernel frame derivation failed for staff ";'
+        existing = 'LOGE() << "MeloPresto Staff: Kernel frame derivation failed for staff ";'
         self.assertNotEqual(self.check_tree({"src/engraving/dom/stafftype.cpp": existing}).returncode, 0)
         self.assertNotEqual(self.check_tree({"src/other.cpp": existing}).returncode, 0)
         self.assertNotEqual(self.check_tree({"src/engraving/dom/stafftype.cpp": existing.replace("failed", "stopped")}).returncode, 0)
