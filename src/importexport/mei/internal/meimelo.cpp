@@ -1495,7 +1495,7 @@ bool MeloMeiImporter::apply(Score* score,
         return false;
     }
     if (anyState) {
-        score->style().set(Sid::musicalSymbolFont, String(u"JiMSMusic"));
+        score->style().set(Sid::musicalSymbolFont, String(u"MeloPresto Music"));
         score->style().set(Sid::hideInstrumentNameIfOneInstrument, false);
     }
     return true;

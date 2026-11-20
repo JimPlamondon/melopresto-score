@@ -500,7 +500,7 @@
     <minLaissezVibLength>2</minLaissezVibLength>
     <laissezVibUseSmuflSym>0</laissezVibUseSmuflSym>
     <sectionPause>3</sectionPause>
-    <musicalSymbolFont>JiMSMusic</musicalSymbolFont>
+    <musicalSymbolFont>MeloPresto Music</musicalSymbolFont>
     <musicalTextFont>Leland Text</musicalTextFont>
     <showHeader>1</showHeader>
     <headerFirstPage>0</headerFirstPage>

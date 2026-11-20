@@ -221,7 +221,7 @@ TEST_F(MusicXml_Melo_Tests, v5ImportBuildsCanonicalStaffConfigurationsAndRelativ
     EXPECT_EQ(notes[1]->meloNPer(), 3);
     EXPECT_EQ(notes[1]->meloNGen(), -5);
     // Engraving font seam (Milestone 3).
-    EXPECT_EQ(score->style().value(Sid::musicalSymbolFont).value<String>(), String(u"JiMSMusic"));
+    EXPECT_EQ(score->style().value(Sid::musicalSymbolFont).value<String>(), String(u"MeloPresto Music"));
     EXPECT_FALSE(score->style().value(Sid::hideInstrumentNameIfOneInstrument).toBool());
     delete score;
 }

@@ -98,8 +98,8 @@ QVariantMap NoteInputBarModel::accidentalPresentationForScore(const engraving::S
     // Melo accidental geometry comes from the Kernel-generated font even in
     // a mixed score whose conventional staves use another engraving font.
     muse::GlobalInject<engraving::IEngravingFontsProvider> fonts;
-    const auto font = fonts()->fontByName("JiMSMusic");
-    if (!font || font->family() != "JiMSMusic") {
+    const auto font = fonts()->fontByName("MeloPresto Music");
+    if (!font || font->family() != "MeloPresto Music") {
         return {};
     }
 

@@ -318,9 +318,9 @@ bool MeloImportContext::applyToPart(Score* score, Part* part, const String& part
         }
     }
 
-    // Milestone 3 engraving-font seam: a JiMS score selects the
-    // Kernel-generated JiMSMusic outlines (stock glyphs fall back).
-    score->style().set(Sid::musicalSymbolFont, String(u"JiMSMusic"));
+    // Milestone 3 engraving-font seam: a MeloPresto score selects the
+    // Kernel-generated MeloPresto Music outlines (stock glyphs fall back).
+    score->style().set(Sid::musicalSymbolFont, String(u"MeloPresto Music"));
     score->style().set(Sid::hideInstrumentNameIfOneInstrument, false);
     return true;
 }

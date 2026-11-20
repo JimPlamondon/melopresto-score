@@ -101,7 +101,7 @@ public:
 
     /// Apply the buffered states of one part: the first state per staff
     /// becomes the MeloPresto StaffType at tick 0, every later state a
-    /// StaffTypeChange at its exact tick; sets the JiMSMusic engraving font.
+    /// StaffTypeChange at its exact tick; sets the MeloPresto Music engraving font.
     /// `staffIndexForNumber` maps a MusicXML staff number to a part-relative
     /// staff index (-1 when invalid). Returns false (after logging) when the
     /// Kernel rejects a state or a carrier cannot be placed.
