@@ -39,10 +39,10 @@
                      </staff>
                      <harm xml:id="h1" staff="1" tstamp="1.5">Si:m3²</harm>
                      <harm xml:id="h6" staff="1" tstamp="1.5">Ti5/3</harm>
-                     <harm xml:id="h2" staff="1" tstamp="1.75">Si:m3³/Ti</harm>
+                     <harm xml:id="h2" staff="1" tstamp="1.75">Si:m3³/m3</harm>
                      <harm xml:id="h3" staff="1" tstamp="2.5">!Ri:Ti5+9/5</harm>
                      <harm xml:id="h5" staff="1" tstamp="2.5">So7/7</harm>
-                     <harm xml:id="h10" staff="1" tstamp="2.75">Mi+Si,4,7</harm>
+                     <harm xml:id="h10" staff="1" tstamp="2.75">Mi+M3,4,7</harm>
                      <harm xml:id="h4" staff="1" tstamp="3.5">So7</harm>
                      <harm xml:id="h7" staff="1" tstamp="3.5">So7</harm>
                      <harm xml:id="h8" staff="1" tstamp="3.5">!So7/3</harm>
