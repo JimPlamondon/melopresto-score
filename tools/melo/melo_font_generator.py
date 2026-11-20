@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 # SPDX-FileCopyrightText: 2026 Jim Plamondon
 # SPDX-License-Identifier: Apache-2.0
-"""Deterministic JiMS SMuFL-subset font generator (MeloStaff Milestone 1).
+"""Deterministic MeloPresto Music font generator: a SMuFL-subset font
+(MeloStaff Milestone 1).
 
-Consumes ONLY the rights-clean generated glyph SVGs from the JiMS Kernel
+Consumes ONLY the rights-clean generated glyph SVGs from the MeloPresto Kernel
 (melo-staff/assets/glyphs, themselves GEN-003 generated artifacts) and
 emits a small OpenType font plus SMuFL-style metadata. No third-party
 outline is read, traced, or embedded. Deterministic: fixed epoch dates,
@@ -12,7 +13,12 @@ sorted tables, no randomness — rebuilds are byte-identical.
 Usage:
   python3 melo_font_generator.py <glyph_svg_dir> <out_dir>
 
-Outputs <out_dir>/JiMSMusic.otf and <out_dir>/JiMSMusic-metadata.json.
+Outputs <out_dir>/MeloPrestoMusic.otf and <out_dir>/MeloPrestoMusic-metadata.json,
+which are installed as fonts/melopresto-music/MeloPrestoMusic.otf and
+fonts/melopresto-music/melopresto-music_metadata.json.
+
+Names: the family and full name are "MeloPresto Music"; the PostScript and
+CFF font names, which cannot hold a space, use MeloPrestoMusic.
 """
 import json
 import math
@@ -23,6 +29,8 @@ import sys
 from fontTools.fontBuilder import FontBuilder
 from fontTools.pens.t2CharStringPen import T2CharStringPen
 
+FAMILY = "MeloPresto Music"  # family and full name
+POSTSCRIPT_NAME = "MeloPrestoMusic"  # where a name cannot hold a space
 UPM = 1000  # font units per em; the SVG design grid is also 1000.
 
 # Design-grid mapping: the SVG grid is 1000x1000, y-down, glyphs centered
@@ -187,8 +195,8 @@ GLYPHS = [
     ("notehead-flat.svg", "noteheadTriangleDownBlack", 0xE0C7),
     ("notehead-double-sharp.svg", "noteheadDiamondBlack", 0xE0DB),
     ("notehead-double-flat.svg", "noteheadSquareBlack", 0xE0B9),
-    ("crescent-clef.svg", "jimsCrescentClef", 0xF400),
-    ("tonic-indicator.svg", "jimsTonicIndicator", 0xF401),
+    ("crescent-clef.svg", "meloCrescentClef", 0xF400),
+    ("tonic-indicator.svg", "meloTonicIndicator", 0xF401),
 ]
 
 
@@ -251,17 +259,17 @@ def build(svg_dir, out_dir):
                 "stemDownNW": [round(x_min / sp, 4), round(anchor_y / sp, 4)],
             }
 
-    fb.setupCFF("JiMSMusic", {"FamilyName": "JiMSMusic", "FullName": "JiMSMusic"},
+    fb.setupCFF(POSTSCRIPT_NAME, {"FamilyName": FAMILY, "FullName": FAMILY},
                 charstrings, {})
     fb.setupHorizontalMetrics(metrics)
     fb.setupHorizontalHeader(ascent=UPM, descent=-UPM // 4)
     fb.setupNameTable({
-        "familyName": "JiMSMusic",
+        "familyName": FAMILY,
         "styleName": "Regular",
-        "uniqueFontIdentifier": "JiMSMusic-1.0-jimstaff-m1",
-        "fullName": "JiMSMusic",
+        "uniqueFontIdentifier": "MeloPrestoMusic-1.0-melostaff-m1",
+        "fullName": FAMILY,
         "version": "Version 1.0",
-        "psName": "JiMSMusic-Regular",
+        "psName": POSTSCRIPT_NAME + "-Regular",
         "copyright": "SPDX-FileCopyrightText: 2026 Jim Plamondon; SPDX-License-Identifier: OFL-1.1",
         "licenseDescription": "SIL Open Font License 1.1",
     })
@@ -272,7 +280,7 @@ def build(svg_dir, out_dir):
     fb.font["head"].created = 0
     fb.font["head"].modified = 0
 
-    otf_path = os.path.join(out_dir, "JiMSMusic.otf")
+    otf_path = os.path.join(out_dir, POSTSCRIPT_NAME + ".otf")
     fb.save(otf_path)
 
     glyphs_with_anchors = {}
@@ -281,14 +289,14 @@ def build(svg_dir, out_dir):
         if anchors:
             glyphs_with_anchors[name] = anchors
     metadata = {
-        "fontName": "JiMSMusic",
+        "fontName": FAMILY,
         "fontVersion": "1.0",
         "engravingDefaults": {"staffLineThickness": 0.1},
         "glyphsWithAnchors": glyphs_with_anchors,
         "glyphs": metadata_glyphs,
         "provenance": "Generated from melo-staff/assets/glyphs (GEN-003); no third-party outlines.",
     }
-    meta_path = os.path.join(out_dir, "JiMSMusic-metadata.json")
+    meta_path = os.path.join(out_dir, POSTSCRIPT_NAME + "-metadata.json")
     with open(meta_path, "w", encoding="utf-8") as f:
         json.dump(metadata, f, indent=2, sort_keys=True)
         f.write("\n")

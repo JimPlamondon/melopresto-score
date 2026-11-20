@@ -1468,7 +1468,7 @@ TEST_F(MeloUiModelTests, MeloAccidentalPickersUseTheMatchingNoteheads) {
     QQmlEngine::setContextForObject(&model, engine.rootContext());
     const auto presentation = model.accidentalPresentation();
     muse::modularity::removeIoC(qmlIoc.ctx);
-    ASSERT_EQ(presentation.value("font").value<QFont>().family(), QString("JiMSMusic"));
+    ASSERT_EQ(presentation.value("font").value<QFont>().family(), QString("MeloPresto Music"));
     const std::pair<const char*, SymId> cases[] = {
         { "sharp", SymId::noteheadTriangleUpBlack },
         { "flat", SymId::noteheadTriangleDownBlack },
@@ -1476,7 +1476,7 @@ TEST_F(MeloUiModelTests, MeloAccidentalPickersUseTheMatchingNoteheads) {
         { "flat2", SymId::noteheadSquareBlack },
     };
     muse::GlobalInject<IEngravingFontsProvider> fonts;
-    auto font = fonts()->fontByName("JiMSMusic");
+    auto font = fonts()->fontByName("MeloPresto Music");
     for (const auto& [action, symbol] : cases) {
         const auto item = presentation.value(action).toMap();
         EXPECT_EQ(item.value("icon").toUInt(), font->symCode(symbol)) << action;

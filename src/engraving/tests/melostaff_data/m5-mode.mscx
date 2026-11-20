@@ -5,7 +5,7 @@
   <Score>
     <metaTag name="meloReferenceTimelineV1">{"schema":"melostaff-reference-v1","initial":{"step":"D","alter":0,"octave":4},"events":[]}</metaTag>
     <Style>
-      <musicalSymbolFont>JiMSMusic</musicalSymbolFont>
+      <musicalSymbolFont>MeloPresto Music</musicalSymbolFont>
       <hideInstrumentNameIfOneInstrument>0</hideInstrumentNameIfOneInstrument>
       </Style>
     <eid>tHojrHvgyIE_1Ach91EA1gH</eid>

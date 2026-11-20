@@ -2,13 +2,13 @@
   "engravingDefaults": {
     "staffLineThickness": 0.1
   },
-  "fontName": "JiMSMusic",
+  "fontName": "MeloPresto Music",
   "fontVersion": "1.0",
   "glyphs": {
-    "jimsCrescentClef": {
+    "meloCrescentClef": {
       "codepoint": "U+F400"
     },
-    "jimsTonicIndicator": {
+    "meloTonicIndicator": {
       "codepoint": "U+F401"
     },
     "noteheadDiamondBlack": {
@@ -66,5 +66,5 @@
       ]
     }
   },
-  "provenance": "Generated from jims-staff/assets/glyphs (GEN-003); no third-party outlines."
+  "provenance": "Generated from melo-staff/assets/glyphs (GEN-003); no third-party outlines."
 }

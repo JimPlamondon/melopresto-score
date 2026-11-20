@@ -226,7 +226,7 @@ TEST(MeloStaffTests, invalidStateFailsVisiblyNotSilently)
     EXPECT_FALSE(melo::nearestPitch(bad, 0.0, false, 0, 0, hit));
 }
 
-// M3 Phase 3: the Kernel-generated JiMSMusic font is registered, its
+// M3 Phase 3: the Kernel-generated MeloPresto Music font is registered, its
 // class-notehead outlines are present and nonempty, and they genuinely
 // differ from the fallback font's stock outlines (outline change only —
 // position/size/selection logic is untouched from M1/M2).
@@ -234,14 +234,14 @@ TEST(MeloStaffTests, meloMusicFontRegisteredWithKernelOutlines)
 {
     auto provider = muse::modularity::globalIoc()->resolve<IEngravingFontsProvider>("melostaff_tests");
     ASSERT_TRUE(provider);
-    IEngravingFontPtr meloFont = provider->fontByName("JiMSMusic");
-    ASSERT_TRUE(meloFont) << "JiMSMusic must be registered at engraving-module init";
+    IEngravingFontPtr meloFont = provider->fontByName("MeloPresto Music");
+    ASSERT_TRUE(meloFont) << "MeloPresto Music must be registered at engraving-module init";
     IEngravingFontPtr fallback = provider->fallbackFont();
     ASSERT_TRUE(fallback);
     for (SymId sym : { SymId::noteheadTriangleUpBlack, SymId::noteheadTriangleDownBlack,
                        SymId::noteheadDiamondBlack, SymId::noteheadSquareBlack }) {
         muse::RectF jb = meloFont->bbox(sym, 1.0);
-        EXPECT_FALSE(jb.isNull()) << "JiMSMusic outline empty";
+        EXPECT_FALSE(jb.isNull()) << "MeloPresto Music outline empty";
         muse::RectF fb = fallback->bbox(sym, 1.0);
         EXPECT_TRUE(jb != fb) << "outline identical to fallback - registration had no effect";
     }
@@ -487,13 +487,13 @@ TEST(MeloStaffTests, evidenceSweepAcceptancePieces)
 
 // Owner correction (2026-08-14, sweep review): stems must attach at the
 // notehead's edge, not its center — the font's SMuFL stem anchors carry
-// that fact, so JiMSMusic must publish nonzero anchors for every class
+// that fact, so MeloPresto Music must publish nonzero anchors for every class
 // notehead.
 TEST(MeloStaffTests, meloMusicNoteheadsPublishStemAnchors)
 {
     auto provider = muse::modularity::globalIoc()->resolve<IEngravingFontsProvider>("melostaff_tests");
     ASSERT_TRUE(provider);
-    IEngravingFontPtr meloFont = provider->fontByName("JiMSMusic");
+    IEngravingFontPtr meloFont = provider->fontByName("MeloPresto Music");
     ASSERT_TRUE(meloFont);
     for (SymId sym : { SymId::noteheadTriangleUpBlack, SymId::noteheadTriangleDownBlack,
                        SymId::noteheadDiamondBlack, SymId::noteheadSquareBlack }) {

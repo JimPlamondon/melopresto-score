@@ -185,11 +185,11 @@ void EngravingModule::onInit(const IApplication::RunMode&)
             m_engravingfonts->addInternalFont(name, fontDataKey.family().id().toStdString(), filePath);
         };
 
-        // JiMSMusic (Milestone 3): the Kernel-generated JiMS glyph font —
+        // MeloPresto Music (Milestone 3): the Kernel-generated MeloPresto glyph font —
         // deterministic build from melo-staff/assets/glyphs (GEN-003).
-        // Selected per-score by the JiMS converter; every non-JiMS symbol
+        // Selected per-score by the MeloPresto importers; every other symbol
         // falls back to the stock engraving font.
-        addMusicFont("JiMSMusic", FontDataKey(u"JiMSMusic"), ":/fonts/jimsmusic/JiMSMusic.otf");
+        addMusicFont("MeloPresto Music", FontDataKey(u"MeloPresto Music"), ":/fonts/melopresto-music/MeloPrestoMusic.otf");
         addMusicFont("Bravura", FontDataKey(u"Bravura"), ":/fonts/bravura/Bravura.otf");
         fdb->addFont(FontDataKey(u"Bravura Text"), ":/fonts/bravura/BravuraText.otf");
         addMusicFont("Leland", FontDataKey(u"Leland"), ":/fonts/leland/Leland.otf");
