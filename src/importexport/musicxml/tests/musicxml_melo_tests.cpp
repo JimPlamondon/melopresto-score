@@ -543,7 +543,7 @@ TEST_F(MusicXml_Melo_Tests, ChordNameEditingKeepsTheWholeOpaqueStringAndRefusesT
     const std::vector<Harmony*> harmonies = harmoniesOnStaff(score, 0);
     ASSERT_EQ(harmonies.size(), 2u);
     Harmony* melo = harmonies.front();
-    const String names[] = { u"Do5", u"Fa5", u"Do:La7", u"!So7/3", u"Do5|Fa5", u"Fi@Te:M3²+La,Ti/Re" };
+    const String names[] = { u"Do5", u"Fa5", u"Do:La7", u"!So7/3", u"Mi:So7+m9", u"Fi@Te:So7+m9,m13/A4" };
     for (const String& name : names) {
         melo->setHarmony(name);
         ASSERT_EQ(melo->chords().size(), 1u) << name.toStdString();
@@ -554,6 +554,12 @@ TEST_F(MusicXml_Melo_Tests, ChordNameEditingKeepsTheWholeOpaqueStringAndRefusesT
     const String before = melo->harmonyName();
     melo->setHarmony(u"~So7/3");
     EXPECT_EQ(melo->harmonyName(), before);
+    for (const String& refused : { String(u"Ti:m3³/Le"), String(u"Do5/Mi"), String(u"Mi:So7+Le") }) {
+        melo->setHarmony(refused);
+        EXPECT_EQ(melo->harmonyName(), before) << refused.toStdString();
+    }
+    melo->setHarmony(u"Ti:m3³/d7");
+    EXPECT_EQ(melo->harmonyName(), u"Ti:m3³/d7");
     delete score;
 }
 

@@ -1438,7 +1438,7 @@ String Harmony::meloNameError() const
     }
     return m_harmonyType == HarmonyType::MELO && (cursor() && cursor()->editing() ? !isValidMeloName(plainText()) : m_isMisspelled)
            ? muse::mtrc("engraving",
-                        "Chord name refused: use /1 through /7 for a modal bass, or /Xx for an exceptional bass. Spaces and ~ are not allowed. The previous name is preserved.")
+                        "Chord name refused: the bass is a degree /1 through /7 of the chord's mode, or an interval such as /d7 measured from the application base; a note name is not a bass. Spaces and ~ are not allowed. The previous name is preserved.")
            : String();
 }
 

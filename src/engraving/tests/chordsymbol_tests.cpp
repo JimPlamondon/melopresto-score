@@ -502,11 +502,13 @@ TEST_F(Engraving_ChordSymbolTests, testAddHarmonyToFretDiagram)
 
 TEST_F(Engraving_ChordSymbolTests, meloBassDegreesAndExceptionalNamesUseKernelValidation)
 {
-    for (const String& name : { String(u"Re:So7/3"), String(u"Do5/5"), String(u"Do:So5+Fi/Ti"), String(u"Ti:m3³/Le") }) {
-        EXPECT_TRUE(Harmony::isValidMeloName(name));
+    for (const String& name : { String(u"Re:So7/3"), String(u"Do5/5"), String(u"Do:So5+M7/M7"), String(u"Ti:m3³/d7"),
+                                String(u"Mi:So7+m9"), String(u"Fa5+A6,m7/5") }) {
+        EXPECT_TRUE(Harmony::isValidMeloName(name)) << name.toStdString();
     }
-    for (const String& name : { String(u"Re:So7/Fi"), String(u"Do5/Mi"), String(u"Do5/0"), String(u"Do5/8"), String(u"Ti:m3³/3") }) {
-        EXPECT_FALSE(Harmony::isValidMeloName(name));
+    for (const String& name : { String(u"Re:So7/Fi"), String(u"Do5/Mi"), String(u"Do:So5+Fi/Ti"), String(u"Ti:m3³/Le"),
+                                String(u"Mi:So7+Le"), String(u"Do5/0"), String(u"Do5/8"), String(u"Ti:m3³/3"), String(u"Do5/P8") }) {
+        EXPECT_FALSE(Harmony::isValidMeloName(name)) << name.toStdString();
     }
 }
 
@@ -522,18 +524,18 @@ TEST_F(Engraving_ChordSymbolTests, meloHarmonyCreationIsPerObjectUndoableCloneab
     score->startCmd(TranslatableString::untranslatable("Add MeloPresto chord name"));
     Harmony* melo = score->addHarmony(HarmonyType::MELO, chordRest);
     ASSERT_TRUE(melo);
-    melo->setHarmony(u"Fi@Te:M3²+La,Ti/Re");
+    melo->setHarmony(u"Fi@Te:So7+m9,m13/A4");
     score->endCmd();
     EXPECT_EQ(melo->harmonyType(), HarmonyType::MELO);
-    EXPECT_EQ(melo->harmonyName(), u"Fi@Te:M3²+La,Ti/Re");
+    EXPECT_EQ(melo->harmonyName(), u"Fi@Te:So7+m9,m13/A4");
     EXPECT_TRUE(melo->accessibleInfo().contains(u"MeloPresto chord name"));
-    EXPECT_TRUE(melo->accessibleInfo().contains(u"Fi@Te:M3²+La,Ti/Re"));
-    EXPECT_TRUE(melo->screenReaderInfo().contains(u"Fi@Te:M3²+La,Ti/Re"));
+    EXPECT_TRUE(melo->accessibleInfo().contains(u"Fi@Te:So7+m9,m13/A4"));
+    EXPECT_TRUE(melo->screenReaderInfo().contains(u"Fi@Te:So7+m9,m13/A4"));
 
     Harmony* clone = melo->clone();
     ASSERT_TRUE(clone);
     EXPECT_EQ(clone->harmonyType(), HarmonyType::MELO);
-    EXPECT_EQ(clone->harmonyName(), u"Fi@Te:M3²+La,Ti/Re");
+    EXPECT_EQ(clone->harmonyName(), u"Fi@Te:So7+m9,m13/A4");
     delete clone;
 
     score->undoRedo(true, nullptr);
@@ -542,7 +544,7 @@ TEST_F(Engraving_ChordSymbolTests, meloHarmonyCreationIsPerObjectUndoableCloneab
     EngravingItem* restored = segment->findAnnotation(ElementType::HARMONY, chordRest->track(), chordRest->track() + 1);
     ASSERT_TRUE(restored && restored->isHarmony());
     EXPECT_EQ(toHarmony(restored)->harmonyType(), HarmonyType::MELO);
-    EXPECT_EQ(toHarmony(restored)->harmonyName(), u"Fi@Te:M3²+La,Ti/Re");
+    EXPECT_EQ(toHarmony(restored)->harmonyName(), u"Fi@Te:So7+m9,m13/A4");
 
     TextBase* standardText = score->addText(TextStyleType::HARMONY_A, chordRest);
     ASSERT_TRUE(standardText && standardText->isHarmony());
@@ -562,17 +564,17 @@ TEST_F(Engraving_ChordSymbolTests, typedColonStaysInsideMeloHarmonyName)
 
     Harmony* melo = score->addHarmony(HarmonyType::MELO, chordRest);
     ASSERT_TRUE(melo);
-    melo->setHarmony(u"Mi");
+    melo->setHarmony(u"So7/7");
     score->doLayout();
     EditData ed;
     melo->startEdit(ed);
-    melo->cursor()->moveCursorToEnd();
+    melo->cursor()->moveCursorToStart();
+    ed.key = 0;
+    ed.s = String(u"Mi");
+    EXPECT_TRUE(melo->edit(ed));
     ed.key = Key_Colon;
     ed.s = String(u":");
     EXPECT_TRUE(melo->isEditAllowed(ed));
-    EXPECT_TRUE(melo->edit(ed));
-    ed.key = 0;
-    ed.s = String(u"So7/7");
     EXPECT_TRUE(melo->edit(ed));
     melo->endEdit(ed);
     EXPECT_EQ(melo->harmonyName().toStdString(), "Mi:So7/7");
@@ -604,8 +606,8 @@ TEST_F(Engraving_ChordSymbolTests, denseMeloHarmonyLabelsUseAlternatingVerticalL
     Harmony* first = score->addHarmony(HarmonyType::MELO, firstChordRest);
     Harmony* second = score->addHarmony(HarmonyType::MELO, secondChordRest);
     ASSERT_TRUE(first && second);
-    first->setHarmony(u"!Ri:Ti5+Le,Te/Re");
-    second->setHarmony(u"Fa5+Ri,Me/5");
+    first->setHarmony(u"!Ri:Ti5+d7,d8/d8");
+    second->setHarmony(u"Fa5+A6,m7/5");
     first->setProperty(Pid::FONT_SIZE, 60.0);
     second->setProperty(Pid::FONT_SIZE, 60.0);
     score->doLayout();

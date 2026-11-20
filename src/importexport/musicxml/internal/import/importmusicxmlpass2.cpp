@@ -8088,7 +8088,7 @@ void MusicXmlParserPass2::harmony(const String& partId, Measure* measure, const 
             if (!meloChordName.isEmpty() || name.isEmpty() || containsWhitespace || !Harmony::isValidMeloName(name)
                 || m_melo.version() < 4) {
                 m_logger->logError(
-                    u"invalid or duplicate melo:chord-name; use modal /1 through /7 or an exceptional /Xx bass in one whitespace-free name",
+                    u"invalid or duplicate melo:chord-name; the bass is a degree /1 through /7 or an interval such as /d7, and the name has no whitespace",
                     &m_e);
                 m_meloError = Err::FileBadFormat;
             } else {

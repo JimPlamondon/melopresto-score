@@ -89,7 +89,7 @@
             </location>
           <Harmony>
             <harmonyInfo>
-              <name>Si:m3³/Ti</name>
+              <name>Si:m3³/m3</name>
               </harmonyInfo>
             <eid>M_M</eid>
             </Harmony>
@@ -114,7 +114,7 @@
             </location>
           <Harmony>
             <harmonyInfo>
-              <name>Mi+Si,4,7</name>
+              <name>Mi+M3,4,7</name>
               </harmonyInfo>
             <eid>P_P</eid>
             </Harmony>
