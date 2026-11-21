@@ -55,7 +55,7 @@ StyledDialogView {
         }
         StyledTextLabel {
             Layout.fillWidth: true
-            text: qsTrc("notation", "For example: M6 moves new Do to the preceding La above it; -M6 moves down. P8 + M6 adds an octave. Integer multiples, such as 7*M5 - 4*P8, preserve other intervals.")
+            text: qsTrc("notation", "For example, where Do₀ is C4: with M6, the pitch (C4) that was on Do₀ moves to Me₋₁, and the pitch (A4) that was on La₀ moves to Do₀. With -M6, the pitch (C4) that was on Do₀ moves to La₀, and the pitch (E♭3) that was on Me₋₁ moves to Do₀. P8 + M6 adds an octave. Integer multiples, such as 7*M5 - 4*P8, preserve other intervals.")
             wrapMode: Text.WordWrap
             horizontalAlignment: Text.AlignLeft
         }
