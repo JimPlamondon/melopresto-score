@@ -24,10 +24,16 @@ uint64_t voiceOf(const int32_t noteId)
 MeloRealtimeProjector* createProjector(const VstPerNotePitchConfig& config, const bool withProfiles, MeloProjectorPlan& plan,
                                        std::string& problem)
 {
+    //! What this host observed about the plug-in; the selection is the shared session's.
+    MeloProjectorPluginReport report {};
+    report.format = MELO_PROJECTOR_FORMAT_VST3;
+    report.vst3_lists_tuning_expression = config.advertisesTuningExpression ? 1u : 0u;
+    report.vst3_maps_midi_pitch_bend = config.midiParams[1][Steinberg::Vst::kPitchBend] != Steinberg::Vst::kNoParamId ? 1u : 0u;
+
     char error[512] = {};
     MeloRealtimeProjector* projector = melo_realtime_projector_create(
         withProfiles && !config.profilesFolder.empty() ? config.profilesFolder.c_str() : nullptr,
-        config.pluginName.c_str(), config.pluginVersion.c_str(), config.advertisesTuningExpression ? 1u : 0u,
+        config.pluginName.c_str(), config.pluginVersion.c_str(), &report,
         &plan, error, sizeof(error));
     if (!projector) {
         problem = error;
@@ -68,20 +74,6 @@ std::string VstPerNotePitchAdapter::configure(const VstPerNotePitchConfig& confi
         // With no readable profiles, the plug-in's own report still decides.
         std::string ignored;
         m_projector = createProjector(config, false, plan, ignored);
-        if (!m_projector) {
-            return problem;
-        }
-    }
-
-    // MPE reaches the plug-in only through the parameters it maps to MIDI
-    // pitch bend; a plug-in that maps none is sent key numbers alone.
-    if (plan.mode == MELO_PROJECTOR_MODE_MPE && midiParam(1, Steinberg::Vst::kPitchBend) == Steinberg::Vst::kNoParamId) {
-        problem = "the profile selects MPE and the plug-in maps no parameter to MIDI pitch bend";
-        VstPerNotePitchConfig unprofiled = config;
-        unprofiled.advertisesTuningExpression = false;
-        release();
-        std::string ignored;
-        m_projector = createProjector(unprofiled, false, plan, ignored);
         if (!m_projector) {
             return problem;
         }
