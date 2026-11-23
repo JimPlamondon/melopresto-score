@@ -35,6 +35,7 @@
 #include "audio/common/audioutils.h"
 
 #include "msbasicpresetscategories.h"
+#include "clapresourcemenu.h"
 
 using namespace mu;
 using namespace mu::playback;
@@ -52,6 +53,7 @@ static const muse::String MS_BASIC_SOUNDFONT_NAME(u"MS Basic");
 static std::unordered_map<AudioResourceType, QString> AUDIO_RESOURCE_TYPE_TO_STR {
     { AudioResourceType::FluidSoundfont, SOUNDFONTS_MENU_ITEM_ID },
     { AudioResourceType::VstPlugin, VST_MENU_ITEM_ID },
+    { AudioResourceType::ClapPlugin, CLAP_MENU_ITEM_ID },
     { AudioResourceType::MuseSamplerSoundPack, MUSE_MENU_ITEM_ID },
 };
 
@@ -106,6 +108,12 @@ void InputResourceItem::requestAvailableResources()
         if (vstResourcesSearch != m_availableResourceMap.end()) {
             result << buildVstMenuItem(vstResourcesSearch->second);
 
+            result << buildSeparator();
+        }
+
+        auto clapResourcesSearch = m_availableResourceMap.find(AudioResourceType::ClapPlugin);
+        if (clapResourcesSearch != m_availableResourceMap.end()) {
+            result << buildClapMenuItem(clapResourcesSearch->second);
             result << buildSeparator();
         }
 
@@ -337,6 +345,32 @@ QVariantMap InputResourceItem::buildVstMenuItem(const ResourceByVendorMap& resou
     return buildMenuItem(VST_MENU_ITEM_ID,
                          VST_MENU_ITEM_ID,
                          m_currentInputParams.resourceMeta.type == AudioResourceType::VstPlugin,
+                         subItemsByType,
+                         /*includeInFilteredLists*/ false);
+}
+
+QVariantMap InputResourceItem::buildClapMenuItem(const ResourceByVendorMap& resourcesByVendor) const
+{
+    QVariantList subItemsByType;
+
+    for (const ClapMenuVendor& vendor : clapMenuModel(resourcesByVendor, m_currentInputParams.resourceMeta)) {
+        QVariantList subItemsByVendor;
+
+        for (const ClapMenuEntry& entry : vendor.entries) {
+            subItemsByVendor << buildMenuItem(entry.itemId, entry.title, entry.current);
+        }
+
+        subItemsByType << buildMenuItem(CLAP_MENU_ITEM_ID + "\\vendor\\" + vendor.vendor,
+                                        vendor.vendor,
+                                        vendor.current,
+                                        subItemsByVendor,
+                                        /*includeInFilteredLists*/ false,
+                                        /*isFilterCategory*/ true);
+    }
+
+    return buildMenuItem(CLAP_MENU_ITEM_ID,
+                         CLAP_MENU_ITEM_ID,
+                         m_currentInputParams.resourceMeta.type == AudioResourceType::ClapPlugin,
                          subItemsByType,
                          /*includeInFilteredLists*/ false);
 }

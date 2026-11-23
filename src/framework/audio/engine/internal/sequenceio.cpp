@@ -134,7 +134,8 @@ void SequenceIO::setInputParamPlain(const TrackId id, const AudioResourceId& res
         return;
     }
     const AudioResourceMeta& resourceMeta = track->inputHandler->inputParams().resourceMeta;
-    if (resourceMeta.type == AudioResourceType::VstPlugin && resourceMeta.id == resourceId) {
+    if ((resourceMeta.type == AudioResourceType::VstPlugin || resourceMeta.type == AudioResourceType::ClapPlugin)
+        && resourceMeta.id == resourceId) {
         track->inputHandler->setInputParamPlain(paramId, plain);
     }
 }
