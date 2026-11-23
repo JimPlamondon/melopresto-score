@@ -57,8 +57,6 @@ private:
                        int32_t keyNumber, double baseCents);
     void orderEventsOfOneMoment(EventSequenceMap& destination);
 
-    int32_t keyNumberOf(const mpe::pitch_level_t pitchLevel) const;
-    double centsOf(const mpe::NoteEvent& noteEvent, int32_t keyNumber) const;
     float velocityOf(const mpe::NoteEvent& noteEvent) const;
     float expressionLevel(const mpe::dynamic_level_t dynamicLevel) const;
 

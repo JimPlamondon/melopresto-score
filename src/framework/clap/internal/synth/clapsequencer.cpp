@@ -16,6 +16,8 @@
 #include "global/interpolation.h"
 #include "global/realfn.h"
 
+#include "audioplugins/audiopluginnotepitch.h"
+
 using namespace muse;
 using namespace muse::clap;
 
@@ -122,14 +124,12 @@ void ClapSequencer::addNoteEvent(EventSequenceMap& destination, const mpe::NoteE
     const mpe::ArrangementContext& arrangementCtx = noteEvent.arrangementCtx();
     const int32_t noteId = allocateNoteId();
 
-    // A note of the MeloPresto Music System carries the key number and the
-    // offset in cents that the Kernel computed for it. Any other note is its
-    // nearest key and the rest of its pitch level, as the stock sequencers
-    // count them.
-    const std::optional<mpe::ExactPitch>& exact = noteEvent.pitchCtx().exactPitch;
-    const int32_t keyNumber = exact.has_value() ? std::clamp(exact->midiKey, 0, 127)
-                              : keyNumberOf(noteEvent.pitchCtx().nominalPitchLevel);
-    const double cents = exact.has_value() ? exact->centsOffset : centsOf(noteEvent, keyNumber);
+    // The key number and the cents come from the one place both hosted
+    // formats take them from. An out-of-range Kernel key is passed on as it
+    // is; the shared projector refuses the note.
+    const audioplugins::NotePitch pitch = audioplugins::notePitchOf(noteEvent);
+    const int32_t keyNumber = pitch.keyNumber;
+    const double cents = pitch.cents;
     const float velocity = velocityOf(noteEvent);
 
     if (arrangementCtx.hasStart()) {
@@ -159,7 +159,7 @@ void ClapSequencer::addPitchCurve(EventSequenceMap& destination, const mpe::Note
     const mpe::timestamp_t curveTimestampTo = std::min(artMeta.timestamp + artMeta.overallDuration, noteTimestampTo);
 
     auto centsAt = [baseCents](const double pitchLevelOffset) {
-        return baseCents + (pitchLevelOffset / static_cast<double>(mpe::PITCH_LEVEL_STEP)) * 100.0;
+        return audioplugins::pitchCurveCents(baseCents, pitchLevelOffset);
     };
     auto change = [noteId, keyNumber](const double cents) {
         return ClapNoteEvent { ClapNoteEvent::Kind::PitchChange, noteId, keyNumber, cents, 0.f };
@@ -186,10 +186,7 @@ void ClapSequencer::addPitchCurve(EventSequenceMap& destination, const mpe::Note
         const Point currPoint { static_cast<double>(currTime), centsAt(currIt->second) };
         const Point nextPoint { static_cast<double>(nextTime), centsAt(nextIt->second) };
 
-        //! NOTE: the same density of points as the stock sequencers use for a bend
-        constexpr mpe::pitch_level_t POINT_WEIGHT = mpe::PITCH_LEVEL_STEP / 25;
-        size_t pointCount = std::abs(nextIt->second - currIt->second) / POINT_WEIGHT;
-        pointCount = std::max(pointCount, size_t(1));
+        const size_t pointCount = audioplugins::pitchCurvePointCount(currIt->second, nextIt->second);
 
         for (const Point& point : lerp(currPoint, nextPoint, pointCount)) {
             const mpe::timestamp_t time = static_cast<mpe::timestamp_t>(std::round(point.x));
@@ -252,21 +249,6 @@ void ClapSequencer::orderEventsOfOneMoment(EventSequenceMap& destination)
             return false;
         });
     }
-}
-
-int32_t ClapSequencer::keyNumberOf(const mpe::pitch_level_t pitchLevel) const
-{
-    const float stepCount = mpe::ZERO_PITCH_LEVEL_MIDI_EQUIVALENT + pitchLevel / static_cast<float>(mpe::PITCH_LEVEL_STEP);
-
-    return static_cast<int32_t>(std::clamp(stepCount, 0.f, 127.f));
-}
-
-double ClapSequencer::centsOf(const mpe::NoteEvent& noteEvent, int32_t keyNumber) const
-{
-    const int stepCount = keyNumber - mpe::ZERO_PITCH_LEVEL_MIDI_EQUIVALENT;
-    const mpe::pitch_level_t rest = noteEvent.pitchCtx().nominalPitchLevel - stepCount * mpe::PITCH_LEVEL_STEP;
-
-    return (rest / static_cast<double>(mpe::PITCH_LEVEL_STEP)) * 100.0;
 }
 
 float ClapSequencer::velocityOf(const mpe::NoteEvent& noteEvent) const

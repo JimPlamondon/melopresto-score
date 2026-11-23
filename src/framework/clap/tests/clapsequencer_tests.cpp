@@ -226,3 +226,17 @@ TEST(ClapSequencerTests, NoteIdsStartAgainOnlyAfterTheSoundingNotesWereEnded)
     EXPECT_EQ(flushed, 2) << "every sounding note was ended before an id can repeat";
     EXPECT_EQ(sequencer.allocateNoteId(), 0);
 }
+
+TEST(ClapSequencerTests, AKernelKeyOutsideMidiIsPassedOnForTheProjectorToRefuse)
+{
+    ClapSequencer sequencer;
+    PlaybackEventsMap events;
+    events[0].push_back(exactNote(0, SECOND, levelOfKey(127), 130, 7.5));
+    events[2 * SECOND].push_back(exactNote(2 * SECOND, SECOND, levelOfKey(0), -2, -7.5));
+
+    const std::vector<Timed> out = run(sequencer, events);
+    ASSERT_EQ(out.size(), 4u);
+    EXPECT_EQ(out[0].event.keyNumber, 130) << "not moved to key 127 with the cents of key 130";
+    EXPECT_DOUBLE_EQ(out[0].event.cents, 7.5);
+    EXPECT_EQ(out[2].event.keyNumber, -2);
+}

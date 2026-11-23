@@ -214,3 +214,18 @@ TEST(VstPerNotePitchAdapterTests, SetupComesFromTheProfileAndAnUnreadableFolderI
     EXPECT_FALSE(adapter.configure(missing).empty());
     EXPECT_EQ(adapter.mode(), VstPerNotePitchAdapter::Mode::KeyNumberOnly) << "with no readable profiles the plug-in's own report decides";
 }
+
+TEST(VstPerNotePitchAdapterTests, AKeyNumberOutsideMidiIsRefusedByTheProjectorAndTheNoteIsLeftOut)
+{
+    VstPerNotePitchConfig config;
+    config.pluginName = "Unprofiled Synth";
+    config.pluginVersion = "3.0";
+    config.advertisesTuningExpression = true;
+    VstPerNotePitchAdapter adapter;
+    ASSERT_TRUE(adapter.configure(config).empty());
+
+    EXPECT_EQ(adapter.adapt(note(VstEvent::kNoteOnEvent, 50, 130, 7.5f)).eventCount, 0u);
+    EXPECT_EQ(adapter.adapt(note(VstEvent::kNoteOnEvent, 51, -2, 7.5f)).eventCount, 0u);
+    // A note inside the range still sounds.
+    EXPECT_EQ(adapter.adapt(note(VstEvent::kNoteOnEvent, 52, 60, 7.5f)).eventCount, 2u);
+}
