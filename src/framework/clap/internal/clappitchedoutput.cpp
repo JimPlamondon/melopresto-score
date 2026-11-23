@@ -18,6 +18,7 @@ std::string ClapPitchedOutput::prepare(ClapHostedPlugin* plugin, const ClapPerNo
 {
     m_plugin = plugin;
     m_fault.store(0);
+    m_noPitchPathReported = false;
     m_client.init(plugin, hostChannels);
     return m_adapter.configure(config);
 }
@@ -81,7 +82,10 @@ void ClapPitchedOutput::sendSetup()
 void ClapPitchedOutput::noteOn(int32_t noteId, int32_t keyNumber, double cents, float velocity)
 {
     if (!m_adapter.isUsable()) {
-        raise(ClapAudioFault::NoPitchPath);
+        if (!m_noPitchPathReported) {
+            m_noPitchPathReported = true;
+            raise(ClapAudioFault::NoPitchPath);
+        }
         return;
     }
     const ClapPerNotePitchOutput output = m_adapter.noteOn(noteId, keyNumber, cents, velocity);

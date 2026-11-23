@@ -209,7 +209,8 @@ void ClapSequencer::addPitchCurve(EventSequenceMap& destination, const mpe::Note
 //! same moment, so that a note of no length is not left sounding.
 void ClapSequencer::orderEventsOfOneMoment(EventSequenceMap& destination)
 {
-    for (auto& [_, sequence] : destination) {
+    for (auto& moment : destination) {
+        EventSequence& sequence = moment.second;
         if (sequence.size() <= 1) {
             continue;
         }

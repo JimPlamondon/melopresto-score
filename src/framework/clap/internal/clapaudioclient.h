@@ -105,6 +105,8 @@ private:
     float m_gain = 1.f;
     int64_t m_steadyTime = 0;
     bool m_stopped = false;
+    //! Said once for each time the plug-in is not processing, not once a block.
+    bool m_notProcessingReported = false;
     std::atomic<int> m_fault { 0 };
 };
 }

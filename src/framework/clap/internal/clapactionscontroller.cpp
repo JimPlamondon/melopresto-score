@@ -10,6 +10,9 @@
 
 #include "clapactionscontroller.h"
 
+#include <QCoreApplication>
+#include <QTimer>
+
 #include "../widgets/clapviewdialog.h"
 #include "claphostedplugin.h"
 
@@ -65,9 +68,22 @@ void ClapActionsController::editorOperation(const std::string& operation, const 
                 instance->refreshConfig();
             }
         } else if (!hosted.isEditorOpen()) {
+            // When the musician closes the plug-in's window, the editor is
+            // let go on the next turn of the event loop and the state saved.
+            ClapEditorCallbacks callbacks;
+            std::weak_ptr<IClapPluginInstance> weak = instance;
+            callbacks.closed = [weak]() {
+                QTimer::singleShot(0, qApp, [weak]() {
+                    if (IClapPluginInstancePtr closed = weak.lock()) {
+                        closed->hosted().closeEditor();
+                        closed->refreshConfig();
+                    }
+                });
+            };
+
             uint32_t width = 0;
             uint32_t height = 0;
-            if (!hosted.openEditor(ClapEditorKind::Floating, nullptr, instance->name(), ClapEditorCallbacks(), width, height)) {
+            if (!hosted.openEditor(ClapEditorKind::Floating, nullptr, instance->name(), callbacks, width, height)) {
                 LOGE() << "CLAP plug-in " << instance->resourceId() << " did not open its editor";
             }
         }

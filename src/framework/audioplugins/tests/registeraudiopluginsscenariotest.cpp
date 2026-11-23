@@ -476,3 +476,35 @@ TEST_F(AudioPlugins_RegisterAudioPluginsScenarioTest, RegisterFailedPlugin)
     // [THEN] The plugin successfully registered
     EXPECT_TRUE(ret);
 }
+
+//! A CLAP (CLever Audio Plug-in) file that could not be registered keeps its
+//! suffix in its id. A VST3 plug-in's id is its bare file name, so the two
+//! builds of one synthesizer cannot take each other's place in the register.
+TEST_F(AudioPlugins_RegisterAudioPluginsScenarioTest, RegisterFailedClapPluginDoesNotTakeAVst3PlugInsId)
+{
+    // [GIVEN] The reader for this file is the CLAP one
+    const auto clapReader = std::make_shared<NiceMock<AudioPluginMetaReaderMock> >();
+    ON_CALL(*clapReader, metaType())
+    .WillByDefault(Return(AudioResourceType::ClapPlugin));
+    ON_CALL(*clapReader, canReadMeta(_))
+    .WillByDefault(Return(true));
+    m_metaReaders = { clapReader };
+
+    path_t pluginPath = "/some/test/path/to/plugin/Synth.clap";
+
+    // [THEN] The failed plug-in is registered under its file name with the suffix
+    AudioPluginInfo expectedPluginInfo;
+    expectedPluginInfo.meta.id = "Synth.clap";
+    expectedPluginInfo.meta.type = AudioResourceType::ClapPlugin;
+    expectedPluginInfo.path = pluginPath;
+    expectedPluginInfo.enabled = false;
+    expectedPluginInfo.errorCode = 1451;
+
+    EXPECT_CALL(*m_knownPlugins, registerPlugins(AudioPluginInfoList { expectedPluginInfo }))
+    .WillOnce(Return(true));
+
+    // [WHEN] Register the plug-in that failed
+    Ret ret = m_scenario->registerFailedPlugin(pluginPath, expectedPluginInfo.errorCode);
+
+    EXPECT_TRUE(ret);
+}

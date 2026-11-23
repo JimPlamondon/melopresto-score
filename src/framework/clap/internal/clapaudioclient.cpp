@@ -41,6 +41,7 @@ void ClapAudioClient::init(ClapHostedPlugin* plugin, uint32_t hostChannels)
     m_pending.clear();
     m_current.clear();
     m_stopped = false;
+    m_notProcessingReported = false;
     m_fault.store(0);
 
     auto allocate = [](const std::vector<uint32_t>& ports, std::vector<std::vector<float> >& storage,
@@ -135,6 +136,7 @@ void ClapAudioClient::stopNow()
 void ClapAudioClient::resume()
 {
     m_stopped = false;
+    m_notProcessingReported = false;
     m_pending.clear();
     m_fault.store(0);
 }
@@ -209,15 +211,16 @@ uint32_t ClapAudioClient::process(float* interleaved, uint32_t frames)
         return 0;
     }
     if (!m_plugin->prepareToProcess()) {
-        if (m_plugin->audioState() == ClapHostedPlugin::AudioState::StartFailed) {
-            raise(ClapAudioFault::StartRefused, false);
-        }
-        if (m_pending.size() > 0) {
-            m_pending.clear();
-            raise(ClapAudioFault::EventsWhileInactive, false);
+        const bool refused = m_plugin->audioState() == ClapHostedPlugin::AudioState::StartFailed;
+        const bool leftOut = m_pending.size() > 0;
+        m_pending.clear();
+        if ((refused || leftOut) && !m_notProcessingReported) {
+            m_notProcessingReported = true;
+            raise(refused ? ClapAudioFault::StartRefused : ClapAudioFault::EventsWhileInactive, false);
         }
         return 0;
     }
+    m_notProcessingReported = false;
 
     uint32_t done = 0;
     while (done < frames) {

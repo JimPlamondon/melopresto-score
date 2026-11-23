@@ -337,6 +337,11 @@ TEST(ClapPitchedOutputTests, AFailedSelectionLeavesThePlugInSilentAndEveryNoteIs
     }
     EXPECT_EQ(player.param(fixture::NotesStarted), 0.0);
     EXPECT_EQ(player.output.takeFault(), ClapAudioFault::NoPitchPath);
+
+    // The log is told once, at the first note, not once a note.
+    player.output.noteOn(2, 62, 0.0, 0.8f);
+    player.render(0.01);
+    EXPECT_EQ(player.output.takeFault(), ClapAudioFault::None);
 }
 
 TEST(ClapPitchedOutputTests, AHostParameterValueReachesThePlugInWithAndWithoutAudio)

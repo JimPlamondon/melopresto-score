@@ -446,6 +446,14 @@ void ClapHostedPlugin::destroy()
     }
     closeEditor();
     if (m_activated) {
+        // The owner stops the audio before it lets go (ClapSynthesiser does).
+        // If processing was left started, no audio thread uses the plug-in
+        // any more, and it is stopped here before it is deactivated.
+        if (m_startedProcessing) {
+            ClapAudioCallScope scope;
+            m_plugin->stop_processing(m_plugin);
+            m_startedProcessing = false;
+        }
         m_audioState.store(AudioState::Inactive);
         m_plugin->deactivate(m_plugin);
         m_activated = false;

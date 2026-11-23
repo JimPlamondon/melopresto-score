@@ -78,7 +78,10 @@ void ClapViewDialog::attachView()
         return true;
     };
     callbacks.closed = [this]() {
-        close();
+        // Not from inside the plug-in's own call: close on the next turn of the event loop.
+        QTimer::singleShot(0, this, [this]() {
+            close();
+        });
     };
 
     uint32_t width = 0;

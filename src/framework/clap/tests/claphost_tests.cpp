@@ -520,4 +520,19 @@ TEST(ClapAudioClientTests, EventsForAPlugInThatIsNotActivatedAreLeftOutWithAFaul
     EXPECT_EQ(loaded.client.takeFault(), ClapAudioFault::EventsWhileInactive);
     EXPECT_FALSE(loaded.client.isStopped());
     EXPECT_EQ(param(loaded.plugin, fixture::ProcessCalls), 0.0);
+
+    // It is said once while the plug-in stays inactive, not once a block.
+    ASSERT_TRUE(loaded.client.pushEvent(fixture::noteEvent(CLAP_EVENT_NOTE_ON, 2, 62, 1.0), 0));
+    EXPECT_EQ(loaded.client.process(buffer.data(), 128), 0u);
+    EXPECT_EQ(loaded.client.takeFault(), ClapAudioFault::None);
+
+    // Activated again, it plays; left inactive once more, that is said again.
+    ASSERT_TRUE(loaded.plugin.activate(48000.0));
+    ASSERT_TRUE(loaded.client.pushEvent(fixture::noteEvent(CLAP_EVENT_NOTE_ON, 3, 64, 1.0), 0));
+    EXPECT_EQ(loaded.client.process(buffer.data(), 128), 128u);
+    EXPECT_EQ(param(loaded.plugin, fixture::NotesStarted), 1.0);
+    loaded.client.stopNow();
+    ASSERT_TRUE(loaded.client.pushEvent(fixture::noteEvent(CLAP_EVENT_NOTE_ON, 4, 65, 1.0), 0));
+    EXPECT_EQ(loaded.client.process(buffer.data(), 128), 0u);
+    EXPECT_EQ(loaded.client.takeFault(), ClapAudioFault::EventsWhileInactive);
 }

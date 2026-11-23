@@ -69,5 +69,7 @@ private:
     ClapAudioClient m_client;
     ClapHostedPlugin* m_plugin = nullptr;
     std::atomic<int> m_fault { 0 };
+    //! The missing pitch path is said once, not once a note.
+    bool m_noPitchPathReported = false;
 };
 }
