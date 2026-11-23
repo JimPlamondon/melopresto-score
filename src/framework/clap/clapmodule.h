@@ -15,6 +15,9 @@
 #include "modularity/imodulesetup.h"
 
 namespace muse::clap {
+class ClapModulesRepository;
+class ClapInstancesRegister;
+
 //! Hosts CLAP (CLever Audio Plug-in) instruments, beside the vst module.
 class ClapModule : public modularity::IModuleSetup
 {
@@ -25,5 +28,9 @@ public:
     void resolveImports() override;
     void onInit(const IApplication::RunMode& mode) override;
     void onDeinit() override;
+
+private:
+    std::shared_ptr<ClapModulesRepository> m_pluginModulesRepo;
+    std::shared_ptr<ClapInstancesRegister> m_pluginInstancesRegister;
 };
 }
