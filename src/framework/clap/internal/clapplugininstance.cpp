@@ -208,6 +208,9 @@ void ClapPluginInstance::sendState(const std::string& base64)
 {
     ONLY_MAIN_THREAD(threadSecurer);
 
+    LOGI() << "CLAP plug-in " << m_resourceId << ": a changed state is sent toward the score (" << base64.size()
+           << " characters of base64)";
+
     audio::AudioUnitConfig config;
     config.emplace(std::string(CLAP_STATE_KEY), base64);
     m_pluginSettingsChanges.send(config);
@@ -238,6 +241,19 @@ void ClapPluginInstance::serviceOnMainThread()
         if (doReactivate()) {
             m_restarted.notify();
         }
+    }
+
+    // The first time this plug-in gives each sign of a changed state, the log
+    // says so: it is how one finds out what a plug-in does on an edit in its editor.
+    const uint32_t signs = m_hosted->signalsSeen();
+    if (signs != m_signalsLogged) {
+        const uint32_t fresh = signs & ~m_signalsLogged;
+        m_signalsLogged = signs;
+        LOGI() << "CLAP plug-in " << m_resourceId << " signals a change of state by:"
+               << ((fresh& ClapHostedPlugin::MarkedDirty) ? " state.mark_dirty" : "")
+               << ((fresh& ClapHostedPlugin::AskedForFlush) ? " params.request_flush" : "")
+               << ((fresh& ClapHostedPlugin::AskedForRescan) ? " params.rescan" : "")
+               << ((fresh& ClapHostedPlugin::ReportedOnOutputEvents) ? " a parameter value or gesture on the output events" : "");
     }
 
     // The plug-in asked for a parameter flush: the audio side is told.

@@ -81,6 +81,7 @@ struct ClapHostExtensions {
     static void CLAP_ABI stateMarkDirty(const clap_host_t* host)
     {
         if (ClapHostedPlugin* self = clapHosted(host)) {
+            self->m_signalsSeen.fetch_or(ClapHostedPlugin::MarkedDirty);
             self->m_stateChanged.store(true);
         }
     }
@@ -94,6 +95,7 @@ struct ClapHostExtensions {
                 self->m_parametersRescanRequested.store(true);
             }
             // Whatever is to be scanned again, the state may have changed.
+            self->m_signalsSeen.fetch_or(ClapHostedPlugin::AskedForRescan);
             self->m_stateChanged.store(true);
         }
     }
@@ -110,6 +112,7 @@ struct ClapHostExtensions {
         // takes them. While playback is stopped the engine renders no block,
         // so the audio side is asked to call the parameter flush.
         if (ClapHostedPlugin* self = clapHosted(host)) {
+            self->m_signalsSeen.fetch_or(ClapHostedPlugin::AskedForFlush);
             self->m_flushRequested.store(true);
         }
     }
@@ -574,7 +577,13 @@ bool ClapHostedPlugin::takeStateChanged()
 
 void ClapHostedPlugin::markStateChanged()
 {
+    m_signalsSeen.fetch_or(ReportedOnOutputEvents);
     m_stateChanged.store(true);
+}
+
+uint32_t ClapHostedPlugin::signalsSeen() const
+{
+    return m_signalsSeen.load();
 }
 
 bool ClapHostedPlugin::takeFlushRequested()

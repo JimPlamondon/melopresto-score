@@ -99,6 +99,7 @@ private:
     std::atomic<bool> m_loadFinished { false };
     std::atomic<double> m_wantedRate { 0.0 };
     bool m_restartWanted = false;
+    uint32_t m_signalsLogged = 0;
 
     std::atomic<int> m_fault { 0 };
 

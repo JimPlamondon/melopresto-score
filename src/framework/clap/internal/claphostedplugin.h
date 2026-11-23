@@ -124,6 +124,16 @@ public:
     //! True once after the plug-in asked for a parameter flush (request_flush).
     bool takeFlushRequested();
 
+    //! Which signs of a changed state this plug-in has given so far, for the
+    //! log: it shows what a given plug-in does when a sound is changed in its editor.
+    enum Signal : uint32_t {
+        MarkedDirty = 1u << 0,
+        AskedForFlush = 1u << 1,
+        AskedForRescan = 1u << 2,
+        ReportedOnOutputEvents = 1u << 3
+    };
+    uint32_t signalsSeen() const;
+
     ClapEditorKind editorKind() const;
     bool openEditor(ClapEditorKind kind, void* nativeParent, const std::string& title, const ClapEditorCallbacks& callbacks,
                     uint32_t& width, uint32_t& height);
@@ -186,6 +196,7 @@ private:
     std::atomic<bool> m_callbackRequested { false };
     std::atomic<bool> m_restartRequested { false };
     std::atomic<bool> m_flushRequested { false };
+    std::atomic<uint32_t> m_signalsSeen { 0 };
     std::atomic<bool> m_stateChanged { false };
     std::atomic<bool> m_parametersRescanRequested { false };
 

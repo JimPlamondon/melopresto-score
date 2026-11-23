@@ -101,6 +101,7 @@ TEST(ClapStateWatchTests, AnEditorChangeWhileStoppedIsFlushedOnRequestAndItsStat
     edited.edit(fixture::Level, 0.5, fixture::FlushThenReport);
     EXPECT_EQ(edited.param(fixture::Level), 1.0) << "the plug-in applies it in its next flush or process call";
     EXPECT_TRUE(edited.plugin.takeFlushRequested()) << "request_flush is honoured";
+    EXPECT_EQ(edited.plugin.signalsSeen(), static_cast<uint32_t>(ClapHostedPlugin::AskedForFlush));
     EXPECT_FALSE(edited.plugin.takeFlushRequested());
 
     // The audio side flushes with no audio; the plug-in reports the value.
@@ -109,6 +110,8 @@ TEST(ClapStateWatchTests, AnEditorChangeWhileStoppedIsFlushedOnRequestAndItsStat
     EXPECT_EQ(edited.param(fixture::FlushCalls), 1.0);
     EXPECT_EQ(edited.param(fixture::ProcessCalls), 0.0);
     EXPECT_EQ(edited.param(fixture::ZeroFrameProcessCalls), 0.0);
+    EXPECT_EQ(edited.plugin.signalsSeen(),
+              static_cast<uint32_t>(ClapHostedPlugin::AskedForFlush | ClapHostedPlugin::ReportedOnOutputEvents));
 
     // Once the value has come to rest, the new state is reported, once.
     const int visits = edited.visitsUntilReported(state, LONG);
