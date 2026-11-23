@@ -59,7 +59,13 @@ function(setup_melo_bridge target)
     add_dependencies(melo_musescore_bridge melo_bridge_build)
     add_dependencies(${target} melo_bridge_build)
     set_target_properties(melo_musescore_bridge PROPERTIES
-                          IMPORTED_LOCATION "${MELO_BRIDGE_LIB}")
+                          IMPORTED_LOCATION "${MELO_BRIDGE_LIB}"
+                          INTERFACE_INCLUDE_DIRECTORIES "${MELO_BRIDGE_CRATE}/include")
+    # The receiver profiles are data the application loads: installed beside
+    # its other data, read when a synthesizer plug-in is opened.
+    install(DIRECTORY "${MELO_ROOT}/sdk/realtime-export/profiles/"
+            DESTINATION "${Mscore_SHARE_NAME}${Mscore_INSTALL_NAME}melo_profiles"
+            FILES_MATCHING PATTERN "*.json" PATTERN "schema.json" EXCLUDE)
     target_include_directories(${target} PRIVATE "${MELO_BRIDGE_CRATE}/include")
     target_link_libraries(${target} PRIVATE melo_musescore_bridge)
     message(STATUS "MeloPresto bridge linked from ${MELO_BRIDGE_LIB}")

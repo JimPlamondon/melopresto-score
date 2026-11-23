@@ -69,6 +69,7 @@ set(MODULE_TEST_LINK
     muse_audio
     muse_mpe
     vst3sdk
+    melo_musescore_bridge
 )
 
 set(MODULE_TEST_INCLUDE

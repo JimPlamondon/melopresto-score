@@ -53,6 +53,8 @@ public:
 
     const muse::audio::AudioResourceId& resourceId() const override;
     const std::string& name() const override;
+    const std::string& className() const override;
+    const std::string& classVersion() const override;
     VstPluginInstanceId id() const override;
 
     PluginViewPtr createView() const override;
@@ -85,6 +87,8 @@ private:
 
     VstPluginInstanceId m_id = 0;
     muse::audio::AudioResourceId m_resourceId;
+    std::string m_className;
+    std::string m_classVersion;
 
     PluginModulePtr m_module = nullptr;
     std::unique_ptr<VstPluginProvider> m_pluginProvider;

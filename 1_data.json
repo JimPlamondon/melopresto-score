@@ -1,0 +1,168 @@
+{
+  "a_name": "test",
+  "a_viewport": [
+    0,
+    0,
+    450000,
+    450000
+  ],
+  "item": {
+    "a_name": "target_test",
+    "children": [
+      {
+        "a_name": "page_1",
+        "children": [
+          {
+            "a_name": "line_1",
+            "children": [],
+            "datas": [
+              {
+                "polygons": [
+                  {
+                    "mode": 3,
+                    "polygon": [
+                      [
+                        0,
+                        0
+                      ],
+                      [
+                        120000,
+                        0
+                      ]
+                    ]
+                  }
+                ],
+                "state": 0
+              }
+            ]
+          },
+          {
+            "a_name": "line_2",
+            "children": [
+              {
+                "a_name": "line_2.2",
+                "children": [],
+                "datas": [
+                  {
+                    "polygons": [
+                      {
+                        "mode": 3,
+                        "polygon": [
+                          [
+                            0,
+                            40000
+                          ],
+                          [
+                            120000,
+                            40000
+                          ]
+                        ]
+                      }
+                    ],
+                    "state": 0
+                  }
+                ]
+              }
+            ],
+            "datas": [
+              {
+                "polygons": [
+                  {
+                    "mode": 3,
+                    "polygon": [
+                      [
+                        0,
+                        20000
+                      ],
+                      [
+                        120000,
+                        20000
+                      ]
+                    ]
+                  }
+                ],
+                "state": 0
+              }
+            ]
+          }
+        ],
+        "datas": []
+      }
+    ],
+    "datas": []
+  },
+  "states": {
+    "0": {
+      "brush": {
+        "color": "#000000",
+        "style": 1
+      },
+      "compositionMode": 0,
+      "font": {
+        "family": "",
+        "hinting": 0,
+        "italic": false,
+        "no_merging": false,
+        "pointSize": -1,
+        "type": 0,
+        "weight": 50
+      },
+      "isAntialiasing": true,
+      "pen": {
+        "capStyle": 16,
+        "color": "#00FF00",
+        "dashPattern": [],
+        "joinStyle": 64,
+        "style": 1,
+        "width": 1
+      },
+      "transform": [
+        2147483647,
+        0,
+        0,
+        0,
+        2147483647,
+        0,
+        0,
+        0,
+        1000
+      ]
+    },
+    "1": {
+      "brush": {
+        "color": "#000000",
+        "style": 1
+      },
+      "compositionMode": 0,
+      "font": {
+        "family": "",
+        "hinting": 0,
+        "italic": false,
+        "no_merging": false,
+        "pointSize": -1,
+        "type": 0,
+        "weight": 50
+      },
+      "isAntialiasing": true,
+      "pen": {
+        "capStyle": 16,
+        "color": "#00FF00",
+        "dashPattern": [],
+        "joinStyle": 64,
+        "style": 1,
+        "width": 1
+      },
+      "transform": [
+        2147483647,
+        0,
+        0,
+        0,
+        2147483647,
+        0,
+        0,
+        0,
+        1000
+      ]
+    }
+  }
+}

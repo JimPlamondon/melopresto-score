@@ -31,6 +31,7 @@
 #include "audio/engine/internal/synthesizers/abstractsynthesizer.h"
 #include "audio/engine/iaudioengineconfiguration.h"
 #include "audio/common/audiotypes.h"
+#include "global/iglobalconfiguration.h"
 #include "modularity/ioc.h"
 #include "mpe/events.h"
 
@@ -103,6 +104,7 @@ private:
 class VstSynthesiser : public muse::audio::synth::AbstractSynthesizer
 {
     GlobalInject<audio::engine::IAudioEngineConfiguration> config;
+    GlobalInject<IGlobalConfiguration> globalConfiguration;
     ContextInject<IVstInstancesRegister> instancesRegister = { this };
 
 public:
@@ -172,7 +174,20 @@ private:
     detail::PendingHostParameterQueue m_pendingHostParameters;
     std::optional<PluginParamChangeGeneration> m_pendingPersistentEditorGeneration;
     bool m_useDynamicEvents = false;
-    double m_mpePitchBendRangeSemitones = 0.0;
+
+    // What prepares the plug-in for its pitch path, drained over successive
+    // blocks: one write at most per parameter in a block.
+    VstPerNotePitchSetup m_pitchSetup;
+    size_t m_pitchSetupSent = 0;
+
+    // Pitch writes that follow a note-on by one sample. `noteOnProcessed`
+    // says the note-on's block has already been rendered.
+    struct DeferredPitchParam {
+        ParamChangeEvent change {};
+        bool noteOnProcessed = false;
+    };
+    std::array<DeferredPitchParam, 32> m_deferredPitchParams {};
+    size_t m_deferredPitchParamCount = 0;
 
     audio::samples_t m_currentPositionSamples = 0;
 };

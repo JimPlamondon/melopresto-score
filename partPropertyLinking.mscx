@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<museScore version="4.70">
+  <Score>
+    <eid>B_B</eid>
+    <Division>480</Division>
+    <Style>
+      <pageNumberFontSize>9</pageNumberFontSize>
+      <pageNumberFontStyle>0</pageNumberFontStyle>
+      <pageNumberMusicalSymbolSize>9</pageNumberMusicalSymbolSize>
+      <spatium>1.75</spatium>
+      </Style>
+    <showInvisible>1</showInvisible>
+    <showUnprintable>1</showUnprintable>
+    <showFrames>1</showFrames>
+    <showMargins>0</showMargins>
+    <open>1</open>
+    <metaTag name="arranger"></metaTag>
+    <metaTag name="composer">Composer / arranger</metaTag>
+    <metaTag name="copyright"></metaTag>
+    <metaTag name="lyricist"></metaTag>
+    <metaTag name="movementNumber"></metaTag>
+    <metaTag name="movementTitle"></metaTag>
+    <metaTag name="source"></metaTag>
+    <metaTag name="subtitle">Subtitle</metaTag>
+    <metaTag name="translator"></metaTag>
+    <metaTag name="workNumber"></metaTag>
+    <metaTag name="workTitle">Untitled score</metaTag>
+    <Order id="orchestral">
+      <name>Orchestral</name>
+      <instrument id="flute">
+        <family id="flutes">Flutes</family>
+        </instrument>
+      <section id="woodwind" brackets="true" barLineSpan="true" thinBrackets="true">
+        <family>flutes</family>
+        <family>oboes</family>
+        <family>clarinets</family>
+        <family>saxophones</family>
+        <family>bassoons</family>
+        <unsorted group="woodwinds"/>
+        </section>
+      <section id="brass" brackets="true" barLineSpan="true" thinBrackets="true">
+        <family>horns</family>
+        <family>trumpets</family>
+        <family>cornets</family>
+        <family>flugelhorns</family>
+        <family>trombones</family>
+        <family>tubas</family>
+        </section>
+      <section id="timpani" brackets="true" barLineSpan="true" thinBrackets="true">
+        <family>timpani</family>
+        </section>
+      <section id="percussion" brackets="true" barLineSpan="true" thinBrackets="true">
+        <family>keyboard-percussion</family>
+        <family>drums</family>
+        <family>unpitched-metal-percussion</family>
+        <family>unpitched-wooden-percussion</family>
+        <family>other-percussion</family>
+        </section>
+      <family>keyboards</family>
+      <family>harps</family>
+      <family>organs</family>
+      <family>synths</family>
+      <soloists/>
+      <section id="voices" brackets="true" barLineSpan="false" thinBrackets="true">
+        <family>voices</family>
+        <family>voice-groups</family>
+        </section>
+      <section id="strings" brackets="true" barLineSpan="true" thinBrackets="true">
+        <family>orchestral-strings</family>
+        </section>
+      <unsorted/>
+      </Order>
+    <Part id="1">
+      <Staff>
+        <eid>C_C</eid>
+        <StaffType group="pitched">
+          <name>stdNormal</name>
+          </StaffType>
+        </Staff>
+      <trackName>Flute</trackName>
+      <Instrument id="flute">
+        <longName>Flute</longName>
+        <shortName>Fl.</shortName>
+        <trackName>Flute</trackName>
+        <minPitchP>59</minPitchP>
+        <maxPitchP>98</maxPitchP>
+        <minPitchA>60</minPitchA>
+        <maxPitchA>93</maxPitchA>
+        <instrumentId>wind.flutes.flute</instrumentId>
+        <Channel>
+          <program value="73"/>
+          </Channel>
+        </Instrument>
+      </Part>
+    <Staff id="1">
+      <VBox>
+        <height>10</height>
+        <eid>D_D</eid>
+        </VBox>
+      <Measure>
+        <eid>E_E</eid>
+        <voice>
+          <KeySig>
+            <eid>F_F</eid>
+            <concertKey>0</concertKey>
+            </KeySig>
+          <TimeSig>
+            <eid>G_G</eid>
+            <sigN>4</sigN>
+            <sigD>4</sigD>
+            </TimeSig>
+          <Dynamic>
+            <subtype>mf</subtype>
+            <velocity>80</velocity>
+            <eid>H_H</eid>
+            </Dynamic>
+          <Chord>
+            <eid>I_I</eid>
+            <durationType>whole</durationType>
+            <Note>
+              <eid>J_J</eid>
+              <pitch>72</pitch>
+              <tpc>14</tpc>
+              </Note>
+            </Chord>
+          </voice>
+        </Measure>
+      </Staff>
+    <Score>
+      <eid>K_K</eid>
+      <name>Flute</name>
+      <Division>480</Division>
+      <Style>
+        <spatium>1.75</spatium>
+        </Style>
+      <showInvisible>1</showInvisible>
+      <showUnprintable>1</showUnprintable>
+      <showFrames>1</showFrames>
+      <showMargins>0</showMargins>
+      <metaTag name="partName">Flute</metaTag>
+      <Part id="1">
+        <Staff>
+          <eid>L_L</eid>
+          <linkedTo>C_C</linkedTo>
+          <StaffType group="pitched">
+            <name>stdNormal</name>
+            </StaffType>
+          </Staff>
+        <trackName>Flute</trackName>
+        <Instrument id="flute">
+          <longName>Flute</longName>
+          <shortName>Fl.</shortName>
+          <trackName>Flute</trackName>
+          <minPitchP>59</minPitchP>
+          <maxPitchP>98</maxPitchP>
+          <minPitchA>60</minPitchA>
+          <maxPitchA>93</maxPitchA>
+          <instrumentId>wind.flutes.flute</instrumentId>
+          <Channel>
+            <program value="73"/>
+            </Channel>
+          </Instrument>
+        </Part>
+      <Staff id="1">
+        <VBox>
+          <height>10</height>
+          <eid>M_M</eid>
+          <linkedTo>D_D</linkedTo>
+          <Text>
+            <eid>N_N</eid>
+            <style>instrument_excerpt</style>
+            <text>Flute</text>
+            </Text>
+          </VBox>
+        <Measure>
+          <eid>O_O</eid>
+          <voice>
+            <KeySig>
+              <eid>P_P</eid>
+              <linkedTo>F_F</linkedTo>
+              <concertKey>0</concertKey>
+              </KeySig>
+            <TimeSig>
+              <eid>Q_Q</eid>
+              <linkedTo>G_G</linkedTo>
+              <sigN>4</sigN>
+              <sigD>4</sigD>
+              </TimeSig>
+            <Dynamic>
+              <subtype>mf</subtype>
+              <velocity>80</velocity>
+              <eid>R_R</eid>
+              <linkedTo>H_H</linkedTo>
+              </Dynamic>
+            <Chord>
+              <eid>S_S</eid>
+              <linkedTo>I_I</linkedTo>
+              <durationType>whole</durationType>
+              <Note>
+                <eid>T_T</eid>
+                <linkedTo>J_J</linkedTo>
+                <pitch>72</pitch>
+                <tpc>14</tpc>
+                </Note>
+              </Chord>
+            </voice>
+          </Measure>
+        </Staff>
+      </Score>
+    </Score>
+  </museScore>

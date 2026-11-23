@@ -1,0 +1,206 @@
+{
+  "a_name": "test",
+  "a_viewport": [
+    0,
+    0,
+    300000,
+    300000
+  ],
+  "item": {
+    "a_name": "target_test",
+    "children": [],
+    "datas": [
+      {
+        "paths": [
+          {
+            "brush": {
+              "color": "#FFFFFF",
+              "style": 1
+            },
+            "mode": 2,
+            "path": {
+              "elements": [
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  300000,
+                  0
+                ],
+                [
+                  1,
+                  300000,
+                  300000
+                ],
+                [
+                  1,
+                  0,
+                  300000
+                ],
+                [
+                  1,
+                  0,
+                  0
+                ]
+              ],
+              "fillRule": 0
+            },
+            "pen": {
+              "capStyle": 16,
+              "color": "#000000",
+              "dashPattern": [],
+              "joinStyle": 64,
+              "style": 1,
+              "width": 1
+            }
+          }
+        ],
+        "state": 0
+      },
+      {
+        "polygons": [
+          {
+            "mode": 3,
+            "polygon": [
+              [
+                0,
+                0
+              ],
+              [
+                120000,
+                0
+              ]
+            ]
+          },
+          {
+            "mode": 3,
+            "polygon": [
+              [
+                0,
+                20000
+              ],
+              [
+                120000,
+                20000
+              ]
+            ]
+          }
+        ],
+        "state": 1
+      }
+    ]
+  },
+  "states": {
+    "0": {
+      "brush": {
+        "color": "#FFFFFF",
+        "style": 1
+      },
+      "compositionMode": 0,
+      "font": {
+        "family": "",
+        "hinting": 0,
+        "italic": false,
+        "no_merging": false,
+        "pointSize": -1,
+        "type": 0,
+        "weight": 50
+      },
+      "isAntialiasing": false,
+      "pen": {
+        "capStyle": 16,
+        "color": "#000000",
+        "dashPattern": [],
+        "joinStyle": 64,
+        "style": 1,
+        "width": 1
+      },
+      "transform": [
+        1000,
+        0,
+        0,
+        0,
+        1000,
+        0,
+        0,
+        0,
+        1000
+      ]
+    },
+    "1": {
+      "brush": {
+        "color": "#FFFFFF",
+        "style": 1
+      },
+      "compositionMode": 0,
+      "font": {
+        "family": "",
+        "hinting": 0,
+        "italic": false,
+        "no_merging": false,
+        "pointSize": -1,
+        "type": 0,
+        "weight": 50
+      },
+      "isAntialiasing": false,
+      "pen": {
+        "capStyle": 16,
+        "color": "#00FF00",
+        "dashPattern": [],
+        "joinStyle": 64,
+        "style": 1,
+        "width": 1
+      },
+      "transform": [
+        1000,
+        0,
+        0,
+        0,
+        1000,
+        0,
+        60000,
+        30000,
+        1000
+      ]
+    },
+    "2": {
+      "brush": {
+        "color": "#FFFFFF",
+        "style": 1
+      },
+      "compositionMode": 0,
+      "font": {
+        "family": "",
+        "hinting": 0,
+        "italic": false,
+        "no_merging": false,
+        "pointSize": -1,
+        "type": 0,
+        "weight": 50
+      },
+      "isAntialiasing": false,
+      "pen": {
+        "capStyle": 16,
+        "color": "#00FF00",
+        "dashPattern": [],
+        "joinStyle": 64,
+        "style": 1,
+        "width": 1
+      },
+      "transform": [
+        1000,
+        0,
+        0,
+        0,
+        1000,
+        0,
+        0,
+        0,
+        1000
+      ]
+    }
+  }
+}

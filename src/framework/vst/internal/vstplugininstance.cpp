@@ -116,6 +116,16 @@ const std::string& VstPluginInstance::name() const
     return m_resourceId;
 }
 
+const std::string& VstPluginInstance::className() const
+{
+    return m_className;
+}
+
+const std::string& VstPluginInstance::classVersion() const
+{
+    return m_classVersion;
+}
+
 VstPluginInstanceId VstPluginInstance::id() const
 {
     return m_id;
@@ -158,6 +168,8 @@ void VstPluginInstance::load()
             }
 
             m_pluginProvider = std::make_unique<VstPluginProvider>(factory, classInfo);
+            m_className = classInfo.name();
+            m_classVersion = classInfo.version();
             break;
         }
 

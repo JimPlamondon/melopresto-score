@@ -11,50 +11,84 @@
 
 #include <array>
 #include <cstddef>
+#include <string>
 
 #include "vsttypes.h"
 
+struct MeloRealtimeProjector;
+
 namespace muse::vst {
+//! MIDI controllers 0 to 127, channel pressure (128) and pitch bend (129).
+inline constexpr size_t VST_MIDI_CONTROLLER_COUNT = 130;
+
 struct VstPerNotePitchConfig {
-    bool tuningExpression = false;
-    double mpePitchBendRangeSemitones = 0.0;
-    std::array<PluginParamId, 16> pitchBendParams {};
+    //! The name and version the plug-in states for itself.
+    std::string pluginName;
+    std::string pluginVersion;
+    //! The folder of MeloPresto receiver profiles; empty for none.
+    std::string profilesFolder;
+    //! The plug-in lists the VST3 tuning note expression.
+    bool advertisesTuningExpression = false;
+    //! The parameter the plug-in maps to each MIDI controller on each channel.
+    std::array<std::array<PluginParamId, VST_MIDI_CONTROLLER_COUNT>, 16> midiParams {};
 
     VstPerNotePitchConfig();
 };
 
-struct VstPerNotePitchOutput {
-    std::array<VstEvent, 2> events {};
-    std::array<ParamChangeEvent, 1> params {};
-    size_t eventCount = 0;
-    size_t paramCount = 0;
-    bool paramsBeforeEvents = false;
+struct VstPerNotePitchParam {
+    ParamChangeEvent change {};
+    //! Deliver one sample after the note-on of the same event; otherwise before it.
+    bool afterNoteOn = false;
 };
 
-//! Converts the canonical VST3 note sent by MuseScore into a pitch path the
-//! selected unmodified instrument explicitly supports. The caller retains
-//! the canonical event for downstream effects before applying this adapter.
+struct VstPerNotePitchOutput {
+    std::array<VstEvent, 2> events {};
+    std::array<VstPerNotePitchParam, 2> params {};
+    size_t eventCount = 0;
+    size_t paramCount = 0;
+};
+
+//! The parameter writes that prepare the plug-in before any note, in order.
+struct VstPerNotePitchSetup {
+    std::array<ParamChangeEvent, 96> params {};
+    size_t count = 0;
+};
+
+//! Converts the canonical VST3 note sent by MuseScore into the pitch path
+//! selected for the unmodified instrument. The selection and every decision
+//! come from the MeloPresto shared projector (melo_realtime_projector.h), the
+//! same one every MeloPresto application uses; this class only carries its
+//! records. The caller retains the canonical event for downstream effects
+//! before applying this adapter.
 class VstPerNotePitchAdapter
 {
 public:
-    void configure(const VstPerNotePitchConfig& config);
+    enum class Mode {
+        KeyNumberOnly, TuningExpression, NoteOnTuning, Mpe
+    };
+
+    VstPerNotePitchAdapter() = default;
+    ~VstPerNotePitchAdapter();
+    VstPerNotePitchAdapter(const VstPerNotePitchAdapter&) = delete;
+    VstPerNotePitchAdapter& operator=(const VstPerNotePitchAdapter&) = delete;
+
+    //! Not on the audio thread: reads the profiles. Returns an empty string,
+    //! or what went wrong; the adapter is usable either way.
+    std::string configure(const VstPerNotePitchConfig& config);
     void reset();
     VstPerNotePitchOutput adapt(const VstEvent& event);
 
-private:
-    struct ActiveNote {
-        int32_t noteId = -1;
-        enum class Mode {
-            TuningExpression, Mpe
-        } mode = Mode::TuningExpression;
-        int16_t channel = 0;
-    };
+    VstPerNotePitchSetup setup();
+    Mode mode() const;
+    const std::string& profileId() const;
 
-    int16_t allocateMpeChannel() const;
-    ActiveNote* findActiveNote(int32_t noteId);
-    void rememberNote(int32_t noteId, ActiveNote::Mode mode, int16_t channel);
+private:
+    void release();
+    PluginParamId midiParam(int16_t channel, int16_t controller) const;
 
     VstPerNotePitchConfig m_config;
-    std::array<ActiveNote, 128> m_activeNotes {};
+    MeloRealtimeProjector* m_projector = nullptr;
+    Mode m_mode = Mode::KeyNumberOnly;
+    std::string m_profileId;
 };
 }
