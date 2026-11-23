@@ -10,70 +10,147 @@
 
 #include "vstpernotepitchadapter.h"
 
-#include <algorithm>
-#include <cmath>
+#include "melo_realtime_projector.h"
 
 using namespace muse::vst;
 
-VstPerNotePitchConfig::VstPerNotePitchConfig()
+namespace {
+//! A projector voice token is never zero; a VST3 note id may be.
+uint64_t voiceOf(const int32_t noteId)
 {
-    pitchBendParams.fill(Steinberg::Vst::kNoParamId);
+    return static_cast<uint64_t>(noteId) + 1;
 }
 
-void VstPerNotePitchAdapter::configure(const VstPerNotePitchConfig& config)
+MeloRealtimeProjector* createProjector(const VstPerNotePitchConfig& config, const bool withProfiles, MeloProjectorPlan& plan,
+                                       std::string& problem)
 {
+    char error[512] = {};
+    MeloRealtimeProjector* projector = melo_realtime_projector_create(
+        withProfiles && !config.profilesFolder.empty() ? config.profilesFolder.c_str() : nullptr,
+        config.pluginName.c_str(), config.pluginVersion.c_str(), config.advertisesTuningExpression ? 1u : 0u,
+        &plan, error, sizeof(error));
+    if (!projector) {
+        problem = error;
+    }
+    return projector;
+}
+}
+
+VstPerNotePitchConfig::VstPerNotePitchConfig()
+{
+    for (auto& channel : midiParams) {
+        channel.fill(Steinberg::Vst::kNoParamId);
+    }
+}
+
+VstPerNotePitchAdapter::~VstPerNotePitchAdapter()
+{
+    release();
+}
+
+void VstPerNotePitchAdapter::release()
+{
+    melo_realtime_projector_destroy(m_projector);
+    m_projector = nullptr;
+}
+
+std::string VstPerNotePitchAdapter::configure(const VstPerNotePitchConfig& config)
+{
+    release();
     m_config = config;
-    reset();
+    m_mode = Mode::KeyNumberOnly;
+    m_profileId.clear();
+
+    std::string problem;
+    MeloProjectorPlan plan {};
+    m_projector = createProjector(config, true, plan, problem);
+    if (!m_projector) {
+        // With no readable profiles, the plug-in's own report still decides.
+        std::string ignored;
+        m_projector = createProjector(config, false, plan, ignored);
+        if (!m_projector) {
+            return problem;
+        }
+    }
+
+    // MPE reaches the plug-in only through the parameters it maps to MIDI
+    // pitch bend; a plug-in that maps none is sent key numbers alone.
+    if (plan.mode == MELO_PROJECTOR_MODE_MPE && midiParam(1, Steinberg::Vst::kPitchBend) == Steinberg::Vst::kNoParamId) {
+        problem = "the profile selects MPE and the plug-in maps no parameter to MIDI pitch bend";
+        VstPerNotePitchConfig unprofiled = config;
+        unprofiled.advertisesTuningExpression = false;
+        release();
+        std::string ignored;
+        m_projector = createProjector(unprofiled, false, plan, ignored);
+        if (!m_projector) {
+            return problem;
+        }
+    }
+
+    switch (plan.mode) {
+    case MELO_PROJECTOR_MODE_VST3_TUNING_EXPRESSION: m_mode = Mode::TuningExpression;
+        break;
+    case MELO_PROJECTOR_MODE_VST3_NOTE_ON_TUNING: m_mode = Mode::NoteOnTuning;
+        break;
+    case MELO_PROJECTOR_MODE_MPE: m_mode = Mode::Mpe;
+        break;
+    default: m_mode = Mode::KeyNumberOnly;
+        break;
+    }
+    m_profileId = plan.profile_id;
+    return problem;
 }
 
 void VstPerNotePitchAdapter::reset()
 {
-    for (ActiveNote& note : m_activeNotes) {
-        note.noteId = -1;
+    if (!m_projector) {
+        return;
     }
+    MeloProjectorInput input {};
+    input.kind = MELO_PROJECTOR_INPUT_RESET;
+    uint32_t count = 0;
+    melo_realtime_projector_project(m_projector, &input, nullptr, 0, &count);
 }
 
-int16_t VstPerNotePitchAdapter::allocateMpeChannel() const
+VstPerNotePitchAdapter::Mode VstPerNotePitchAdapter::mode() const
 {
-    for (int16_t channel = 1; channel < 16; ++channel) {
-        if (m_config.pitchBendParams[channel] == Steinberg::Vst::kNoParamId) {
-            continue;
-        }
-        bool inUse = false;
-        for (const ActiveNote& note : m_activeNotes) {
-            if (note.noteId >= 0 && note.mode == ActiveNote::Mode::Mpe && note.channel == channel) {
-                inUse = true;
-                break;
-            }
-        }
-        if (!inUse) {
-            return channel;
-        }
-    }
-    return -1;
+    return m_mode;
 }
 
-VstPerNotePitchAdapter::ActiveNote* VstPerNotePitchAdapter::findActiveNote(const int32_t noteId)
+const std::string& VstPerNotePitchAdapter::profileId() const
 {
-    const auto note = std::find_if(m_activeNotes.begin(), m_activeNotes.end(), [noteId](const ActiveNote& active) {
-        return active.noteId == noteId;
-    });
-    return note == m_activeNotes.end() ? nullptr : &*note;
+    return m_profileId;
 }
 
-void VstPerNotePitchAdapter::rememberNote(const int32_t noteId, const ActiveNote::Mode mode, const int16_t channel)
+PluginParamId VstPerNotePitchAdapter::midiParam(const int16_t channel, const int16_t controller) const
 {
-    ActiveNote* slot = findActiveNote(noteId);
-    if (!slot) {
-        const auto free = std::find_if(m_activeNotes.begin(), m_activeNotes.end(), [](const ActiveNote& active) {
-            return active.noteId < 0;
-        });
-        if (free == m_activeNotes.end()) {
-            return;
-        }
-        slot = &*free;
+    if (channel < 0 || channel >= 16 || controller < 0 || static_cast<size_t>(controller) >= VST_MIDI_CONTROLLER_COUNT) {
+        return Steinberg::Vst::kNoParamId;
     }
-    *slot = ActiveNote { noteId, mode, channel };
+    return m_config.midiParams[channel][controller];
+}
+
+VstPerNotePitchSetup VstPerNotePitchAdapter::setup()
+{
+    VstPerNotePitchSetup result;
+    if (!m_projector) {
+        return result;
+    }
+    std::array<MeloProjectorRecord, MELO_PROJECTOR_SETUP_RECORDS> records {};
+    MeloProjectorInput input {};
+    input.kind = MELO_PROJECTOR_INPUT_SETUP;
+    uint32_t count = 0;
+    if (melo_realtime_projector_project(m_projector, &input, records.data(), MELO_PROJECTOR_SETUP_RECORDS, &count)
+        != MELO_PROJECTOR_OK) {
+        return result;
+    }
+    for (uint32_t i = 0; i < count; ++i) {
+        const PluginParamId param = midiParam(records[i].channel, records[i].controller);
+        if (records[i].kind == MELO_PROJECTOR_RECORD_MIDI_CONTROLLER_WRITE && param != Steinberg::Vst::kNoParamId) {
+            result.params[result.count++] = ParamChangeEvent { param, records[i].value };
+        }
+    }
+    return result;
 }
 
 VstPerNotePitchOutput VstPerNotePitchAdapter::adapt(const VstEvent& event)
@@ -82,9 +159,54 @@ VstPerNotePitchOutput VstPerNotePitchAdapter::adapt(const VstEvent& event)
     output.events[0] = event;
     output.eventCount = 1;
 
-    if (event.type == VstEvent::kNoteOnEvent && event.noteOn.noteId >= 0) {
-        if (m_config.tuningExpression) {
-            output.events[0].noteOn.tuning = 0.f;
+    const bool noteOn = event.type == VstEvent::kNoteOnEvent && event.noteOn.noteId >= 0;
+    const bool noteOff = event.type == VstEvent::kNoteOffEvent && event.noteOff.noteId >= 0;
+    if (!m_projector || (!noteOn && !noteOff)) {
+        return output;
+    }
+
+    MeloProjectorInput input {};
+    if (noteOn) {
+        input.kind = MELO_PROJECTOR_INPUT_NOTE_START;
+        input.voice = voiceOf(event.noteOn.noteId);
+        input.key_number = event.noteOn.pitch;
+        input.cents = event.noteOn.tuning;
+        input.strength = event.noteOn.velocity;
+    } else {
+        input.kind = MELO_PROJECTOR_INPUT_NOTE_END;
+        input.voice = voiceOf(event.noteOff.noteId);
+    }
+
+    std::array<MeloProjectorRecord, 4> records {};
+    uint32_t count = 0;
+    const int32_t status = melo_realtime_projector_project(m_projector, &input, records.data(), 4, &count);
+    if (status != MELO_PROJECTOR_OK) {
+        // A note the projector cannot place is left out whole. A release the
+        // projector does not know (a note from before a reset) passes as it is,
+        // unless it belongs to a note that was left out.
+        if (noteOn || status != MELO_PROJECTOR_VOICE_UNKNOWN || m_mode == Mode::Mpe) {
+            output.eventCount = 0;
+        }
+        return output;
+    }
+
+    output.eventCount = 0;
+    for (uint32_t i = 0; i < count; ++i) {
+        const MeloProjectorRecord& record = records[i];
+        switch (record.kind) {
+        case MELO_PROJECTOR_RECORD_NOTE_ON: {
+            VstEvent on = event;
+            on.noteOn.channel = record.channel;
+            on.noteOn.tuning = record.tuning_cents;
+            output.events[output.eventCount++] = on;
+        } break;
+        case MELO_PROJECTOR_RECORD_NOTE_OFF: {
+            VstEvent off = event;
+            off.noteOff.channel = record.channel;
+            off.noteOff.tuning = 0.f;
+            output.events[output.eventCount++] = off;
+        } break;
+        case MELO_PROJECTOR_RECORD_TUNING_EXPRESSION: {
             VstEvent expression {};
             expression.busIndex = event.busIndex;
             expression.sampleOffset = event.sampleOffset;
@@ -93,46 +215,19 @@ VstPerNotePitchOutput VstPerNotePitchAdapter::adapt(const VstEvent& event)
             expression.type = VstEvent::kNoteExpressionValueEvent;
             expression.noteExpressionValue.typeId = Steinberg::Vst::kTuningTypeID;
             expression.noteExpressionValue.noteId = event.noteOn.noteId;
-            expression.noteExpressionValue.value = std::clamp(0.5 + event.noteOn.tuning / 24000.0, 0.0, 1.0);
-            output.events[1] = expression;
-            output.eventCount = 2;
-            rememberNote(event.noteOn.noteId, ActiveNote::Mode::TuningExpression, event.noteOn.channel);
-            return output;
-        }
-
-        const double rangeCents = m_config.mpePitchBendRangeSemitones * 100.0;
-        if (rangeCents > 0.0 && std::abs(event.noteOn.tuning) <= rangeCents) {
-            const int16_t channel = allocateMpeChannel();
-            if (channel >= 0) {
-                output.events[0].noteOn.channel = channel;
-                output.events[0].noteOn.tuning = 0.f;
-                output.params[0] = ParamChangeEvent {
-                    m_config.pitchBendParams[channel],
-                    std::clamp(0.5 + event.noteOn.tuning / (2.0 * rangeCents), 0.0, 1.0)
-                };
-                output.paramCount = 1;
-                output.paramsBeforeEvents = true;
-                rememberNote(event.noteOn.noteId, ActiveNote::Mode::Mpe, channel);
+            expression.noteExpressionValue.value = record.value;
+            output.events[output.eventCount++] = expression;
+        } break;
+        case MELO_PROJECTOR_RECORD_MIDI_CONTROLLER_WRITE: {
+            const PluginParamId param = midiParam(record.channel, record.controller);
+            if (param != Steinberg::Vst::kNoParamId && output.paramCount < output.params.size()) {
+                output.params[output.paramCount++] = VstPerNotePitchParam { ParamChangeEvent { param, record.value },
+                                                                            record.after_note_on != 0 };
             }
+        } break;
+        default:
+            break;
         }
-        return output;
     }
-
-    if (event.type != VstEvent::kNoteOffEvent || event.noteOff.noteId < 0) {
-        return output;
-    }
-
-    ActiveNote* active = findActiveNote(event.noteOff.noteId);
-    if (!active) {
-        return output;
-    }
-    if (active->mode == ActiveNote::Mode::TuningExpression) {
-        output.events[0].noteOff.tuning = 0.f;
-    } else {
-        const int16_t channel = active->channel;
-        output.events[0].noteOff.channel = channel;
-        output.events[0].noteOff.tuning = 0.f;
-    }
-    active->noteId = -1;
     return output;
 }

@@ -102,6 +102,8 @@ public:
 
     const muse::audio::AudioResourceId& resourceId() const override { return m_resourceId; }
     const std::string& name() const override { return m_name; }
+    const std::string& className() const override { return m_name; }
+    const std::string& classVersion() const override { return m_name; }
     VstPluginInstanceId id() const override { return 1; }
     bool isLoaded() const override { return true; }
     muse::async::Notification loadingCompleted() const override { return {}; }

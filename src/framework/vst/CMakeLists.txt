@@ -78,7 +78,9 @@ target_sources(muse_vst PRIVATE
     widgets/vstviewdialog_qwidget.h
 )
 
-target_link_libraries(muse_vst PRIVATE vst3sdk)
+# The per-note pitch adapter takes its decisions from the MeloPresto shared
+# projector, which the bridge static library carries.
+target_link_libraries(muse_vst PRIVATE vst3sdk melo_musescore_bridge)
 
 if (MUSE_QT_SUPPORT)
     list(APPEND MODULE_LINK Qt::Qml Qt::Widgets)

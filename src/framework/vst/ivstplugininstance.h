@@ -36,6 +36,10 @@ public:
 
     virtual const muse::audio::AudioResourceId& resourceId() const = 0;
     virtual const std::string& name() const = 0;
+    //! The name and version the plug-in states for itself in its class
+    //! information; a MeloPresto receiver profile is matched by them.
+    virtual const std::string& className() const = 0;
+    virtual const std::string& classVersion() const = 0;
     virtual VstPluginInstanceId id() const = 0;
 
     virtual bool isLoaded() const = 0;

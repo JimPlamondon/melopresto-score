@@ -54,7 +54,7 @@ public:
     void setVolumeGain(const muse::audio::gain_t newVolumeGain);
 
     bool handleEvent(const VstEvent& event);
-    bool handleParamChange(const ParamChangeEvent& param);
+    bool handleParamChange(const ParamChangeEvent& param, int32_t sampleOffset = 0);
     // A score-owned value must survive transport flushes. Unlike automation
     // and note-expression parameter events, it is not reset to the plug-in
     // default when playback stops.
@@ -96,7 +96,7 @@ private:
 
     void flushBuffers();
 
-    void addParamChange(const ParamChangeEvent& param);
+    void addParamChange(const ParamChangeEvent& param, int32_t sampleOffset = 0);
     void rememberPersistentParam(const ParamChangeEvent& param);
     void restagePersistentParams();
     bool processIdleParamChange(const ParamChangeEvent& param);

@@ -33,7 +33,8 @@ using namespace muse::audio::synth;
 using namespace muse::audio;
 using namespace muse::audioplugins;
 
-static constexpr std::string_view MELO_MPE_PITCH_BEND_RANGE_KEY = "meloMpePitchBendRangeSemitones";
+//! The folder of MeloPresto receiver profiles, beside the application's other data.
+static constexpr std::string_view MELO_PROFILES_FOLDER = "melo_profiles";
 
 static const std::set<Steinberg::Vst::CtrlNumber> SUPPORTED_CONTROLLERS = {
     Steinberg::Vst::kCtrlVolume,
@@ -115,23 +116,26 @@ void VstSynthesiser::init(const OutputSpec& spec)
         const VstNoteExpressionCapabilities noteExpressionCapabilities = m_vstAudioClient->noteExpressionCapabilities();
         m_sequencer.init(m_vstAudioClient->paramsMapping(SUPPORTED_CONTROLLERS), m_useDynamicEvents,
                          noteExpressionCapabilities);
+        // One selection for this plug-in, made by the MeloPresto shared code
+        // from its receiver profile, if one matches the name and version the
+        // plug-in states, and from what the plug-in itself lists.
         VstPerNotePitchConfig pitchConfig;
-        pitchConfig.tuningExpression = noteExpressionCapabilities.tuning;
-        const auto range = m_params.configuration.find(MELO_MPE_PITCH_BEND_RANGE_KEY.data());
-        if (range != m_params.configuration.end()) {
-            try {
-                pitchConfig.mpePitchBendRangeSemitones = std::stod(range->second);
-            } catch (...) {
-                LOGW() << "Invalid MPE pitch-bend range for " << m_params.resourceMeta.id;
+        pitchConfig.pluginName = m_pluginPtr->className();
+        pitchConfig.pluginVersion = m_pluginPtr->classVersion();
+        pitchConfig.profilesFolder = (globalConfiguration()->appDataPath() + MELO_PROFILES_FOLDER.data()).toStdString();
+        pitchConfig.advertisesTuningExpression = noteExpressionCapabilities.tuning;
+        for (int16_t channel = 0; channel < 16; ++channel) {
+            for (size_t controller = 0; controller < VST_MIDI_CONTROLLER_COUNT; ++controller) {
+                pitchConfig.midiParams[channel][controller]
+                    = m_vstAudioClient->midiControllerParam(static_cast<Steinberg::Vst::CtrlNumber>(controller), channel);
             }
         }
-        m_mpePitchBendRangeSemitones = pitchConfig.mpePitchBendRangeSemitones;
-        if (pitchConfig.mpePitchBendRangeSemitones > 0.0) {
-            for (int16_t channel = 1; channel < 16; ++channel) {
-                pitchConfig.pitchBendParams[channel] = m_vstAudioClient->midiControllerParam(Steinberg::Vst::kPitchBend, channel);
-            }
+        const std::string pitchProblem = m_perNotePitchAdapter.configure(pitchConfig);
+        if (!pitchProblem.empty()) {
+            LOGW() << "MeloPresto pitch path for " << m_params.resourceMeta.id << ": " << pitchProblem;
         }
-        m_perNotePitchAdapter.configure(pitchConfig);
+        LOGI() << "MeloPresto pitch path for " << m_params.resourceMeta.id << ": mode "
+               << static_cast<int>(m_perNotePitchAdapter.mode()) << ", profile \"" << m_perNotePitchAdapter.profileId() << "\"";
         m_pluginPtr->pluginParamChanged().onReceive(this, [this](PluginParamId id, PluginParamValue normalized,
                                                                  PluginParamChangeGeneration generation) {
             // Editor values are normalized already. Treat them as score-owned
@@ -263,6 +267,7 @@ void VstSynthesiser::flushSound()
 {
     m_sequencer.flushOffstream();
     m_perNotePitchAdapter.reset();
+    m_deferredPitchParamCount = 0;
     m_vstAudioClient->flushSound();
 }
 
@@ -323,32 +328,12 @@ void VstSynthesiser::requestConfigRefreshAfterPersistentDelivery()
 
 void VstSynthesiser::configureMpeInput()
 {
-    if (m_mpePitchBendRangeSemitones <= 0.0) {
-        return;
-    }
-
-    const auto sendController = [this](const int16_t channel, const Steinberg::Vst::CtrlNumber controller,
-                                       const double sevenBitValue) {
-        const PluginParamId param = m_vstAudioClient->midiControllerParam(controller, channel);
-        if (param != Steinberg::Vst::kNoParamId) {
-            m_vstAudioClient->handleParamChange(ParamChangeEvent { param, sevenBitValue / 127.0 });
-        }
-    };
-
-    // MIDI Polyphonic Expression lower zone: manager channel 1 (zero-based
-    // channel 0), member channels 2-16. Registered Parameter Number 6/0
-    // enables all 15 members. Registered Parameter Number 0/0 sets the
-    // member pitch-bend range. These are ordinary controller assignments
-    // exposed by the unmodified VST3 controller through IMidiMapping.
-    sendController(0, Steinberg::Vst::kCtrlRPNSelectLSB, 6.0);
-    sendController(0, Steinberg::Vst::kCtrlRPNSelectMSB, 0.0);
-    sendController(0, Steinberg::Vst::kCtrlDataEntryMSB, 15.0);
-    for (int16_t channel = 1; channel < 16; ++channel) {
-        sendController(channel, Steinberg::Vst::kCtrlRPNSelectLSB, 0.0);
-        sendController(channel, Steinberg::Vst::kCtrlRPNSelectMSB, 0.0);
-        sendController(channel, Steinberg::Vst::kCtrlDataEntryMSB,
-                       std::clamp(m_mpePitchBendRangeSemitones, 0.0, 127.0));
-    }
+    // The writes that prepare the plug-in come from the shared projector:
+    // the MPE configuration message only for a plug-in that takes it, the
+    // bend-range message only where the range is settable. They are
+    // delivered by processSequence.
+    m_pitchSetup = m_perNotePitchAdapter.setup();
+    m_pitchSetupSent = 0;
 }
 
 muse::audio::msecs_t VstSynthesiser::playbackPosition() const
@@ -435,6 +420,33 @@ const AudioNoteEvents& VstSynthesiser::noteEvents() const
 samples_t VstSynthesiser::processSequence(const VstSequencer::EventSequence& sequence, const samples_t sequenceSampleOffset,
                                           const samples_t samples, float* buffer)
 {
+    // A plug-in may keep only the last write to a parameter in one block, so a
+    // block carries one preparation write at most per parameter.
+    const size_t setupBlockStart = m_pitchSetupSent;
+    while (m_pitchSetupSent < m_pitchSetup.count) {
+        const ParamChangeEvent& next = m_pitchSetup.params[m_pitchSetupSent];
+        bool repeated = false;
+        for (size_t i = setupBlockStart; i < m_pitchSetupSent; ++i) {
+            repeated = repeated || m_pitchSetup.params[i].paramId == next.paramId;
+        }
+        if (repeated) {
+            break;
+        }
+        m_vstAudioClient->handleParamChange(next);
+        ++m_pitchSetupSent;
+    }
+
+    // Pitch writes whose note-on was rendered by the previous block open this one.
+    size_t waiting = 0;
+    for (size_t i = 0; i < m_deferredPitchParamCount; ++i) {
+        if (m_deferredPitchParams[i].noteOnProcessed) {
+            m_vstAudioClient->handleParamChange(m_deferredPitchParams[i].change);
+        } else {
+            m_deferredPitchParams[waiting++] = m_deferredPitchParams[i];
+        }
+    }
+    m_deferredPitchParamCount = waiting;
+
     for (const VstSequencer::EventType& event : sequence) {
         if (std::holds_alternative<mpe::DynamicTonalityProfileEvent>(event)) {
             m_vstAudioClient->handleDynamicTonalityProfile(std::get<mpe::DynamicTonalityProfileEvent>(event));
@@ -442,17 +454,17 @@ samples_t VstSynthesiser::processSequence(const VstSequencer::EventSequence& seq
             const VstEvent& vstEvent = std::get<VstEvent>(event);
             const VstPerNotePitchOutput adapted = m_perNotePitchAdapter.adapt(vstEvent);
             bool accepted = false;
-            if (adapted.paramsBeforeEvents) {
-                for (size_t i = 0; i < adapted.paramCount; ++i) {
-                    m_vstAudioClient->handleParamChange(adapted.params[i]);
+            for (size_t i = 0; i < adapted.paramCount; ++i) {
+                if (!adapted.params[i].afterNoteOn) {
+                    m_vstAudioClient->handleParamChange(adapted.params[i].change);
                 }
             }
             for (size_t i = 0; i < adapted.eventCount; ++i) {
                 accepted = m_vstAudioClient->handleEvent(adapted.events[i]) || accepted;
             }
-            if (!adapted.paramsBeforeEvents) {
-                for (size_t i = 0; i < adapted.paramCount; ++i) {
-                    m_vstAudioClient->handleParamChange(adapted.params[i]);
+            for (size_t i = 0; i < adapted.paramCount; ++i) {
+                if (adapted.params[i].afterNoteOn && m_deferredPitchParamCount < m_deferredPitchParams.size()) {
+                    m_deferredPitchParams[m_deferredPitchParamCount++] = { adapted.params[i].change, false };
                 }
             }
             if (accepted) {
@@ -471,6 +483,19 @@ samples_t VstSynthesiser::processSequence(const VstSequencer::EventSequence& seq
     if (samples == 0) {
         return 0;
     }
+
+    // A pitch write that follows its note-on goes one sample after it. In a
+    // block of one sample it waits for the next block's first sample.
+    waiting = 0;
+    for (size_t i = 0; i < m_deferredPitchParamCount; ++i) {
+        if (samples >= 2) {
+            m_vstAudioClient->handleParamChange(m_deferredPitchParams[i].change, 1);
+        } else {
+            m_deferredPitchParams[waiting] = m_deferredPitchParams[i];
+            m_deferredPitchParams[waiting++].noteOnProcessed = true;
+        }
+    }
+    m_deferredPitchParamCount = waiting;
 
     const samples_t processed = m_vstAudioClient->process(buffer, samples, m_currentPositionSamples);
     requestConfigRefreshAfterPersistentDelivery();
