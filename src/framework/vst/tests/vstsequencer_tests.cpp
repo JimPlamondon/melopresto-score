@@ -461,3 +461,22 @@ TEST(Vst_SequencerTests, samePitchSortKeepsExpressionsBehindTheirNoteOn)
     EXPECT_EQ(std::get<VstEvent>(first[0]).noteOn.pitch, 57);
     EXPECT_EQ(std::get<VstEvent>(first[3]).noteOn.pitch, 69);
 }
+
+// The key number and the cents come from audioplugins/audiopluginnotepitch.h,
+// shared with the clap module. A Kernel key outside 0 to 127 is passed on as
+// it is, for the shared projector to refuse; it is not moved to key 127 or 0
+// with the cents of the other key kept.
+TEST(VstSequencerTests, AKernelKeyOutsideMidiIsPassedOnNotClamped)
+{
+    Harness h;
+    PlaybackEventsMap events;
+    events[0].push_back(meloNote(0, SECOND, 0, exactOf(440.0, 130, 7.5, 0, 0)));
+    events[2 * SECOND].push_back(meloNote(2 * SECOND, SECOND, 0, exactOf(440.0, -2, -7.5, 0, 0)));
+
+    const auto map = h.run(events, VstNoteExpressionCapabilities());
+    const std::vector<VstEvent> ons = vstEventsOf(map, VstEvent::kNoteOnEvent);
+    ASSERT_EQ(ons.size(), 2u);
+    EXPECT_EQ(ons[0].noteOn.pitch, 130);
+    EXPECT_FLOAT_EQ(ons[0].noteOn.tuning, 7.5f);
+    EXPECT_EQ(ons[1].noteOn.pitch, -2);
+}

@@ -22,6 +22,8 @@
 
 #include "mixerchannelitem.h"
 
+#include "clapresourcemenu.h"
+
 #include "defer.h"
 #include "translation.h"
 #include "log.h"
@@ -548,11 +550,13 @@ InputResourceItem* MixerChannelItem::buildInputResourceItem()
     connect(newItem, &InputResourceItem::isBlankChanged, this, &MixerChannelItem::inputResourceItemChanged);
 
     connect(newItem, &InputResourceItem::nativeEditorViewLaunchRequested, this, [this, newItem]() {
-        if (newItem->params().type() != AudioSourceType::Vsti) {
+        // A CLAP (CLever Audio Plug-in) instrument has an editor action of its own.
+        const std::string clapEditorAction = clapInstrumentEditorAction(newItem->params().type());
+        if (newItem->params().type() != AudioSourceType::Vsti && clapEditorAction.empty()) {
             return;
         }
 
-        actions::ActionQuery aq(VSTI_EDITOR_ACTION);
+        actions::ActionQuery aq(clapEditorAction.empty() ? VSTI_EDITOR_ACTION : clapEditorAction);
         aq.addParam(TRACK_ID_KEY, Val(m_trackId));
         aq.addParam(RESOURCE_ID_KEY, Val(newItem->params().resourceMeta.id));
 

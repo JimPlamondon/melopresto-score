@@ -59,6 +59,7 @@ protected:
     {
         const std::map<AudioResourceType, std::string> RESOURCE_TYPE_TO_STR {
             { AudioResourceType::VstPlugin, "VstPlugin" },
+            { AudioResourceType::ClapPlugin, "ClapPlugin" },
         };
 
         JsonArray array;
@@ -164,6 +165,56 @@ inline bool operator==(const AudioPluginInfo& info1, const AudioPluginInfo& info
 
     return equal;
 }
+}
+
+//! A CLAP (CLever Audio Plug-in) instrument is kept in the register under its
+//! own resource type, beside a VST3 plug-in of the same synthesizer.
+TEST_F(AudioPlugins_KnownAudioPluginsRegisterTest, ClapPluginKeepsItsTypeThroughTheFile)
+{
+    AudioPluginInfo clapInfo;
+    clapInfo.type = AudioPluginType::Instrument;
+    clapInfo.path = "/some/path/to/clap/plugin/Synth.clap";
+    clapInfo.meta.id = "org.example.synth";
+    clapInfo.meta.type = AudioResourceType::ClapPlugin;
+    clapInfo.meta.vendor = "Example";
+    clapInfo.meta.hasNativeEditorSupport = true;
+    clapInfo.meta.attributes = { { audio::CATEGORIES_ATTRIBUTE, u"Instrument" },
+        { u"clapName", u"Synth" },
+        { audio::PLAYBACK_SETUP_DATA_ATTRIBUTE, mpe::GENERIC_SETUP_DATA_STRING } };
+    clapInfo.enabled = true;
+
+    AudioPluginInfo vstInfo;
+    vstInfo.type = AudioPluginType::Instrument;
+    vstInfo.path = "/some/path/to/vst/plugin/Synth.vst3";
+    vstInfo.meta.id = "Synth";
+    vstInfo.meta.type = AudioResourceType::VstPlugin;
+    vstInfo.meta.attributes = { { audio::CATEGORIES_ATTRIBUTE, u"Instrument|Synth" },
+        { audio::PLAYBACK_SETUP_DATA_ATTRIBUTE, mpe::GENERIC_SETUP_DATA_STRING } };
+    vstInfo.enabled = true;
+
+    const ByteArray data = pluginInfoListToJson({ clapInfo, vstInfo });
+    EXPECT_NE(data.toQByteArrayNoCopy().indexOf("\"ClapPlugin\""), -1);
+    ON_CALL(*m_fileSystem, readFile(m_knownAudioPluginsFilePath))
+    .WillByDefault(Return(RetVal<ByteArray>::make_ok(data)));
+    ON_CALL(*m_fileSystem, exists(m_knownAudioPluginsFilePath))
+    .WillByDefault(Return(muse::make_ok()));
+
+    ASSERT_TRUE(m_knownPlugins->load());
+
+    const std::vector<AudioPluginInfo> loaded = m_knownPlugins->pluginInfoList();
+    ASSERT_EQ(loaded.size(), 2u);
+    EXPECT_TRUE(muse::contains(loaded, clapInfo));
+    EXPECT_TRUE(muse::contains(loaded, vstInfo));
+    EXPECT_EQ(m_knownPlugins->pluginPath("org.example.synth"), clapInfo.path);
+
+    // Written again, the CLAP entry still states its type.
+    AudioPluginInfo another = vstInfo;
+    another.meta.id = "Another";
+    another.path = "/some/path/to/vst/plugin/Another.vst3";
+    const ByteArray expected = pluginInfoListToJson({ another, vstInfo, clapInfo });
+    EXPECT_CALL(*m_fileSystem, writeFile(m_knownAudioPluginsFilePath, expected))
+    .WillOnce(Return(muse::make_ok()));
+    EXPECT_TRUE(m_knownPlugins->registerPlugins({ another }));
 }
 
 TEST_F(AudioPlugins_KnownAudioPluginsRegisterTest, PluginInfoList)

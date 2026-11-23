@@ -235,8 +235,11 @@ bool EventAudioSource::readyToPlay() const
 {
     ONLY_AUDIO_ENGINE_THREAD;
 
-    IF_ASSERT_FAILED(m_synth) {
-        return false;
+    // No synthesiser could be made for this track (that is written to the
+    // log where it is found out). It will never become ready, and playback
+    // and audio export wait for every track that is not: it is not waited for.
+    if (!m_synth) {
+        return true;
     }
 
     return m_synth->readyToPlay();

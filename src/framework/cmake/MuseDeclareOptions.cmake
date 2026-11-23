@@ -38,6 +38,10 @@ set(MUSE_MODULE_AUDIO_WORKMODE 1 CACHE STRING "Audio subsystem work mode")
 declare_muse_module_opt(AUDIOPLUGINS ON)
 
 declare_muse_module_opt(AUTOBOT ON)
+# CLAP (CLever Audio Plug-in) instrument hosting. Off by default, as VST is.
+declare_muse_module_opt(CLAP OFF)
+set(MUSE_MODULE_CLAP_HEADERS_PATH "" CACHE PATH "Path to a checkout of the CLAP headers at the pinned commit (see clap/SetupClap.cmake); empty to fetch them")
+
 declare_muse_module_opt(CLOUD ON)
 option(MUSE_MODULE_CLOUD_MUSESCORECOM "Enable MuseScore.com account" ON)
 

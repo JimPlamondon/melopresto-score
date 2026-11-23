@@ -26,6 +26,8 @@
 
 #include "global/interpolation.h"
 
+#include "audioplugins/audiopluginnotepitch.h"
+
 using namespace muse;
 using namespace muse::vst;
 
@@ -160,13 +162,15 @@ void VstSequencer::addNoteEvent(EventSequenceMap& destination, const mpe::NoteEv
     const int32_t noteId = allocateNoteId();
     const std::optional<mpe::ExactPitch>& exact = noteEvent.pitchCtx().exactPitch;
     // A lattice-identified MeloPresto note carries its exact sounding pitch: the
-    // Note On uses the Kernel's nearest key and the FULL residual cents
-    // instead of the 2-cent pitch-level grid; stock notes keep the stock
-    // construction byte for byte.
-    const int32_t noteIdx = exact.has_value() ? std::clamp(exact->midiKey, 0, 127)
-                            : noteIndex(noteEvent.pitchCtx().nominalPitchLevel);
+    // Note On uses the Kernel's key and the FULL residual cents instead of the
+    // 2-cent pitch-level grid; stock notes keep the stock construction. The
+    // derivation is shared with the clap module (audiopluginnotepitch.h). A
+    // Kernel key outside 0 to 127 is passed on as it is, for the shared
+    // projector to refuse; it is not moved to another key with its cents kept.
+    const audioplugins::NotePitch pitch = audioplugins::notePitchOf(noteEvent);
+    const int32_t noteIdx = pitch.keyNumber;
     const float velocityFraction = noteVelocityFraction(noteEvent);
-    const float tuning = exact.has_value() ? static_cast<float>(exact->centsOffset) : noteTuning(noteEvent, noteIdx);
+    const float tuning = static_cast<float>(pitch.cents);
 
     if (arrangementCtx.hasStart()) {
         destination[arrangementCtx.actualTimestamp].emplace_back(buildEvent(VstEvent::kNoteOnEvent, noteIdx, velocityFraction,
@@ -304,10 +308,7 @@ void VstSequencer::addPitchCurve(EventSequenceMap& destination, const mpe::NoteE
         const Point currPoint { static_cast<double>(currTime), currValue };
         const Point nextPoint { static_cast<double>(nextTime), nextValue };
 
-        //! NOTE: Increasing this number results in fewer points being interpolated
-        constexpr mpe::pitch_level_t POINT_WEIGHT = mpe::PITCH_LEVEL_STEP / 25;
-        size_t pointCount = std::abs(nextIt->second - currIt->second) / POINT_WEIGHT;
-        pointCount = std::max(pointCount, size_t(1));
+        const size_t pointCount = audioplugins::pitchCurvePointCount(currIt->second, nextIt->second);
 
         const std::vector<Point> points = lerp(currPoint, nextPoint, pointCount);
 
@@ -338,13 +339,9 @@ void VstSequencer::addTuningExpressionCurve(EventSequenceMap& destination, const
     auto nextIt = std::next(currIt);
     auto endIt = noteEvent.pitchCtx().pitchCurve.cend();
 
-    const std::optional<mpe::ExactPitch>& exact = noteEvent.pitchCtx().exactPitch;
-    const int32_t noteIdx = exact.has_value() ? std::clamp(exact->midiKey, 0, 127)
-                            : noteIndex(noteEvent.pitchCtx().nominalPitchLevel);
-    const double baseCents = exact.has_value() ? exact->centsOffset : noteTuning(noteEvent, noteIdx);
+    const double baseCents = audioplugins::notePitchOf(noteEvent).cents;
     auto tuningNormalized = [baseCents](const mpe::pitch_level_t pitchLevelOffset) {
-        const double cents = baseCents + (pitchLevelOffset / static_cast<double>(mpe::PITCH_LEVEL_STEP)) * 100.0;
-        return 0.5 + cents / 24000.0;
+        return 0.5 + audioplugins::pitchCurveCents(baseCents, pitchLevelOffset) / 24000.0;
     };
 
     double prevValue = -1.0;
@@ -367,9 +364,7 @@ void VstSequencer::addTuningExpressionCurve(EventSequenceMap& destination, const
         const Point currPoint { static_cast<double>(currTime), currValue };
         const Point nextPoint { static_cast<double>(nextTime), nextValue };
 
-        constexpr mpe::pitch_level_t POINT_WEIGHT = mpe::PITCH_LEVEL_STEP / 25;
-        size_t pointCount = std::abs(nextIt->second - currIt->second) / POINT_WEIGHT;
-        pointCount = std::max(pointCount, size_t(1));
+        const size_t pointCount = audioplugins::pitchCurvePointCount(currIt->second, nextIt->second);
 
         const std::vector<Point> points = lerp(currPoint, nextPoint, pointCount);
 
@@ -548,18 +543,12 @@ VstEvent VstSequencer::buildNoteExpressionEvent(const Steinberg::Vst::NoteExpres
 
 int32_t VstSequencer::noteIndex(const mpe::pitch_level_t pitchLevel) const
 {
-    float stepCount = mpe::ZERO_PITCH_LEVEL_MIDI_EQUIVALENT + pitchLevel / static_cast<float>(mpe::PITCH_LEVEL_STEP);
-
-    return std::clamp(stepCount, 0.f, 127.f);
+    return audioplugins::keyNumberOfPitchLevel(pitchLevel);
 }
 
 float VstSequencer::noteTuning(const mpe::NoteEvent& noteEvent, const int noteIdx) const
 {
-    int semitonesCount = noteIdx - mpe::ZERO_PITCH_LEVEL_MIDI_EQUIVALENT;
-
-    mpe::pitch_level_t tuningPitchLevel = noteEvent.pitchCtx().nominalPitchLevel - semitonesCount * mpe::PITCH_LEVEL_STEP;
-
-    return (tuningPitchLevel / static_cast<float>(mpe::PITCH_LEVEL_STEP)) * 100.f;
+    return static_cast<float>(audioplugins::centsOfPitchLevel(noteEvent.pitchCtx().nominalPitchLevel, noteIdx));
 }
 
 float VstSequencer::noteVelocityFraction(const mpe::NoteEvent& noteEvent) const

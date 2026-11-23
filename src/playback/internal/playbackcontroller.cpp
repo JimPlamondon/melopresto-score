@@ -293,7 +293,8 @@ void PlaybackController::setInputParamPlainForResource(const notation::INotation
     }
     for (const auto& [instrumentTrackId, audioTrackId] : m_instrumentTrackIdMap) {
         const AudioInputParams& params = settings->trackInputParams(instrumentTrackId);
-        if (params.resourceMeta.type == AudioResourceType::VstPlugin
+        if ((params.resourceMeta.type == AudioResourceType::VstPlugin
+             || params.resourceMeta.type == AudioResourceType::ClapPlugin)
             && params.resourceMeta.id == resourceId) {
             playback()->setInputParamPlain(sequenceId, audioTrackId, resourceId, paramId, plain);
         }

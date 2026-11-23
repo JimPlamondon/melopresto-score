@@ -206,8 +206,13 @@ Ret RegisterAudioPluginsScenario::registerFailedPlugin(const io::path_t& pluginP
     }
 
     AudioPluginInfo info;
-    info.meta.id = io::completeBasename(pluginPath).toStdString();
     info.meta.type = metaType(pluginPath);
+    // A CLAP file that failed keeps its suffix in its id: a VST3 plug-in's id
+    // is its bare file name, and the two builds of one synthesizer must not
+    // take each other's place in the register.
+    info.meta.id = info.meta.type == audio::AudioResourceType::ClapPlugin
+                   ? io::filename(pluginPath).toStdString()
+                   : io::completeBasename(pluginPath).toStdString();
     info.path = pluginPath;
     info.enabled = false;
     info.errorCode = failCode;

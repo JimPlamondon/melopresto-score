@@ -117,6 +117,10 @@
 #include "framework/stubs/update/updatestubmodule.h"
 #endif
 
+#ifdef MUSE_MODULE_CLAP
+#include "framework/clap/clapmodule.h"
+#endif
+
 #ifdef MUSE_MODULE_VST
 #include "framework/vst/vstmodule.h"
 #else
@@ -334,6 +338,9 @@ std::shared_ptr<muse::IApplication> AppFactory::newGuiApp(const CmdOptions& opti
 #endif
     app->addModule(new muse::tours::ToursModule());
     app->addModule(new muse::vst::VSTModule());
+#ifdef MUSE_MODULE_CLAP
+    app->addModule(new muse::clap::ClapModule());
+#endif
     app->addModule(new muse::media::MediaModule());
 
 // modules
@@ -463,6 +470,10 @@ static void addConsoleModules(std::shared_ptr<ConsoleApp> app)
     app->addModule(new muse::vst::VSTModule());
 #endif
 
+#ifdef MUSE_MODULE_CLAP
+    app->addModule(new muse::clap::ClapModule());
+#endif
+
 #ifdef MUSE_MODULE_AUTOBOT
     app->addModule(new muse::autobot::AutobotModule());
 #endif
@@ -531,6 +542,10 @@ static void addAudioPluginRegistrationModules(std::shared_ptr<ConsoleApp> app)
 
 #ifdef MUSE_MODULE_VST
     app->addModule(new muse::vst::VSTModule());
+#endif
+
+#ifdef MUSE_MODULE_CLAP
+    app->addModule(new muse::clap::ClapModule());
 #endif
 }
 

@@ -281,7 +281,7 @@ gain_t PlaybackConfiguration::defaultAuxSendValue(aux_channel_idx_t index, Audio
             float lvl = musesamplerInfo()->defaultReverbLevel(instrumentSoundId);
             return muse::RealIsNull(lvl) ? DEFAULT_VALUE : lvl;
         }
-    } else if (sourceType == AudioSourceType::Vsti) {
+    } else if (sourceType == AudioSourceType::Vsti || sourceType == AudioSourceType::Clap) {
         return 0.f;
     }
 

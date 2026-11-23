@@ -131,6 +131,10 @@ if (MUSE_MODULE_VST)
     add_subdirectory(vst)
 endif()
 
+if (MUSE_MODULE_CLAP)
+    add_subdirectory(clap)
+endif()
+
 if (MUSE_MODULE_UPDATE)
     add_subdirectory(update)
 endif()
