@@ -17,6 +17,7 @@
 namespace muse::clap {
 class ClapModulesRepository;
 class ClapInstancesRegister;
+class ClapActionsController;
 
 //! Hosts CLAP (CLever Audio Plug-in) instruments, beside the vst module.
 class ClapModule : public modularity::IModuleSetup
@@ -32,5 +33,6 @@ public:
 private:
     std::shared_ptr<ClapModulesRepository> m_pluginModulesRepo;
     std::shared_ptr<ClapInstancesRegister> m_pluginInstancesRegister;
+    std::shared_ptr<ClapActionsController> m_actionsController;
 };
 }
