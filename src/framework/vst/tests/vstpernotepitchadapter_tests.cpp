@@ -157,6 +157,22 @@ TEST(VstPerNotePitchAdapterTests, SixteenthHeldMpeNoteIsLeftOutAndItsReleaseEnds
     EXPECT_EQ(adapter.adapt(note(VstEvent::kNoteOffEvent, 1, 60, 0.f)).eventCount, 1u);
 }
 
+TEST(VstPerNotePitchAdapterTests, MpeProfileAndNoParameterMappedToPitchBendGivesKeyNumbersAlone)
+{
+    VstPerNotePitchConfig config = mpeSynth(profilesFolder());
+    for (auto& channel : config.midiParams) {
+        channel.fill(Steinberg::Vst::kNoParamId);
+    }
+    VstPerNotePitchAdapter adapter;
+    ASSERT_TRUE(adapter.configure(config).empty()) << "the shared selection decides this; it is not a fault of the adapter";
+    EXPECT_EQ(adapter.mode(), VstPerNotePitchAdapter::Mode::KeyNumberOnly);
+    EXPECT_EQ(adapter.profileId(), "test-mpe-synth");
+
+    const VstPerNotePitchOutput on = adapter.adapt(note(VstEvent::kNoteOnEvent, 7, 67, 14.f));
+    ASSERT_EQ(on.eventCount, 1u);
+    EXPECT_EQ(on.paramCount, 0u);
+}
+
 TEST(VstPerNotePitchAdapterTests, MeasuredProfileFactOutranksThePlugInsOwnListing)
 {
     VstPerNotePitchConfig config
