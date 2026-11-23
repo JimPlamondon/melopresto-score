@@ -156,6 +156,9 @@
 #cmakedefine MUSE_MODULE_UPDATE_TESTS 1
 #cmakedefine MUSE_MODULE_UPDATE_API 1
 
+#cmakedefine MUSE_MODULE_CLAP 1
+#cmakedefine MUSE_MODULE_CLAP_TESTS 1
+
 #cmakedefine MUSE_MODULE_VST 1
 #cmakedefine MUSE_MODULE_VST_TESTS 1
 #cmakedefine MUSE_MODULE_VST_API 1
