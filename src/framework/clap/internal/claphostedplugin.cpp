@@ -52,7 +52,14 @@ struct ClapHostExtensions {
 
     static bool CLAP_ABI isAudioThread(const clap_host_t*)
     {
-        return t_clapAudioCallDepth > 0 || std::this_thread::get_id() != s_clapMainThread.load();
+        // Only a thread that is inside one of the plug-in's audio functions.
+        // A thread of the plug-in's own is neither the main nor the audio thread.
+        return t_clapAudioCallDepth > 0;
+    }
+
+    static bool onMainThread()
+    {
+        return std::this_thread::get_id() == s_clapMainThread.load() && t_clapAudioCallDepth == 0;
     }
 
     // log
@@ -83,8 +90,8 @@ struct ClapHostExtensions {
     {
         if (ClapHostedPlugin* self = clapHosted(host)) {
             if (flags & (CLAP_PARAM_RESCAN_INFO | CLAP_PARAM_RESCAN_ALL)) {
+                // Read again at the main thread's next visit; on_main_thread is not called for it.
                 self->m_parametersRescanRequested.store(true);
-                self->m_callbackRequested.store(true);
             }
             if (flags & (CLAP_PARAM_RESCAN_VALUES | CLAP_PARAM_RESCAN_ALL)) {
                 self->m_stateChanged.store(true);
@@ -109,8 +116,9 @@ struct ClapHostExtensions {
 
     static bool CLAP_ABI guiRequestResize(const clap_host_t* host, uint32_t width, uint32_t height)
     {
+        // The editor's state belongs to the main thread; a call from any other is refused.
         ClapHostedPlugin* self = clapHosted(host);
-        if (!self || !self->m_editorOpen || !self->m_editorCallbacks.resizeRequested) {
+        if (!self || !onMainThread() || !self->m_editorOpen || !self->m_editorCallbacks.resizeRequested) {
             return false;
         }
         return self->m_editorCallbacks.resizeRequested(width, height);
@@ -129,7 +137,7 @@ struct ClapHostExtensions {
     static void CLAP_ABI guiClosed(const clap_host_t* host, bool)
     {
         ClapHostedPlugin* self = clapHosted(host);
-        if (self && self->m_editorCallbacks.closed) {
+        if (self && onMainThread() && self->m_editorCallbacks.closed) {
             self->m_editorCallbacks.closed();
         }
     }
@@ -411,17 +419,32 @@ const ClapAudioPortLayout& ClapHostedPlugin::audioPorts() const
     return m_audioPorts;
 }
 
-bool ClapHostedPlugin::activate(double sampleRate, uint32_t maxFrames)
+uint32_t ClapHostedPlugin::activationCount() const
+{
+    return m_activationCount.load();
+}
+
+void ClapHostedPlugin::releaseToAudio()
+{
+    AudioState expected = AudioState::Held;
+    m_audioState.compare_exchange_strong(expected, AudioState::Ready);
+}
+
+bool ClapHostedPlugin::activate(double sampleRate, uint32_t maxFrames, bool held)
 {
     if (!m_plugin || m_activated || !std::isfinite(sampleRate) || sampleRate <= 0.0 || maxFrames == 0) {
         return false;
     }
+    // A plug-in may change its ports while it is deactivated; they are read
+    // again at every activation.
+    readPorts();
     if (!m_plugin->activate(m_plugin, sampleRate, 1, maxFrames)) {
         return false;
     }
     m_activated = true;
     m_sampleRate = sampleRate;
-    m_audioState.store(AudioState::Ready);
+    m_activationCount.fetch_add(1);
+    m_audioState.store(held ? AudioState::Held : AudioState::Ready);
     return true;
 }
 
@@ -480,7 +503,7 @@ bool ClapHostedPlugin::requestAudioStop()
     if (expected == AudioState::StopRequested) {
         return false;
     }
-    if (expected == AudioState::Ready || expected == AudioState::StartFailed) {
+    if (expected == AudioState::Ready || expected == AudioState::StartFailed || expected == AudioState::Held) {
         // The audio thread may be taking Ready for itself at this moment.
         if (!m_audioState.compare_exchange_strong(expected, AudioState::Stopped)) {
             return requestAudioStop();
@@ -529,10 +552,10 @@ int ClapHostedPlugin::serveMainThreadCallbacks()
     //! A plug-in may ask again while it is being served, more than once while it settles.
     static constexpr int MOST_IN_ONE_VISIT = 64;
     int served = 0;
+    if (m_plugin && m_parametersRescanRequested.exchange(false)) {
+        readParameters();
+    }
     while (m_plugin && served < MOST_IN_ONE_VISIT && m_callbackRequested.exchange(false)) {
-        if (m_parametersRescanRequested.exchange(false)) {
-            readParameters();
-        }
         m_plugin->on_main_thread(m_plugin);
         ++served;
     }
@@ -699,7 +722,8 @@ bool ClapHostedPlugin::prepareToProcess()
 void ClapHostedPlugin::stopProcessingNow()
 {
     const AudioState state = m_audioState.load();
-    if (state == AudioState::Inactive || state == AudioState::Stopped) {
+    // A held plug-in is not processing and stays held for the audio side to release.
+    if (state == AudioState::Inactive || state == AudioState::Stopped || state == AudioState::Held) {
         return;
     }
     if (m_startedProcessing) {

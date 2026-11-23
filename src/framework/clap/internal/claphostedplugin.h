@@ -66,6 +66,9 @@ public:
     enum class AudioState {
         //! Not activated: the audio thread leaves the plug-in alone.
         Inactive,
+        //! Activated again after a restart, and kept from the audio thread
+        //! until the audio side has prepared for it (releaseToAudio).
+        Held,
         //! Activated and waiting for the audio thread to start processing.
         Ready,
         Processing,
@@ -89,7 +92,13 @@ public:
     const ClapNotePortReport& notePorts() const;
     const ClapAudioPortLayout& audioPorts() const;
 
-    bool activate(double sampleRate, uint32_t maxFrames = CLAP_MAX_BLOCK_FRAMES);
+    //! Reads the plug-in's ports again, then activates it. \p held leaves it
+    //! in the Held state.
+    bool activate(double sampleRate, uint32_t maxFrames = CLAP_MAX_BLOCK_FRAMES, bool held = false);
+    //! How many times the plug-in has been activated. Any thread.
+    uint32_t activationCount() const;
+    //! Audio engine thread: the audio side is prepared; Held becomes Ready.
+    void releaseToAudio();
     //! Only in the Inactive, Ready, StartFailed or Stopped states.
     void deactivate();
     void destroy();
@@ -168,6 +177,7 @@ private:
 
     std::atomic<AudioState> m_audioState { AudioState::Inactive };
     bool m_activated = false;
+    std::atomic<uint32_t> m_activationCount { 0 };
     bool m_startedProcessing = false; // audio thread only
     double m_sampleRate = 0.0;
 

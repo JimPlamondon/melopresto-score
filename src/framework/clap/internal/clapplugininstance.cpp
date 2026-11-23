@@ -10,6 +10,9 @@
 
 #include "clapplugininstance.h"
 
+#include <chrono>
+#include <condition_variable>
+
 #include <QByteArray>
 #include <QCoreApplication>
 #include <QTimer>
@@ -30,6 +33,42 @@ static std::atomic<ClapPluginInstanceId> s_lastClapInstanceId { 0 };
 //! Main-thread visits between a change of the plug-in's state and saving it,
 //! so that a value being dragged is saved once, when it has come to rest.
 static constexpr int CLAP_STATE_SETTLE_VISITS = 25;
+
+//! What the audio engine thread waits on while the main thread does
+//! something for it.
+struct ClapMainThreadWait {
+    std::mutex mutex;
+    std::condition_variable changed;
+    bool done = false;
+    bool ok = false;
+    //! The waiter gave up; what the main thread still does is reported another way.
+    bool abandoned = false;
+
+    //! Returns whether the waiter had given up by now.
+    bool finish(bool result)
+    {
+        bool gaveUp = false;
+        {
+            std::lock_guard lock(mutex);
+            ok = result;
+            done = true;
+            gaveUp = abandoned;
+        }
+        changed.notify_all();
+        return gaveUp;
+    }
+
+    //! True if the main thread finished in time; otherwise the wait is abandoned.
+    bool wait(int timeoutMsec)
+    {
+        std::unique_lock lock(mutex);
+        if (!changed.wait_for(lock, std::chrono::milliseconds(timeoutMsec), [this]() { return done; })) {
+            abandoned = true;
+            return false;
+        }
+        return true;
+    }
+};
 }
 
 ClapPluginInstance::ClapPluginInstance(const audio::AudioResourceId& resourceId, const modularity::ContextPtr& iocCtx)
@@ -55,15 +94,26 @@ ClapPluginInstance::~ClapPluginInstance()
 
 void ClapPluginInstance::load(double sampleRate)
 {
+    m_wantedRate.store(sampleRate);
+
     std::weak_ptr<ClapPluginInstance> weak = weak_from_this();
-    Async::call(this, [weak, sampleRate]() {
+    Async::call(this, [weak]() {
         if (std::shared_ptr<ClapPluginInstance> self = weak.lock()) {
-            self->doLoad(sampleRate);
+            self->doLoad();
         }
     }, m_mainThreadId);
 }
 
-void ClapPluginInstance::doLoad(double sampleRate)
+void ClapPluginInstance::finishLoad(bool loaded)
+{
+    // The flags are set before the notification goes out: whoever subscribes
+    // too late to receive it asks isLoadFinished().
+    m_isLoaded = loaded;
+    m_loadFinished = true;
+    m_loadingCompleted.notify();
+}
+
+void ClapPluginInstance::doLoad()
 {
     ONLY_MAIN_THREAD(threadSecurer);
 
@@ -82,14 +132,14 @@ void ClapPluginInstance::doLoad(double sampleRate)
     if (!bundle) {
         LOGE() << "CLAP plug-in " << m_resourceId << " is missing or could not be opened. "
                << "The staff stays assigned to it, with its saved state, and is silent.";
-        m_loadingCompleted.notify();
+        finishLoad(false);
         return;
     }
 
     std::string problem;
     if (!m_hosted->create(bundle, m_resourceId, problem)) {
         LOGE() << "CLAP plug-in " << m_resourceId << " could not be created: " << problem;
-        m_loadingCompleted.notify();
+        finishLoad(false);
         return;
     }
     m_name = m_hosted->descriptor().name.empty() ? m_resourceId : m_hosted->descriptor().name;
@@ -102,15 +152,43 @@ void ClapPluginInstance::doLoad(double sampleRate)
                << "That state is kept in the score; it is not replaced by the plug-in's default.";
     }
 
-    if (!m_hosted->activate(sampleRate)) {
-        LOGE() << "CLAP plug-in " << m_resourceId << " refused to activate at " << sampleRate << " Hz";
+    // The sample rate wanted now, which may be newer than the one the load
+    // was asked with; and again if a newer one arrived while activating.
+    double rate = m_wantedRate.load();
+    bool activated = m_hosted->activate(rate);
+    while (activated && m_wantedRate.load() != rate) {
+        rate = m_wantedRate.load();
+        m_hosted->requestAudioStop();
+        m_hosted->deactivate();
+        activated = m_hosted->activate(rate);
+    }
+    if (!activated) {
+        LOGE() << "CLAP plug-in " << m_resourceId << " refused to activate at " << rate << " Hz";
         m_hosted->destroy();
-        m_loadingCompleted.notify();
+        finishLoad(false);
         return;
     }
 
-    m_isLoaded = true;
-    m_loadingCompleted.notify();
+    finishLoad(true);
+}
+
+bool ClapPluginInstance::doReactivate()
+{
+    ONLY_MAIN_THREAD(threadSecurer);
+
+    if (!m_isLoaded || !m_hosted->requestAudioStop()) {
+        return false;
+    }
+    m_hosted->deactivate();
+
+    // Held: the ports are read again at activation and may have changed, so
+    // the audio thread waits until the audio side has prepared for them.
+    const double rate = m_wantedRate.load();
+    if (!m_hosted->activate(rate, CLAP_MAX_BLOCK_FRAMES, /*held*/ true)) {
+        LOGE() << "CLAP plug-in " << m_resourceId << " refused to activate at " << rate << " Hz";
+        return false;
+    }
+    return true;
 }
 
 bool ClapPluginInstance::applyConfig(const audio::AudioUnitConfig& config)
@@ -168,22 +246,16 @@ void ClapPluginInstance::serviceOnMainThread()
 
     m_hosted->serveMainThreadCallbacks();
 
-    // The plug-in asked to be restarted, or the audio side asked for another
-    // sample rate. Either waits until the audio thread has stopped processing.
+    // The plug-in asked to be restarted. That waits until the audio thread
+    // has stopped processing; then the audio side is told, and prepares again.
     if (m_hosted->takeRestartRequested()) {
         m_restartWanted = true;
     }
-    const double wantedRate = m_reactivationRate.load();
-    if ((m_restartWanted || wantedRate > 0.0) && m_hosted->requestAudioStop()) {
-        const double rate = wantedRate > 0.0 ? wantedRate : m_hosted->sampleRate();
-        m_hosted->deactivate();
-        if (!m_hosted->activate(rate)) {
-            LOGE() << "CLAP plug-in " << m_resourceId << " refused to activate at " << rate << " Hz";
-        }
+    if (m_restartWanted && m_hosted->requestAudioStop()) {
         m_restartWanted = false;
-        // A newer request that arrived meanwhile stays for the next visit.
-        double served = wantedRate;
-        m_reactivationRate.compare_exchange_strong(served, 0.0);
+        if (doReactivate()) {
+            m_restarted.notify();
+        }
     }
 
     if (m_hosted->takeStateChanged()) {
@@ -211,6 +283,11 @@ ClapPluginInstanceId ClapPluginInstance::id() const
 bool ClapPluginInstance::isLoaded() const
 {
     return m_isLoaded;
+}
+
+bool ClapPluginInstance::isLoadFinished() const
+{
+    return m_loadFinished;
 }
 
 Notification ClapPluginInstance::loadingCompleted() const
@@ -305,9 +382,61 @@ Notification ClapPluginInstance::settled() const
     return m_settled;
 }
 
-void ClapPluginInstance::requestReactivation(double sampleRate)
+bool ClapPluginInstance::settleAndWait(int timeoutMsec)
 {
-    m_reactivationRate.store(sampleRate);
+    std::shared_ptr<ClapMainThreadWait> wait = std::make_shared<ClapMainThreadWait>();
+    std::weak_ptr<ClapPluginInstance> weak = weak_from_this();
+    Async::call(this, [weak, wait]() {
+        std::shared_ptr<ClapPluginInstance> self = weak.lock();
+        if (!self) {
+            wait->finish(false);
+            return;
+        }
+        if (self->m_isLoaded) {
+            self->m_hosted->serveMainThreadCallbacks();
+        }
+        // As in requestSettle: one turn of the main event loop, then once more.
+        QTimer::singleShot(0, qApp, [weak, wait]() {
+            std::shared_ptr<ClapPluginInstance> again = weak.lock();
+            if (again && again->m_isLoaded) {
+                again->m_hosted->serveMainThreadCallbacks();
+            }
+            wait->finish(again != nullptr);
+        });
+    }, m_mainThreadId);
+
+    return wait->wait(timeoutMsec) && wait->ok;
+}
+
+void ClapPluginInstance::setWantedSampleRate(double sampleRate)
+{
+    m_wantedRate.store(sampleRate);
+}
+
+bool ClapPluginInstance::reactivateAndWait(double sampleRate, int timeoutMsec)
+{
+    m_wantedRate.store(sampleRate);
+    if (!m_isLoaded) {
+        return false;
+    }
+
+    std::shared_ptr<ClapMainThreadWait> wait = std::make_shared<ClapMainThreadWait>();
+    std::weak_ptr<ClapPluginInstance> weak = weak_from_this();
+    Async::call(this, [weak, wait]() {
+        std::shared_ptr<ClapPluginInstance> self = weak.lock();
+        const bool ok = self && self->doReactivate();
+        // If nobody waits any more, the audio side is told another way.
+        if (wait->finish(ok) && ok) {
+            self->m_restarted.notify();
+        }
+    }, m_mainThreadId);
+
+    return wait->wait(timeoutMsec) && wait->ok;
+}
+
+Notification ClapPluginInstance::restarted() const
+{
+    return m_restarted;
 }
 
 void ClapPluginInstance::reportAudioFault(int fault)

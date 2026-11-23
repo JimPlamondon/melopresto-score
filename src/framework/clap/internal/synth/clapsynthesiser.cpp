@@ -28,6 +28,10 @@ namespace muse::clap {
 //! The folder of MeloPresto receiver profiles, beside the application's other data.
 static constexpr std::string_view CLAP_MELO_PROFILES_FOLDER = "melo_profiles";
 static constexpr size_t CLAP_NOTE_EVENT_CAPACITY = 4096;
+//! How long the audio engine thread waits for the main thread to activate a
+//! plug-in again, and to serve it afterwards, in milliseconds.
+static constexpr int CLAP_REACTIVATION_WAIT_MSEC = 5000;
+static constexpr int CLAP_SETTLE_WAIT_MSEC = 2000;
 }
 
 ClapSynthesiser::ClapSynthesiser(const TrackId trackId, const muse::audio::AudioInputParams& params,
@@ -76,10 +80,7 @@ void ClapSynthesiser::init(const OutputSpec& spec)
     m_pluginPtr->updatePluginConfig(m_params.configuration);
 
     m_pluginPtr->settled().onNotify(this, [this]() {
-        if (!m_settled) {
-            m_settled = true;
-            m_readyToPlayChanged.notify();
-        }
+        setSettled(true);
     });
 
     // A state applied to a loaded plug-in may undo what prepared it for its
@@ -91,12 +92,17 @@ void ClapSynthesiser::init(const OutputSpec& spec)
         }
     });
 
-    if (m_pluginPtr->isLoaded()) {
+    m_pluginPtr->restarted().onNotify(this, [this]() {
+        onPluginRestarted();
+    });
+
+    // Subscribe first, then ask: a load that ended (well or badly) before
+    // this subscription sent its notification to nobody.
+    m_pluginPtr->loadingCompleted().onNotify(this, [this]() {
         onPluginLoaded();
-    } else {
-        m_pluginPtr->loadingCompleted().onNotify(this, [this]() {
-            onPluginLoaded();
-        });
+    });
+    if (m_pluginPtr->isLoadFinished()) {
+        onPluginLoaded();
     }
 
     // Notes whose releases will not come from the score are ended here.
@@ -108,9 +114,19 @@ void ClapSynthesiser::init(const OutputSpec& spec)
     });
 }
 
+void ClapSynthesiser::setSettled(bool settled)
+{
+    if (m_settled != settled) {
+        m_settled = settled;
+        m_readyToPlayChanged.notify();
+    }
+}
+
 void ClapSynthesiser::onPluginLoaded()
 {
-    if (m_inited || m_loadFailed) {
+    // Called by the notification and, once, by init(): only the first call
+    // after the load has ended does anything.
+    if (m_inited || m_loadFailed || !m_pluginPtr->isLoadFinished()) {
         return;
     }
     if (!m_pluginPtr->isLoaded()) {
@@ -122,10 +138,38 @@ void ClapSynthesiser::onPluginLoaded()
         return;
     }
 
-    prepareAndSettle();
+    // The sample rate may have changed while the plug-in was loading.
+    const double rate = static_cast<double>(m_outputSpec.sampleRate);
+    if (m_pluginPtr->hosted().sampleRate() != rate && !m_pluginPtr->reactivateAndWait(rate, CLAP_REACTIVATION_WAIT_MSEC)) {
+        m_pluginPtr->reportAudioFault(static_cast<int>(ClapAudioFault::RestartTimedOut));
+    }
+
+    prepareOutput();
+    m_sequencer.init(m_useDynamicEvents);
+    m_inited = true;
+
+    // What prepares the plug-in is sent now, when it has loaded, not when
+    // playback starts. The synthesiser is ready to play once the main thread
+    // has served what the plug-in asked of it.
+    m_output.sendSetup();
+    m_pluginPtr->requestSettle();
 }
 
-void ClapSynthesiser::prepareAndSettle()
+void ClapSynthesiser::onPluginRestarted()
+{
+    if (!m_inited) {
+        return;
+    }
+    // The main thread deactivated the plug-in and activated it again; it is
+    // held. Its sounding notes are gone and its ports may have changed:
+    // prepare again, send the setup again, and wait to be served again.
+    setSettled(false);
+    prepareOutput();
+    m_output.sendSetup();
+    m_pluginPtr->requestSettle();
+}
+
+void ClapSynthesiser::prepareOutput()
 {
     ClapHostedPlugin& hosted = m_pluginPtr->hosted();
 
@@ -157,14 +201,8 @@ void ClapSynthesiser::prepareAndSettle()
            << static_cast<int>(m_output.adapter().mode()) << ", transport " << static_cast<int>(m_output.adapter().transport())
            << ", profile \"" << m_output.adapter().profileId() << "\"";
 
-    m_sequencer.init(m_useDynamicEvents);
-    m_inited = true;
-
-    // What prepares the plug-in is sent now, when it has loaded, not when
-    // playback starts. The synthesiser is ready to play once the main thread
-    // has served what the plug-in asked of it.
-    m_output.sendSetup();
-    m_pluginPtr->requestSettle();
+    // The audio side is prepared for the plug-in's ports as they are now.
+    hosted.releaseToAudio();
 }
 
 void ClapSynthesiser::toggleVolumeGain(const bool isActive)
@@ -268,14 +306,43 @@ void ClapSynthesiser::setPlaybackPosition(const muse::audio::msecs_t newPosition
 void ClapSynthesiser::setOutputSpec(const audio::OutputSpec& spec)
 {
     const bool rateChanged = spec.sampleRate != m_outputSpec.sampleRate;
+    const bool channelsChanged = spec.audioChannelCount != m_outputSpec.audioChannelCount;
     m_outputSpec = spec;
 
-    if (m_inited && rateChanged) {
-        // The plug-in is activated for one sample rate. Stop processing here,
-        // on the audio engine thread; the main thread activates it again.
-        m_output.stopNow();
-        m_pluginPtr->requestReactivation(static_cast<double>(spec.sampleRate));
+    if (!m_pluginPtr || (!rateChanged && !channelsChanged)) {
+        return;
     }
+
+    const double rate = static_cast<double>(spec.sampleRate);
+    if (!m_inited) {
+        // Still loading: the plug-in is activated at the latest rate, and
+        // onPluginLoaded() checks the rate once more.
+        m_pluginPtr->setWantedSampleRate(rate);
+        return;
+    }
+
+    if (!rateChanged) {
+        m_output.allNotesOff();
+        prepareOutput();
+        return;
+    }
+
+    // A plug-in is activated for one sample rate, on the main thread. Whoever
+    // changes the rate renders straight afterwards (audio export does, block
+    // after block, without asking whether the track is ready), so this waits
+    // here until the plug-in is active at the new rate, prepared and served.
+    // No block is rendered, and no note is lost, in between.
+    setSettled(false);
+    m_output.stopNow();
+    if (!m_pluginPtr->reactivateAndWait(rate, CLAP_REACTIVATION_WAIT_MSEC)) {
+        // Not in time, or refused. If it still happens, onPluginRestarted() takes over.
+        m_pluginPtr->reportAudioFault(static_cast<int>(ClapAudioFault::RestartTimedOut));
+        return;
+    }
+    prepareOutput();
+    m_output.sendSetup();
+    m_pluginPtr->settleAndWait(CLAP_SETTLE_WAIT_MSEC);
+    setSettled(true);
 }
 
 unsigned int ClapSynthesiser::audioChannelsCount() const

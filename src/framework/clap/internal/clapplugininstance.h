@@ -52,6 +52,7 @@ public:
     ClapPluginInstanceId id() const override;
 
     bool isLoaded() const override;
+    bool isLoadFinished() const override;
     async::Notification loadingCompleted() const override;
 
     ClapHostedPlugin& hosted() override;
@@ -63,12 +64,18 @@ public:
 
     void requestSettle() override;
     async::Notification settled() const override;
+    bool settleAndWait(int timeoutMsec) override;
 
-    void requestReactivation(double sampleRate) override;
+    void setWantedSampleRate(double sampleRate) override;
+    bool reactivateAndWait(double sampleRate, int timeoutMsec) override;
+    async::Notification restarted() const override;
     void reportAudioFault(int fault) override;
 
 private:
-    void doLoad(double sampleRate);
+    void doLoad();
+    void finishLoad(bool loaded);
+    //! Main thread. True if the plug-in is activated again, held.
+    bool doReactivate();
     //! True if the configuration carried no state or the plug-in took it.
     bool applyConfig(const muse::audio::AudioUnitConfig& config);
     void sendState();
@@ -85,18 +92,20 @@ private:
     bool m_configTaken = false;
 
     std::atomic<bool> m_isLoaded { false };
+    std::atomic<bool> m_loadFinished { false };
+    std::atomic<double> m_wantedRate { 0.0 };
     //! The plug-in refused the state saved in the score. That state is kept:
     //! nothing replaces it until the musician has had the editor open.
     bool m_stateRejected = false;
     int m_stateCountdown = 0;
     bool m_restartWanted = false;
 
-    std::atomic<double> m_reactivationRate { 0.0 };
     std::atomic<int> m_fault { 0 };
 
     async::Notification m_loadingCompleted;
     async::Notification m_stateRestored;
     async::Notification m_settled;
+    async::Notification m_restarted;
     async::Channel<muse::audio::AudioUnitConfig> m_pluginSettingsChanges;
 };
 }

@@ -44,6 +44,9 @@ enum Param : uint32_t {
     NotesStarted = 12,
     VoicesSounding = 13,
     LastTuningDelay = 14,
+    AudioThreadInProcess = 15,
+    AudioThreadOnMainThread = 16,
+    AudioThreadOnOtherThread = 17,
 };
 
 //! One CLAP note event written from clap/events.h.

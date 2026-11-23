@@ -18,6 +18,7 @@
 #include <QString>
 
 #include "audio/common/audiotypes.h"
+#include "clap/clapactions.h"
 
 //! CLAP (CLever Audio Plug-in) instruments in the mixer's sound menu: a
 //! submenu of their own, "CLAP", beside "VST3", grouped by vendor. A
@@ -41,16 +42,6 @@ struct ClapMenuVendor {
 inline QString clapMenuItemId(const muse::audio::AudioResourceId& resourceId)
 {
     return CLAP_MENU_ITEM_ID + "\\" + QString::fromStdString(resourceId);
-}
-
-inline bool clapResourceIdOfMenuItem(const QString& menuItemId, muse::audio::AudioResourceId& resourceId)
-{
-    const QString prefix = CLAP_MENU_ITEM_ID + "\\";
-    if (!menuItemId.startsWith(prefix) || menuItemId.size() == prefix.size()) {
-        return false;
-    }
-    resourceId = menuItemId.mid(prefix.size()).toStdString();
-    return true;
 }
 
 //! The vendors in order, each with its plug-ins sorted by the name shown.
@@ -85,6 +76,6 @@ inline std::vector<ClapMenuVendor> clapMenuModel(
 //! The action that opens the editor of a CLAP instrument; empty for any other source.
 inline std::string clapInstrumentEditorAction(muse::audio::AudioSourceType sourceType)
 {
-    return sourceType == muse::audio::AudioSourceType::Clap ? std::string("action://clap/instrument_editor") : std::string();
+    return sourceType == muse::audio::AudioSourceType::Clap ? std::string(muse::clap::CLAP_INSTRUMENT_EDITOR_ACTION) : std::string();
 }
 }

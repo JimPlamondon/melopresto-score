@@ -13,6 +13,7 @@
 #include <QCoreApplication>
 #include <QTimer>
 
+#include "../clapactions.h"
 #include "../widgets/clapviewdialog.h"
 #include "claphostedplugin.h"
 
@@ -26,7 +27,7 @@ static const char16_t* CLAP_EDITOR_URI = u"muse://clap/editor?instanceId=%1&moda
 void ClapActionsController::init()
 {
     interactiveUriRegister()->registerWidgetUri<ClapViewDialog>(Uri("muse://clap/editor"));
-    dispatcher()->reg(this, actions::ActionQuery("action://clap/instrument_editor"), this, &ClapActionsController::instEditor);
+    dispatcher()->reg(this, actions::ActionQuery(CLAP_INSTRUMENT_EDITOR_ACTION), this, &ClapActionsController::instEditor);
 }
 
 void ClapActionsController::instEditor(const actions::ActionQuery& actionQuery)

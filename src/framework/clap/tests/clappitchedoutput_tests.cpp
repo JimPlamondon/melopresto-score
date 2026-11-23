@@ -367,3 +367,57 @@ TEST(ClapPitchedOutputTests, AHostParameterValueReachesThePlugInWithAndWithoutAu
     EXPECT_FALSE(player.output.parameter(fixture::Level, 9.0)) << "outside the plug-in's plain range";
     EXPECT_FALSE(player.output.parameter(4242, 0.5));
 }
+
+TEST(ClapPitchedOutputTests, APitchChangeAtTheMomentOfItsNoteOnIsTheOneThatSounds)
+{
+    // On this route the note-on's own bend follows the note-on by one sample.
+    // A pitch change stated at the same moment comes after both.
+    Player midi(fixture::MIDI_ONLY_ID, MIDI_ONLY_FACTS);
+    ASSERT_EQ(midi.problem, "");
+    midi.output.sendSetup();
+    midi.plugin.serveMainThreadCallbacks();
+    midi.output.noteOn(1, 60, 10.0, 0.8f);
+    midi.output.pitchChange(1, 40.0);
+    EXPECT_NEAR(midi.centsFromKey(60), 40.0, 0.1);
+
+    // A change in a later block is placed at that block's start, as before.
+    midi.output.pitchChange(1, -15.0);
+    EXPECT_NEAR(midi.centsFromKey(60, 0.5), -15.0, 0.1);
+
+    Player tone(fixture::TONE_ID, TONE_FACTS);
+    ASSERT_EQ(tone.problem, "");
+    tone.output.noteOn(1, 60, 10.0, 0.8f);
+    tone.output.pitchChange(1, 40.0);
+    EXPECT_NEAR(tone.centsFromKey(60), 40.0, 0.05);
+}
+
+TEST(ClapPitchedOutputTests, SetupOwedToAPlugInThatCouldNotProcessIsDeliveredBeforeItsNextNotes)
+{
+    Player player(fixture::MIDI_ONLY_ID, MIDI_ONLY_FACTS);
+    ASSERT_EQ(player.problem, "");
+    ASSERT_TRUE(player.plugin.requestAudioStop());
+    player.plugin.deactivate();
+
+    // The plug-in is being restarted: setup cannot go through now.
+    player.output.sendSetup();
+    EXPECT_EQ(player.param(fixture::ProcessCalls), 0.0);
+    EXPECT_EQ(player.output.takeFault(), ClapAudioFault::None) << "nothing was dropped";
+
+    // Activated again: the setup goes first, in its own discarded block.
+    ASSERT_TRUE(player.plugin.activate(RATE));
+    player.render(0.01);
+    EXPECT_GE(player.plugin.serveMainThreadCallbacks(), 1);
+    EXPECT_EQ(player.param(fixture::MpeEnabled), 1.0);
+    player.output.noteOn(1, 60, COMMA, 0.8f);
+    EXPECT_NEAR(player.centsFromKey(60), COMMA, 0.1);
+}
+
+TEST(ClapPitchedOutputTests, ANoteWhoseKeyIsOutsideMidiIsRefusedWithAFault)
+{
+    Player player(fixture::TONE_ID, TONE_FACTS);
+    ASSERT_EQ(player.problem, "");
+    player.output.noteOn(1, 130, 5.0, 0.8f);
+    player.render(0.05);
+    EXPECT_EQ(player.param(fixture::NotesStarted), 0.0);
+    EXPECT_EQ(player.output.takeFault(), ClapAudioFault::NoteRefused);
+}

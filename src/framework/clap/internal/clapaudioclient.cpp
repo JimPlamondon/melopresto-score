@@ -26,6 +26,7 @@ const char* muse::clap::clapAudioFaultText(ClapAudioFault fault)
     case ClapAudioFault::ProcessError: return "the plug-in reported a processing error; the audio path has stopped";
     case ClapAudioFault::NonFiniteAudio: return "the plug-in wrote audio that is not a finite number; the audio path has stopped";
     case ClapAudioFault::StartRefused: return "the plug-in refused to start processing";
+    case ClapAudioFault::RestartTimedOut: return "the plug-in was not activated again in time; it is silent until it is";
     case ClapAudioFault::EventsWhileInactive: return "events arrived while the plug-in was not activated and were left out";
     case ClapAudioFault::UndeliverableRecord: return "a projected record has no CLAP form on the selected transport";
     case ClapAudioFault::NoteRefused: return "the shared projector refused a note";
@@ -87,8 +88,19 @@ void ClapAudioClient::raise(ClapAudioFault fault, bool stopsThePath)
     m_fault.compare_exchange_strong(expected, static_cast<int>(fault));
     if (stopsThePath) {
         m_stopped = true;
+        m_stoppedAtActivation = m_plugin ? m_plugin->activationCount() : 0;
         m_pending.clear();
     }
+}
+
+bool ClapAudioClient::stoppedNow()
+{
+    // A fault stops the path until the plug-in's next activation, which clears it.
+    if (m_stopped && m_plugin && m_plugin->activationCount() != m_stoppedAtActivation) {
+        m_stopped = false;
+        m_notProcessingReported = false;
+    }
+    return m_stopped;
 }
 
 ClapAudioFault ClapAudioClient::takeFault()
@@ -103,7 +115,7 @@ bool ClapAudioClient::isStopped() const
 
 bool ClapAudioClient::pushEvent(const ClapEventStorage& event, uint32_t time)
 {
-    if (m_stopped) {
+    if (stoppedNow()) {
         return false;
     }
     ClapEventStorage timed = event;
@@ -133,30 +145,24 @@ void ClapAudioClient::stopNow()
     m_pending.clear();
 }
 
-void ClapAudioClient::resume()
+uint32_t ClapAudioClient::renderChunk(uint32_t frames, bool takePending)
 {
-    m_stopped = false;
-    m_notProcessingReported = false;
-    m_pending.clear();
-    m_fault.store(0);
-}
-
-uint32_t ClapAudioClient::renderChunk(uint32_t frames)
-{
-    // The events of this chunk; later ones wait, moved to the next chunk's time.
-    m_current.clear();
-    uint32_t kept = 0;
-    const uint32_t pending = m_pending.size();
-    for (uint32_t i = 0; i < pending; ++i) {
-        ClapEventStorage event = m_pending.at(i);
-        if (event.header.time < frames) {
-            m_current.push(event);
-        } else {
-            event.header.time -= frames;
-            m_pending.replace(kept++, event);
+    if (takePending) {
+        // The events of this chunk; later ones wait, moved to the next chunk's time.
+        m_current.clear();
+        uint32_t kept = 0;
+        const uint32_t pending = m_pending.size();
+        for (uint32_t i = 0; i < pending; ++i) {
+            ClapEventStorage event = m_pending.at(i);
+            if (event.header.time < frames) {
+                m_current.push(event);
+            } else {
+                event.header.time -= frames;
+                m_pending.replace(kept++, event);
+            }
         }
+        m_pending.truncate(kept);
     }
-    m_pending.truncate(kept);
 
     for (std::vector<float>& channel : m_inputStorage) {
         std::memset(channel.data(), 0, sizeof(float) * frames);
@@ -207,7 +213,13 @@ uint32_t ClapAudioClient::process(float* interleaved, uint32_t frames)
     }
     std::memset(interleaved, 0, sizeof(float) * frames * m_hostChannels);
 
-    if (!m_plugin || m_stopped) {
+    if (!m_plugin) {
+        return 0;
+    }
+    if (stoppedNow()) {
+        // Nothing is rendered, but a request of the main thread to stop
+        // processing is still answered, so that the plug-in can be restarted.
+        m_plugin->prepareToProcess();
         return 0;
     }
     if (!m_plugin->prepareToProcess()) {
@@ -225,7 +237,7 @@ uint32_t ClapAudioClient::process(float* interleaved, uint32_t frames)
     uint32_t done = 0;
     while (done < frames) {
         const uint32_t chunk = std::min(frames - done, CLAP_MAX_BLOCK_FRAMES);
-        if (renderChunk(chunk) != chunk) {
+        if (renderChunk(chunk, true) != chunk) {
             // The path has stopped: what was rendered of this block is not kept.
             std::memset(interleaved, 0, sizeof(float) * frames * m_hostChannels);
             return 0;
@@ -246,24 +258,38 @@ uint32_t ClapAudioClient::process(float* interleaved, uint32_t frames)
     return frames;
 }
 
-void ClapAudioClient::processDiscarded(uint32_t frames)
+bool ClapAudioClient::deliverInDiscardedBlock(const ClapEventStorage* events, size_t count, uint32_t frames)
 {
-    if (!m_plugin || m_stopped || frames == 0 || !m_plugin->prepareToProcess()) {
-        return;
+    if (!m_plugin || frames == 0 || stoppedNow() || !m_plugin->prepareToProcess()) {
+        return false;
     }
+
+    m_current.clear();
+    for (size_t i = 0; i < count; ++i) {
+        ClapEventStorage event = events[i];
+        event.header.time = 0;
+        if (!m_current.push(event)) {
+            raise(ClapAudioFault::EventOverflow, true);
+            return false;
+        }
+    }
+
+    // The events go in the first chunk; what is queued stays queued.
     uint32_t done = 0;
     while (done < frames) {
         const uint32_t chunk = std::min(frames - done, CLAP_MAX_BLOCK_FRAMES);
-        if (renderChunk(chunk) != chunk) {
-            return;
+        if (renderChunk(chunk, false) != chunk) {
+            return false;
         }
+        m_current.clear();
         done += chunk;
     }
+    return true;
 }
 
 bool ClapAudioClient::flushParameters()
 {
-    if (!m_plugin || m_stopped || m_pending.size() == 0) {
+    if (!m_plugin || stoppedNow() || m_pending.size() == 0) {
         return false;
     }
     for (uint32_t i = 0; i < m_pending.size(); ++i) {

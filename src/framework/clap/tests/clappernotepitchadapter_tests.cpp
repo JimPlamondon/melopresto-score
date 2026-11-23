@@ -147,6 +147,7 @@ TEST(ClapPerNotePitchAdapterTests, TuningExpressionRouteSendsANoteOnAndTheOffset
     expectHeader(off.events[0].event.note.header, CLAP_EVENT_NOTE_OFF, sizeof(clap_event_note_t));
     EXPECT_EQ(off.events[0].event.note.note_id, note.note_id);
     EXPECT_EQ(off.events[0].event.note.key, 60);
+    EXPECT_EQ(off.events[0].event.note.channel, 0);
     EXPECT_EQ(off.events[0].event.note.port_index, 0);
     EXPECT_EQ(adapter.soundingNotes(), 2u);
 }
@@ -381,4 +382,18 @@ TEST(ClapPerNotePitchAdapterTests, AnUnreadableProfileFolderIsReportedAndNoRoute
     ClapPerNotePitchAdapter deaf;
     EXPECT_NE(deaf.configure(plugIn("Unprofiled", "", false, false)), "");
     EXPECT_FALSE(deaf.isUsable());
+}
+
+TEST(ClapPerNotePitchAdapterTests, AKeyNumberOutsideMidiIsRefusedByTheProjectorNotMovedToAnotherKey)
+{
+    for (const char* facts : { FOLLOWS_TUNING, MPE_ALREADY_ON }) {
+        ClapPerNotePitchAdapter adapter;
+        ASSERT_EQ(adapter.configure(plugIn("Out Of Range", facts, true, true)), "");
+        for (const int32_t key : { 128, 130, -1 }) {
+            const ClapPerNotePitchOutput on = adapter.noteOn(500 + key, key, 12.5, 0.5f);
+            EXPECT_EQ(on.status, 6) << "MELO_PROJECTOR_KEY_NUMBER_OUT_OF_RANGE for key " << key;
+            EXPECT_EQ(on.count, 0u);
+        }
+        EXPECT_EQ(adapter.soundingNotes(), 0u);
+    }
 }

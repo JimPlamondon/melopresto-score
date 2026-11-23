@@ -69,7 +69,11 @@ public:
 
 private:
     void onPluginLoaded();
-    void prepareAndSettle();
+    void onPluginRestarted();
+    //! Selects the pitch path, prepares the audio side for the plug-in's
+    //! ports and releases a held plug-in to the audio thread.
+    void prepareOutput();
+    void setSettled(bool settled);
     void toggleVolumeGain(const bool isActive);
     audio::samples_t processSequence(const ClapSequencer::EventSequence& sequence, const audio::samples_t sequenceSampleOffset,
                                      const audio::samples_t samples, float* buffer);

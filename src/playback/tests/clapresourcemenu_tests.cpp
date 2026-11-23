@@ -79,20 +79,12 @@ TEST(Playback_ClapResourceMenuTests, AVst3BuildOfTheSameSynthesizerIsNotTheCurre
     EXPECT_FALSE(menu[0].entries[0].current);
 }
 
-TEST(Playback_ClapResourceMenuTests, MenuItemIdsNameTheClapTypeAndTheDescriptorId)
-{
-    EXPECT_EQ(clapMenuItemId("org.example.synth"), QString("CLAP\\org.example.synth"));
-
-    std::string id;
-    EXPECT_TRUE(clapResourceIdOfMenuItem("CLAP\\org.example.synth", id));
-    EXPECT_EQ(id, "org.example.synth");
-    EXPECT_FALSE(clapResourceIdOfMenuItem("VST3\\Example Synth", id));
-    EXPECT_FALSE(clapResourceIdOfMenuItem("CLAP", id));
-}
-
 TEST(Playback_ClapResourceMenuTests, OnlyAClapSourceOpensTheClapEditor)
 {
-    EXPECT_EQ(clapInstrumentEditorAction(AudioSourceType::Clap), "action://clap/instrument_editor");
+    // The action's name is written once (clap/clapactions.h); the clap module
+    // registers that same constant and the mixer sends it.
+    EXPECT_EQ(clapInstrumentEditorAction(AudioSourceType::Clap), std::string(muse::clap::CLAP_INSTRUMENT_EDITOR_ACTION));
+    EXPECT_FALSE(std::string(muse::clap::CLAP_INSTRUMENT_EDITOR_ACTION).empty());
     EXPECT_EQ(clapInstrumentEditorAction(AudioSourceType::Vsti), "");
     EXPECT_EQ(clapInstrumentEditorAction(AudioSourceType::Fluid), "");
     EXPECT_EQ(clapInstrumentEditorAction(AudioSourceType::MuseSampler), "");

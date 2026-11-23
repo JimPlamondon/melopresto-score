@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include <array>
 #include <atomic>
 #include <string>
 
@@ -56,13 +57,13 @@ public:
     void setVolumeGain(float gain);
     //! For the audio thread when no block is being rendered.
     void stopNow();
-    void resume();
 
     //! The first fault not yet taken; None if there is none.
     ClapAudioFault takeFault();
 
 private:
-    void deliver(const ClapPerNotePitchOutput& output);
+    void deliver(const ClapPerNotePitchOutput& output, uint32_t earliestFrame = 0);
+    bool startedSinceLastBlock(int32_t noteId) const;
     void raise(ClapAudioFault fault);
 
     ClapPerNotePitchAdapter m_adapter;
@@ -71,5 +72,14 @@ private:
     std::atomic<int> m_fault { 0 };
     //! The missing pitch path is said once, not once a note.
     bool m_noPitchPathReported = false;
+    //! The setup could not be delivered (the plug-in was not processing); it
+    //! goes first, in a block of its own, when the plug-in next renders.
+    bool m_setupOwed = false;
+    //! The notes started since the last rendered block. A pitch change for
+    //! one of them is placed after the note-on and after the note-on's own
+    //! tuning or bend, not before them.
+    std::array<int32_t, 64> m_startedNotes {};
+    size_t m_startedCount = 0;
+    bool m_startedOverflow = false;
 };
 }

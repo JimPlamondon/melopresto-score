@@ -289,10 +289,9 @@ TEST(ClapHostedPluginTests, AMainThreadCallbackIsServedOnRequestAndSetupTakesEff
 
     // The MPE (MIDI Polyphonic Expression) Configuration Message as MIDI 1.0
     // control changes on channel index 0: registered parameter 6, 15 member channels.
-    ASSERT_TRUE(loaded.client.pushEvent(fixture::midiEvent(0xB0, 101, 0), 0));
-    ASSERT_TRUE(loaded.client.pushEvent(fixture::midiEvent(0xB0, 100, 6), 0));
-    ASSERT_TRUE(loaded.client.pushEvent(fixture::midiEvent(0xB0, 6, 15), 0));
-    loaded.client.processDiscarded(CLAP_SETUP_BLOCK_FRAMES);
+    const ClapEventStorage message[3] = { fixture::midiEvent(0xB0, 101, 0), fixture::midiEvent(0xB0, 100, 6),
+                                          fixture::midiEvent(0xB0, 6, 15) };
+    ASSERT_TRUE(loaded.client.deliverInDiscardedBlock(message, 3, CLAP_SETUP_BLOCK_FRAMES));
 
     EXPECT_EQ(param(loaded.plugin, fixture::MpeEnabled), 0.0) << "the plug-in waits for the main thread";
     EXPECT_EQ(param(loaded.plugin, fixture::MainThreadCalls), 0.0);
@@ -499,12 +498,109 @@ TEST(ClapAudioClientTests, AProcessErrorAndAnEventOverflowStopThePathWithAFault)
         EXPECT_FALSE(loaded.client.pushEvent(fixture::noteEvent(CLAP_EVENT_NOTE_ON, 1, 60, 1.0), 0));
         EXPECT_EQ(loaded.client.takeFault(), ClapAudioFault::EventOverflow);
         EXPECT_TRUE(loaded.client.isStopped());
-
-        // Activated again, the path may run again.
-        loaded.client.resume();
-        EXPECT_FALSE(loaded.client.isStopped());
-        EXPECT_EQ(loaded.client.process(buffer.data(), 128), 128u);
     }
+}
+
+TEST(ClapAudioClientTests, AFaultStopsThePathUntilThePlugInIsActivatedAgain)
+{
+    using State = ClapHostedPlugin::AudioState;
+    Loaded loaded(fixture::TONE_ID);
+    std::vector<float> buffer(2 * 128, 1.f);
+    loaded.setParam(fixture::FailProcess, 1.0);
+    EXPECT_EQ(loaded.client.process(buffer.data(), 128), 0u);
+    ASSERT_TRUE(loaded.client.isStopped());
+    EXPECT_EQ(loaded.client.takeFault(), ClapAudioFault::ProcessError);
+
+    // The main thread wants to restart the plug-in (a new sample rate, or the
+    // plug-in asked). A stopped path still answers the stop request, or the
+    // restart would never happen.
+    EXPECT_FALSE(loaded.plugin.requestAudioStop());
+    EXPECT_EQ(loaded.client.process(buffer.data(), 128), 0u);
+    EXPECT_EQ(loaded.plugin.audioState(), State::Stopped);
+    ASSERT_TRUE(loaded.plugin.requestAudioStop());
+
+    // Deactivated and activated again, as the application does it. The new
+    // activation is what clears the fault; nothing else does.
+    loaded.plugin.deactivate();
+    EXPECT_EQ(loaded.client.process(buffer.data(), 128), 0u);
+    EXPECT_TRUE(loaded.client.isStopped());
+    ASSERT_TRUE(loaded.plugin.activate(48000.0));
+
+    ClapEventStorage healthy;
+    ASSERT_TRUE(loaded.plugin.makeParameterEvent(fixture::FailProcess, 0.0, healthy));
+    ASSERT_TRUE(loaded.client.pushEvent(healthy, 0)) << "the path takes events again";
+    ASSERT_TRUE(loaded.client.pushEvent(fixture::noteEvent(CLAP_EVENT_NOTE_ON, 1, 69, 1.0), 0));
+    EXPECT_EQ(loaded.client.process(buffer.data(), 128), 128u);
+    EXPECT_FALSE(loaded.client.isStopped());
+    EXPECT_FALSE(allZero(buffer));
+    EXPECT_EQ(loaded.client.takeFault(), ClapAudioFault::None);
+}
+
+TEST(ClapHostedPluginTests, APlugInHeldAfterARestartIsNotProcessedUntilTheAudioSideIsPrepared)
+{
+    using State = ClapHostedPlugin::AudioState;
+    Loaded loaded(fixture::TONE_ID);
+    ASSERT_TRUE(loaded.plugin.requestAudioStop());
+    loaded.plugin.deactivate();
+    const uint32_t before = loaded.plugin.activationCount();
+
+    // Activated again for a restart: its ports may have changed, so the audio
+    // thread may not touch it until the audio side has prepared for them.
+    ASSERT_TRUE(loaded.plugin.activate(44100.0, CLAP_MAX_BLOCK_FRAMES, /*held*/ true));
+    EXPECT_EQ(loaded.plugin.activationCount(), before + 1);
+    EXPECT_EQ(loaded.plugin.audioState(), State::Held);
+    EXPECT_FALSE(loaded.plugin.prepareToProcess());
+    EXPECT_EQ(loaded.plugin.audioState(), State::Held);
+    EXPECT_EQ(param(loaded.plugin, fixture::ProcessCalls), 0.0);
+
+    loaded.plugin.releaseToAudio();
+    EXPECT_EQ(loaded.plugin.audioState(), State::Ready);
+    EXPECT_TRUE(loaded.plugin.prepareToProcess());
+
+    // A held plug-in can be withdrawn again without the audio thread.
+    EXPECT_FALSE(loaded.plugin.requestAudioStop());
+    EXPECT_FALSE(loaded.plugin.prepareToProcess());
+    loaded.plugin.deactivate();
+    ASSERT_TRUE(loaded.plugin.activate(44100.0, CLAP_MAX_BLOCK_FRAMES, true));
+    EXPECT_TRUE(loaded.plugin.requestAudioStop());
+    EXPECT_EQ(loaded.plugin.audioState(), State::Stopped);
+}
+
+TEST(ClapHostedPluginTests, OnlyAThreadInsideAnAudioCallIsCalledTheAudioThread)
+{
+    Loaded loaded(fixture::MIDI_ONLY_ID);
+    // The MPE Configuration Message makes the fixture ask for its main-thread callback.
+    const ClapEventStorage message[3] = { fixture::midiEvent(0xB0, 101, 0), fixture::midiEvent(0xB0, 100, 6),
+                                          fixture::midiEvent(0xB0, 6, 15) };
+    ASSERT_TRUE(loaded.client.deliverInDiscardedBlock(message, 3, CLAP_SETUP_BLOCK_FRAMES));
+    ASSERT_EQ(loaded.plugin.serveMainThreadCallbacks(), 1);
+
+    EXPECT_EQ(param(loaded.plugin, fixture::AudioThreadInProcess), 1.0);
+    EXPECT_EQ(param(loaded.plugin, fixture::AudioThreadOnMainThread), 0.0);
+    EXPECT_EQ(param(loaded.plugin, fixture::AudioThreadOnOtherThread), 0.0)
+        << "a thread of the plug-in's own is neither the main nor the audio thread";
+}
+
+TEST(ClapAudioClientTests, SetupForAPlugInThatCannotProcessIsNotQueuedAndNotLost)
+{
+    Loaded loaded(fixture::MIDI_ONLY_ID);
+    ASSERT_TRUE(loaded.plugin.requestAudioStop());
+    loaded.plugin.deactivate();
+
+    const ClapEventStorage setup[3] = { fixture::midiEvent(0xB0, 101, 0), fixture::midiEvent(0xB0, 100, 6),
+                                        fixture::midiEvent(0xB0, 6, 15) };
+    EXPECT_FALSE(loaded.client.deliverInDiscardedBlock(setup, 3, CLAP_SETUP_BLOCK_FRAMES)) << "the caller still owes the setup";
+    EXPECT_EQ(loaded.client.pendingEvents(), 0u);
+    EXPECT_EQ(loaded.client.takeFault(), ClapAudioFault::None);
+
+    // Activated: the same events are delivered, apart from any note waiting in the queue.
+    ASSERT_TRUE(loaded.plugin.activate(48000.0));
+    ASSERT_TRUE(loaded.client.pushEvent(fixture::midiEvent(0x91, 60, 100), 0));
+    EXPECT_TRUE(loaded.client.deliverInDiscardedBlock(setup, 3, CLAP_SETUP_BLOCK_FRAMES));
+    EXPECT_EQ(loaded.client.pendingEvents(), 1u) << "the note waits for a block that is kept";
+    EXPECT_EQ(param(loaded.plugin, fixture::NotesStarted), 0.0);
+    EXPECT_EQ(loaded.plugin.serveMainThreadCallbacks(), 1);
+    EXPECT_EQ(param(loaded.plugin, fixture::MpeEnabled), 1.0);
 }
 
 TEST(ClapAudioClientTests, EventsForAPlugInThatIsNotActivatedAreLeftOutWithAFault)

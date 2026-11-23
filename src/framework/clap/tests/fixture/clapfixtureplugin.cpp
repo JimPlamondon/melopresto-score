@@ -31,6 +31,7 @@
 #include <cstdio>
 #include <cstring>
 #include <limits>
+#include <thread>
 
 #include <clap/clap.h>
 
@@ -67,7 +68,10 @@ enum Param : clap_id {
     NotesStarted = 12,
     VoicesSounding = 13,
     LastTuningDelay = 14, // samples between the last note-on and the first tuning or bend that followed it
-    ParamCount = 14
+    AudioThreadInProcess = 15,     // the host called this thread the audio thread during process
+    AudioThreadOnMainThread = 16,  // ... during on_main_thread
+    AudioThreadOnOtherThread = 17, // ... on a thread of the plug-in's own, which is neither
+    ParamCount = 17
 };
 
 constexpr int MAX_VOICES = 64;
@@ -115,6 +119,9 @@ struct Fixture {
     std::atomic<int> notesStarted { 0 };
     std::atomic<int> voicesSounding { 0 };
     std::atomic<int> lastTuningDelay { -1 };
+    std::atomic<int> audioThreadInProcess { -1 };
+    std::atomic<int> audioThreadOnMainThread { -1 };
+    std::atomic<int> audioThreadOnOtherThread { -1 };
     std::atomic<bool> editorOpen { false };
     std::atomic<bool> editorParentSet { false };
 
@@ -169,8 +176,11 @@ bool matches(const Voice& voice, int32_t noteId, int16_t channel, int16_t key)
     if (!voice.active || voice.releasing) {
         return false;
     }
-    if (noteId >= 0 && voice.noteId >= 0) {
-        return voice.noteId == noteId;
+    // Every field the host states must agree: its note id, its channel and
+    // its key. A host that addresses a note by the wrong channel or key
+    // reaches no voice, even with the right note id.
+    if (noteId >= 0 && voice.noteId >= 0 && voice.noteId != noteId) {
+        return false;
     }
     return (channel < 0 || voice.channel == channel) && (key < 0 || voice.key == key);
 }
@@ -327,6 +337,11 @@ void render(Fixture* f, float* left, float* right, uint32_t from, uint32_t to)
 
 // --- plug-in ---------------------------------------------------------------
 
+const clap_host_thread_check_t* threadCheck(Fixture* f)
+{
+    return static_cast<const clap_host_thread_check_t*>(f->host->get_extension(f->host, CLAP_EXT_THREAD_CHECK));
+}
+
 bool pluginInit(const clap_plugin_t*)
 {
     return true;
@@ -369,6 +384,9 @@ clap_process_status pluginProcess(const clap_plugin_t* plugin, const clap_proces
 {
     Fixture* f = self(plugin);
     f->processCalls.fetch_add(1);
+    if (const clap_host_thread_check_t* check = threadCheck(f)) {
+        f->audioThreadInProcess.store(check->is_audio_thread(f->host) ? 1 : 0);
+    }
     if (process->frames_count == 0) {
         f->zeroFrameProcessCalls.fetch_add(1);
         f->poisoned = true;
@@ -420,6 +438,13 @@ void pluginOnMainThread(const clap_plugin_t* plugin)
 {
     Fixture* f = self(plugin);
     f->mainThreadCalls.fetch_add(1);
+    if (const clap_host_thread_check_t* check = threadCheck(f)) {
+        f->audioThreadOnMainThread.store(check->is_audio_thread(f->host) ? 1 : 0);
+        std::thread other([f, check]() {
+            f->audioThreadOnOtherThread.store(check->is_audio_thread(f->host) ? 1 : 0);
+        });
+        other.join();
+    }
     const int members = f->pendingMpeMembers.exchange(-1);
     if (members >= 0) {
         f->mpeEnabled.store(members > 0);
@@ -499,6 +524,9 @@ const ParamDefinition PARAMS[ParamCount] = {
     { NotesStarted, "NotesStarted", 0.0, 1e9, 0.0, CLAP_PARAM_IS_READONLY },
     { VoicesSounding, "VoicesSounding", 0.0, 1e9, 0.0, CLAP_PARAM_IS_READONLY },
     { LastTuningDelay, "LastTuningDelay", -1.0, 1e9, -1.0, CLAP_PARAM_IS_READONLY },
+    { AudioThreadInProcess, "AudioThreadInProcess", -1.0, 1.0, -1.0, CLAP_PARAM_IS_READONLY },
+    { AudioThreadOnMainThread, "AudioThreadOnMainThread", -1.0, 1.0, -1.0, CLAP_PARAM_IS_READONLY },
+    { AudioThreadOnOtherThread, "AudioThreadOnOtherThread", -1.0, 1.0, -1.0, CLAP_PARAM_IS_READONLY },
 };
 
 uint32_t paramsCount(const clap_plugin_t*)
@@ -554,6 +582,12 @@ bool paramsGetValue(const clap_plugin_t* plugin, clap_id id, double* value)
     case VoicesSounding: *value = f->voicesSounding.load();
         return true;
     case LastTuningDelay: *value = f->lastTuningDelay.load();
+        return true;
+    case AudioThreadInProcess: *value = f->audioThreadInProcess.load();
+        return true;
+    case AudioThreadOnMainThread: *value = f->audioThreadOnMainThread.load();
+        return true;
+    case AudioThreadOnOtherThread: *value = f->audioThreadOnOtherThread.load();
         return true;
     default:
         return false;
