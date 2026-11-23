@@ -198,6 +198,7 @@ enum class AudioResourceType {
     MuseSamplerSoundPack,
     Lv2Plugin,
     AudioUnit,
+    ClapPlugin, // CLAP (CLever Audio Plug-in) instrument, hosted by the clap module
 };
 
 static const std::map<AudioResourceType, QString> RESOURCE_TYPE_MAP = {
@@ -206,6 +207,7 @@ static const std::map<AudioResourceType, QString> RESOURCE_TYPE_MAP = {
     { AudioResourceType::FluidSoundfont, "fluid_soundfont" },
     { AudioResourceType::VstPlugin, "vst_plugin" },
     { AudioResourceType::MusePlugin, "muse_plugin" },
+    { AudioResourceType::ClapPlugin, "clap_plugin" },
 };
 
 struct AudioResourceMeta {
@@ -321,6 +323,7 @@ struct AudioFxParams {
         case AudioResourceType::Lv2Plugin:
         case AudioResourceType::FluidSoundfont:
         case AudioResourceType::MuseSamplerSoundPack:
+        case AudioResourceType::ClapPlugin:
         case AudioResourceType::Undefined: break;
         }
 
@@ -392,7 +395,8 @@ enum class AudioSourceType {
     Undefined = -1,
     Fluid,
     Vsti,
-    MuseSampler
+    MuseSampler,
+    Clap
 };
 
 inline AudioSourceType sourceTypeFromResourceType(AudioResourceType type)
@@ -401,6 +405,7 @@ inline AudioSourceType sourceTypeFromResourceType(AudioResourceType type)
     case AudioResourceType::FluidSoundfont: return AudioSourceType::Fluid;
     case AudioResourceType::VstPlugin: return AudioSourceType::Vsti;
     case AudioResourceType::MuseSamplerSoundPack: return AudioSourceType::MuseSampler;
+    case AudioResourceType::ClapPlugin: return AudioSourceType::Clap;
     case AudioResourceType::AudioUnit:
     case AudioResourceType::Lv2Plugin:
     case AudioResourceType::MusePlugin:

@@ -66,6 +66,14 @@ inline String audioSourceName(const AudioInputParams& params)
         }
     }
 
+    // A CLAP resource's id is its descriptor id; the plug-in's own name is an attribute.
+    if (params.resourceMeta.type == audio::AudioResourceType::ClapPlugin) {
+        const String& clapName = params.resourceMeta.attributeVal(u"clapName");
+        if (!clapName.empty()) {
+            return clapName;
+        }
+    }
+
     return String::fromStdString(params.resourceMeta.id);
 }
 

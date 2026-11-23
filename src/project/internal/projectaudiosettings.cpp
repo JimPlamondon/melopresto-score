@@ -40,7 +40,8 @@ static const std::map<AudioSourceType, QString> SOURCE_TYPE_MAP = {
     { AudioSourceType::Undefined, "undefined" },
     { AudioSourceType::MuseSampler, "musesampler" },
     { AudioSourceType::Fluid, "fluid" },
-    { AudioSourceType::Vsti, "vsti" }
+    { AudioSourceType::Vsti, "vsti" },
+    { AudioSourceType::Clap, "clap" }
 };
 
 static void doCompatibilityConversions(AudioResourceMeta& meta)
