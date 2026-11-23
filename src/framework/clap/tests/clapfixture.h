@@ -47,7 +47,22 @@ enum Param : uint32_t {
     AudioThreadInProcess = 15,
     AudioThreadOnMainThread = 16,
     AudioThreadOnOtherThread = 17,
+    Serial = 18,
 };
+
+//! How the fixture tells its host of a change made in its editor.
+enum GuiEdit : int {
+    //! As a real plug-in does: request_flush, then the value on the output events.
+    FlushThenReport = 0,
+    //! Nothing reaches the host.
+    Silent = 1,
+    MarkDirty = 2,
+    RescanValues = 3,
+};
+
+//! The musician changes a parameter in the editor of the fixture instance
+//! with this serial (its parameter Serial). POSIX only.
+void guiEdit(int serial, uint32_t paramId, double value, GuiEdit how);
 
 //! One CLAP note event written from clap/events.h.
 inline ClapEventStorage noteEvent(uint16_t type, int32_t noteId, int16_t key, double velocity)

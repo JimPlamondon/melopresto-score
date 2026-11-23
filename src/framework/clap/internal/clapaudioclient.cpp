@@ -287,6 +287,34 @@ bool ClapAudioClient::deliverInDiscardedBlock(const ClapEventStorage* events, si
     return true;
 }
 
+bool ClapAudioClient::flushRequested()
+{
+    if (!m_plugin || stoppedNow() || !m_plugin->prepareToProcess()) {
+        return false;
+    }
+    // Parameter values that are waiting go along; anything else waits for a block.
+    m_current.clear();
+    uint32_t kept = 0;
+    const uint32_t pending = m_pending.size();
+    for (uint32_t i = 0; i < pending; ++i) {
+        ClapEventStorage event = m_pending.at(i);
+        if (event.header.type == CLAP_EVENT_PARAM_VALUE) {
+            event.header.time = 0;
+            m_current.push(event);
+        } else {
+            m_pending.replace(kept++, event);
+        }
+    }
+    m_pending.truncate(kept);
+
+    const bool flushed = m_plugin->flushParameters(m_current.list(), m_out.list());
+    m_current.clear();
+    if (m_out.takeParameterChanged()) {
+        m_plugin->markStateChanged();
+    }
+    return flushed;
+}
+
 bool ClapAudioClient::flushParameters()
 {
     if (!m_plugin || stoppedNow() || m_pending.size() == 0) {

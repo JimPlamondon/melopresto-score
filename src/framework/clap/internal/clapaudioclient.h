@@ -80,6 +80,10 @@ public:
     //! kept; what is queued stays queued. False, with nothing queued, when
     //! the plug-in cannot process now.
     bool deliverInDiscardedBlock(const ClapEventStorage* events, size_t count, uint32_t frames);
+    //! The plug-in asked for a parameter flush: flushes now, with whatever
+    //! parameter values are pending. Audio thread, between blocks. False if
+    //! the plug-in cannot be flushed now.
+    bool flushRequested();
     //! Delivers pending parameter values with no audio. False if anything else is pending.
     bool flushParameters();
 

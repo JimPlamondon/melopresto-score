@@ -96,6 +96,16 @@ void ClapSynthesiser::init(const OutputSpec& spec)
         onPluginRestarted();
     });
 
+    // The plug-in asked for a parameter flush. The engine renders no block
+    // while playback is stopped, so the flush is called here, on the audio
+    // engine thread, between blocks. It is what brings a value changed in
+    // the plug-in's editor to this host while nothing plays.
+    m_pluginPtr->flushWanted().onNotify(this, [this]() {
+        if (m_inited) {
+            m_output.flushRequested();
+        }
+    });
+
     // Subscribe first, then ask: a load that ended (well or badly) before
     // this subscription sent its notification to nobody.
     m_pluginPtr->loadingCompleted().onNotify(this, [this]() {

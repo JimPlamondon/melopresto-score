@@ -49,6 +49,7 @@ set(MODULE_TEST_SRC
     ${CMAKE_CURRENT_LIST_DIR}/clappernotepitchadapter_tests.cpp
     ${CMAKE_CURRENT_LIST_DIR}/clappitchedoutput_tests.cpp
     ${CMAKE_CURRENT_LIST_DIR}/clapsequencer_tests.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/clapstatewatch_tests.cpp
 
     ${CMAKE_CURRENT_LIST_DIR}/../internal/clapaudioclient.cpp
     ${CMAKE_CURRENT_LIST_DIR}/../internal/clapaudioclient.h
@@ -65,6 +66,8 @@ set(MODULE_TEST_SRC
     ${CMAKE_CURRENT_LIST_DIR}/../internal/clappluginmetareader.h
     ${CMAKE_CURRENT_LIST_DIR}/../internal/clappluginsscanner.cpp
     ${CMAKE_CURRENT_LIST_DIR}/../internal/clappluginsscanner.h
+    ${CMAKE_CURRENT_LIST_DIR}/../internal/clapstatewatch.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/../internal/clapstatewatch.h
     ${CMAKE_CURRENT_LIST_DIR}/../internal/synth/clapsequencer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/../internal/synth/clapsequencer.h
 )

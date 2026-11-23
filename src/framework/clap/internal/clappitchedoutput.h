@@ -54,6 +54,9 @@ public:
     //! parameter values go through the parameter flush, notes wait.
     uint32_t render(float* interleaved, uint32_t frames);
 
+    //! The plug-in asked for a parameter flush while no block is rendered.
+    void flushRequested();
+
     void setVolumeGain(float gain);
     //! For the audio thread when no block is being rendered.
     void stopNow();

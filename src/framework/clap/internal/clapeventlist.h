@@ -109,7 +109,10 @@ private:
     static bool CLAP_ABI listTryPush(const clap_output_events_t* list, const clap_event_header_t* event)
     {
         ClapOutputEvents* self = static_cast<ClapOutputEvents*>(list->ctx);
-        if (event && event->space_id == CLAP_CORE_EVENT_SPACE_ID && event->type == CLAP_EVENT_PARAM_VALUE) {
+        // A value, or a gesture around one: a control was moved in the plug-in's editor.
+        if (event && event->space_id == CLAP_CORE_EVENT_SPACE_ID
+            && (event->type == CLAP_EVENT_PARAM_VALUE || event->type == CLAP_EVENT_PARAM_GESTURE_BEGIN
+                || event->type == CLAP_EVENT_PARAM_GESTURE_END)) {
             self->m_parameterChanged.store(true);
         }
         return true;

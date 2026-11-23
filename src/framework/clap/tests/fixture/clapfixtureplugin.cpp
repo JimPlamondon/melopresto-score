@@ -31,6 +31,7 @@
 #include <cstdio>
 #include <cstring>
 #include <limits>
+#include <mutex>
 #include <thread>
 
 #include <clap/clap.h>
@@ -71,7 +72,8 @@ enum Param : clap_id {
     AudioThreadInProcess = 15,     // the host called this thread the audio thread during process
     AudioThreadOnMainThread = 16,  // ... during on_main_thread
     AudioThreadOnOtherThread = 17, // ... on a thread of the plug-in's own, which is neither
-    ParamCount = 17
+    Serial = 18,                   // which instance this is, for melo_clap_fixture_gui_edit
+    ParamCount = 18
 };
 
 constexpr int MAX_VOICES = 64;
@@ -122,6 +124,11 @@ struct Fixture {
     std::atomic<int> audioThreadInProcess { -1 };
     std::atomic<int> audioThreadOnMainThread { -1 };
     std::atomic<int> audioThreadOnOtherThread { -1 };
+    int serial = 0;
+    //! A change the musician made in the editor, waiting for the next process or flush call.
+    std::atomic<bool> guiEditPending { false };
+    std::atomic<uint32_t> guiEditParam { 0 };
+    std::atomic<double> guiEditValue { 0.0 };
     std::atomic<bool> editorOpen { false };
     std::atomic<bool> editorParentSet { false };
 
@@ -141,6 +148,66 @@ struct Fixture {
 Fixture* self(const clap_plugin_t* plugin)
 {
     return static_cast<Fixture*>(plugin->plugin_data);
+}
+
+// --- the instances, so that a test can reach one as its editor would ----------
+
+std::mutex g_instancesMutex;
+Fixture* g_instances[64] = {};
+int g_lastSerial = 0;
+
+void setValue(Fixture* f, clap_id id, double value)
+{
+    switch (id) {
+    case Level: f->level.store(value);
+        break;
+    case Program: f->program.store(value);
+        break;
+    case EmitNonFinite: f->emitNonFinite.store(value);
+        break;
+    case FailProcess: f->failProcess.store(value);
+        break;
+    default:
+        break;
+    }
+}
+
+//! What a real plug-in does with a value its editor changed: it applies it
+//! in its next process or flush call and tells the host through the output
+//! events, as a gesture around a parameter value.
+void emitPendingGuiEdit(Fixture* f, const clap_output_events_t* out)
+{
+    if (!f->guiEditPending.exchange(false)) {
+        return;
+    }
+    const clap_id id = f->guiEditParam.load();
+    const double value = f->guiEditValue.load();
+    setValue(f, id, value);
+    if (!out) {
+        return;
+    }
+
+    clap_event_param_gesture_t gesture {};
+    gesture.header.size = sizeof(gesture);
+    gesture.header.space_id = CLAP_CORE_EVENT_SPACE_ID;
+    gesture.header.type = CLAP_EVENT_PARAM_GESTURE_BEGIN;
+    gesture.param_id = id;
+    out->try_push(out, &gesture.header);
+
+    clap_event_param_value_t changed {};
+    changed.header.size = sizeof(changed);
+    changed.header.space_id = CLAP_CORE_EVENT_SPACE_ID;
+    changed.header.type = CLAP_EVENT_PARAM_VALUE;
+    changed.param_id = id;
+    changed.note_id = -1;
+    changed.port_index = -1;
+    changed.channel = -1;
+    changed.key = -1;
+    changed.value = value;
+    out->try_push(out, &changed.header);
+
+    gesture.header.type = CLAP_EVENT_PARAM_GESTURE_END;
+    out->try_push(out, &gesture.header);
 }
 
 // --- sound -----------------------------------------------------------------
@@ -275,18 +342,7 @@ void handleEvent(Fixture* f, const clap_event_header_t* header)
     } break;
     case CLAP_EVENT_PARAM_VALUE: {
         const clap_event_param_value_t* param = reinterpret_cast<const clap_event_param_value_t*>(header);
-        switch (param->param_id) {
-        case Level: f->level.store(param->value);
-            break;
-        case Program: f->program.store(param->value);
-            break;
-        case EmitNonFinite: f->emitNonFinite.store(param->value);
-            break;
-        case FailProcess: f->failProcess.store(param->value);
-            break;
-        default:
-            break;
-        }
+        setValue(f, param->param_id, param->value);
     } break;
     default:
         break;
@@ -349,7 +405,16 @@ bool pluginInit(const clap_plugin_t*)
 
 void pluginDestroy(const clap_plugin_t* plugin)
 {
-    delete self(plugin);
+    Fixture* f = self(plugin);
+    {
+        std::lock_guard<std::mutex> lock(g_instancesMutex);
+        for (Fixture*& instance : g_instances) {
+            if (instance == f) {
+                instance = nullptr;
+            }
+        }
+    }
+    delete f;
 }
 
 bool pluginActivate(const clap_plugin_t* plugin, double sampleRate, uint32_t, uint32_t)
@@ -419,6 +484,7 @@ clap_process_status pluginProcess(const clap_plugin_t* plugin, const clap_proces
         handleEvent(f, header);
     }
     render(f, left, right, rendered, process->frames_count);
+    emitPendingGuiEdit(f, process->out_events);
 
     if (f->failProcess.load() >= 0.5) {
         return CLAP_PROCESS_ERROR;
@@ -527,6 +593,7 @@ const ParamDefinition PARAMS[ParamCount] = {
     { AudioThreadInProcess, "AudioThreadInProcess", -1.0, 1.0, -1.0, CLAP_PARAM_IS_READONLY },
     { AudioThreadOnMainThread, "AudioThreadOnMainThread", -1.0, 1.0, -1.0, CLAP_PARAM_IS_READONLY },
     { AudioThreadOnOtherThread, "AudioThreadOnOtherThread", -1.0, 1.0, -1.0, CLAP_PARAM_IS_READONLY },
+    { Serial, "Serial", 0.0, 1e9, 0.0, CLAP_PARAM_IS_READONLY },
 };
 
 uint32_t paramsCount(const clap_plugin_t*)
@@ -589,6 +656,8 @@ bool paramsGetValue(const clap_plugin_t* plugin, clap_id id, double* value)
         return true;
     case AudioThreadOnOtherThread: *value = f->audioThreadOnOtherThread.load();
         return true;
+    case Serial: *value = f->serial;
+        return true;
     default:
         return false;
     }
@@ -605,8 +674,9 @@ bool paramsTextToValue(const clap_plugin_t*, clap_id, const char* text, double* 
     return text && std::sscanf(text, "%lf", value) == 1;
 }
 
-void paramsFlush(const clap_plugin_t* plugin, const clap_input_events_t* in, const clap_output_events_t*)
+void paramsFlush(const clap_plugin_t* plugin, const clap_input_events_t* in, const clap_output_events_t* out)
 {
+    emitPendingGuiEdit(self(plugin), out);
     Fixture* f = self(plugin);
     f->flushCalls.fetch_add(1);
     const uint32_t count = in ? in->size(in) : 0;
@@ -838,6 +908,16 @@ const clap_plugin_t* factoryCreate(const clap_plugin_factory_t*, const clap_host
     f->plugin.process = pluginProcess;
     f->plugin.get_extension = pluginGetExtension;
     f->plugin.on_main_thread = pluginOnMainThread;
+    {
+        std::lock_guard<std::mutex> lock(g_instancesMutex);
+        f->serial = ++g_lastSerial;
+        for (Fixture*& instance : g_instances) {
+            if (!instance) {
+                instance = f;
+                break;
+            }
+        }
+    }
     return &f->plugin;
 }
 
@@ -859,5 +939,43 @@ const void* entryGetFactory(const char* factoryId)
 }
 
 extern "C" {
+//! For tests: the musician changes a parameter in the editor of the instance
+//! with this serial. \p how says what the plug-in then tells its host:
+//! 0, what a real plug-in does: it asks for a parameter flush and reports the
+//! value in its next process or flush call; 1, nothing at all; 2, it marks
+//! its state dirty; 3, it asks for a rescan of its parameter values.
+CLAP_EXPORT void melo_clap_fixture_gui_edit(int serial, uint32_t paramId, double value, int how)
+{
+    Fixture* f = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(g_instancesMutex);
+        for (Fixture* instance : g_instances) {
+            if (instance && instance->serial == serial) {
+                f = instance;
+            }
+        }
+    }
+    if (!f) {
+        return;
+    }
+    const clap_host_params_t* params = static_cast<const clap_host_params_t*>(f->host->get_extension(f->host, CLAP_EXT_PARAMS));
+    const clap_host_state_t* state = static_cast<const clap_host_state_t*>(f->host->get_extension(f->host, CLAP_EXT_STATE));
+    if (how == 0) {
+        f->guiEditParam.store(paramId);
+        f->guiEditValue.store(value);
+        f->guiEditPending.store(true);
+        if (params) {
+            params->request_flush(f->host);
+        }
+        return;
+    }
+    setValue(f, paramId, value);
+    if (how == 2 && state) {
+        state->mark_dirty(f->host);
+    } else if (how == 3 && params) {
+        params->rescan(f->host, CLAP_PARAM_RESCAN_VALUES);
+    }
+}
+
 CLAP_EXPORT const clap_plugin_entry_t clap_entry = { CLAP_VERSION_INIT, entryInit, entryDeinit, entryGetFactory };
 }

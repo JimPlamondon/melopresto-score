@@ -93,9 +93,8 @@ struct ClapHostExtensions {
                 // Read again at the main thread's next visit; on_main_thread is not called for it.
                 self->m_parametersRescanRequested.store(true);
             }
-            if (flags & (CLAP_PARAM_RESCAN_VALUES | CLAP_PARAM_RESCAN_ALL)) {
-                self->m_stateChanged.store(true);
-            }
+            // Whatever is to be scanned again, the state may have changed.
+            self->m_stateChanged.store(true);
         }
     }
 
@@ -104,9 +103,15 @@ struct ClapHostExtensions {
         // This host keeps no automation and no modulation of a plug-in's parameters.
     }
 
-    static void CLAP_ABI paramsRequestFlush(const clap_host_t*)
+    static void CLAP_ABI paramsRequestFlush(const clap_host_t* host)
     {
-        // The audio thread calls process, or the parameter flush, continuously.
+        // The plug-in has parameter values to hand over (a control moved in
+        // its editor, for one). While a score plays, the next process call
+        // takes them. While playback is stopped the engine renders no block,
+        // so the audio side is asked to call the parameter flush.
+        if (ClapHostedPlugin* self = clapHosted(host)) {
+            self->m_flushRequested.store(true);
+        }
     }
 
     // gui
@@ -570,6 +575,11 @@ bool ClapHostedPlugin::takeStateChanged()
 void ClapHostedPlugin::markStateChanged()
 {
     m_stateChanged.store(true);
+}
+
+bool ClapHostedPlugin::takeFlushRequested()
+{
+    return m_flushRequested.exchange(false);
 }
 
 bool ClapHostedPlugin::takeRestartRequested()

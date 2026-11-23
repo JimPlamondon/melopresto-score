@@ -181,6 +181,11 @@ uint32_t ClapPitchedOutput::render(float* interleaved, uint32_t frames)
     return m_client.process(interleaved, frames);
 }
 
+void ClapPitchedOutput::flushRequested()
+{
+    m_client.flushRequested();
+}
+
 void ClapPitchedOutput::setVolumeGain(float gain)
 {
     m_client.setVolumeGain(gain);

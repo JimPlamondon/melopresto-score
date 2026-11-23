@@ -121,6 +121,8 @@ public:
     //! Any thread, no allocation: the plug-in's state is no longer what was last saved.
     void markStateChanged();
     bool takeRestartRequested();
+    //! True once after the plug-in asked for a parameter flush (request_flush).
+    bool takeFlushRequested();
 
     ClapEditorKind editorKind() const;
     bool openEditor(ClapEditorKind kind, void* nativeParent, const std::string& title, const ClapEditorCallbacks& callbacks,
@@ -183,6 +185,7 @@ private:
 
     std::atomic<bool> m_callbackRequested { false };
     std::atomic<bool> m_restartRequested { false };
+    std::atomic<bool> m_flushRequested { false };
     std::atomic<bool> m_stateChanged { false };
     std::atomic<bool> m_parametersRescanRequested { false };
 

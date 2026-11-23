@@ -57,6 +57,9 @@ target_sources(muse_clap PRIVATE
     internal/clappluginsscanner.cpp
     internal/clappluginsscanner.h
 
+    internal/clapstatewatch.cpp
+    internal/clapstatewatch.h
+
     internal/synth/clapiresolver.cpp
     internal/synth/clapiresolver.h
     internal/synth/clapsequencer.cpp

@@ -30,10 +30,6 @@ using namespace muse::async;
 namespace muse::clap {
 static std::atomic<ClapPluginInstanceId> s_lastClapInstanceId { 0 };
 
-//! Main-thread visits between a change of the plug-in's state and saving it,
-//! so that a value being dragged is saved once, when it has come to rest.
-static constexpr int CLAP_STATE_SETTLE_VISITS = 25;
-
 //! What the audio engine thread waits on while the main thread does
 //! something for it.
 struct ClapMainThreadWait {
@@ -72,7 +68,8 @@ struct ClapMainThreadWait {
 }
 
 ClapPluginInstance::ClapPluginInstance(const audio::AudioResourceId& resourceId, const modularity::ContextPtr& iocCtx)
-    : muse::Contextable(iocCtx), m_resourceId(resourceId), m_name(resourceId), m_hosted(std::make_shared<ClapHostedPlugin>())
+    : muse::Contextable(iocCtx), m_resourceId(resourceId), m_name(resourceId), m_hosted(std::make_shared<ClapHostedPlugin>()),
+    m_stateWatch(std::make_unique<ClapStateWatch>(*m_hosted))
 {
     m_id = ++s_lastClapInstanceId;
     m_mainThreadId = threadSecurer()->mainThreadId();
@@ -81,6 +78,7 @@ ClapPluginInstance::ClapPluginInstance(const audio::AudioResourceId& resourceId,
 ClapPluginInstance::~ClapPluginInstance()
 {
     m_isLoaded = false;
+    m_stateWatch.reset();
 
     // The plug-in is deactivated and destroyed on the main thread, wherever
     // the last owner of this instance let go of it. The audio side has
@@ -147,9 +145,13 @@ void ClapPluginInstance::doLoad()
     // The saved state goes in before the plug-in is activated, so the first
     // note already sounds with it.
     if (config.has_value() && !applyConfig(*config)) {
-        m_stateRejected = true;
         LOGE() << "CLAP plug-in " << m_resourceId << " refused its saved state. "
                << "That state is kept in the score; it is not replaced by the plug-in's default.";
+    }
+    // What the plug-in holds now is what the score holds: only a state that
+    // differs from it is reported, so opening a score marks nothing as modified.
+    if (!m_stateWatch->isRejected()) {
+        m_stateWatch->setBaseline();
     }
 
     // The sample rate wanted now, which may be newer than the one the load
@@ -196,38 +198,18 @@ bool ClapPluginInstance::applyConfig(const audio::AudioUnitConfig& config)
     ONLY_MAIN_THREAD(threadSecurer);
 
     auto state = config.find(std::string(CLAP_STATE_KEY));
-    if (state == config.end() || state->second.empty()) {
+    if (state == config.end()) {
         return true;
     }
-    if (!m_hosted->hasState()) {
-        return false;
-    }
-    // The plug-in's opaque bytes are kept in the configuration as base64 text.
-    const QByteArray bytes = QByteArray::fromBase64(QByteArray::fromStdString(state->second),
-                                                    QByteArray::AbortOnBase64DecodingErrors);
-    if (bytes.isEmpty()) {
-        return false;
-    }
-    const std::vector<uint8_t> raw(bytes.begin(), bytes.end());
-    return m_hosted->loadState(raw);
+    return m_stateWatch->restore(state->second);
 }
 
-void ClapPluginInstance::sendState()
+void ClapPluginInstance::sendState(const std::string& base64)
 {
     ONLY_MAIN_THREAD(threadSecurer);
 
-    if (!m_isLoaded || m_stateRejected || !m_hosted->hasState()) {
-        return;
-    }
-    std::vector<uint8_t> raw;
-    if (!m_hosted->saveState(raw)) {
-        LOGW() << "CLAP plug-in " << m_resourceId << " did not save its state";
-        return;
-    }
-    const QByteArray bytes(reinterpret_cast<const char*>(raw.data()), static_cast<qsizetype>(raw.size()));
-
     audio::AudioUnitConfig config;
-    config.emplace(std::string(CLAP_STATE_KEY), bytes.toBase64().toStdString());
+    config.emplace(std::string(CLAP_STATE_KEY), base64);
     m_pluginSettingsChanges.send(config);
 }
 
@@ -258,10 +240,16 @@ void ClapPluginInstance::serviceOnMainThread()
         }
     }
 
-    if (m_hosted->takeStateChanged()) {
-        m_stateCountdown = CLAP_STATE_SETTLE_VISITS;
-    } else if (m_stateCountdown > 0 && --m_stateCountdown == 0) {
-        sendState();
+    // The plug-in asked for a parameter flush: the audio side is told.
+    if (m_hosted->takeFlushRequested()) {
+        m_flushWanted.notify();
+    }
+
+    // The state is read when it may have changed and has come to rest, and
+    // now and then while the editor is open; it is sent on when it differs.
+    std::string state;
+    if (m_stateWatch->visit(state)) {
+        sendState(state);
     }
 }
 
@@ -320,10 +308,8 @@ void ClapPluginInstance::updatePluginConfig(const audio::AudioUnitConfig& config
             return;
         }
         if (self->applyConfig(config)) {
-            self->m_stateRejected = false;
             self->m_stateRestored.notify();
         } else {
-            self->m_stateRejected = true;
             LOGE() << "CLAP plug-in " << self->m_resourceId << " refused a saved state; that state is kept";
         }
     }, m_mainThreadId);
@@ -333,11 +319,14 @@ void ClapPluginInstance::refreshConfig()
 {
     ONLY_MAIN_THREAD(threadSecurer);
 
-    // The musician has had the editor open: what the plug-in holds now is their choice.
-    m_stateRejected = false;
-    m_stateCountdown = 0;
-    m_hosted->takeStateChanged();
-    sendState();
+    if (!m_isLoaded) {
+        return;
+    }
+    // The editor was closed: the state is read now and sent on if it differs.
+    std::string state;
+    if (m_stateWatch->editorClosed(state)) {
+        sendState(state);
+    }
 }
 
 async::Channel<audio::AudioUnitConfig> ClapPluginInstance::pluginSettingsChanged() const
@@ -437,6 +426,11 @@ bool ClapPluginInstance::reactivateAndWait(double sampleRate, int timeoutMsec)
 Notification ClapPluginInstance::restarted() const
 {
     return m_restarted;
+}
+
+Notification ClapPluginInstance::flushWanted() const
+{
+    return m_flushWanted;
 }
 
 void ClapPluginInstance::reportAudioFault(int fault)

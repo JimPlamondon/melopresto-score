@@ -77,6 +77,11 @@ public:
     //! The plug-in is held, and its ports may have changed.
     virtual async::Notification restarted() const = 0;
 
+    //! Sent when the plug-in asked for a parameter flush (request_flush). The
+    //! audio side flushes if no block is being rendered; if one is, the
+    //! process call has taken the values already and the flush finds none.
+    virtual async::Notification flushWanted() const = 0;
+
     //! Any thread, no allocation: something on the audio path went wrong and
     //! that path has stopped. The main thread writes it to the log.
     virtual void reportAudioFault(int fault) = 0;

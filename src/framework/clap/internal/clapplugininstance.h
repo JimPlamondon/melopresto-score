@@ -24,6 +24,7 @@
 #include "audio/common/iaudiothreadsecurer.h"
 
 #include "claphostedplugin.h"
+#include "clapstatewatch.h"
 
 namespace muse::clap {
 //! One CLAP plug-in for one track. It is made on the audio engine thread and
@@ -69,6 +70,7 @@ public:
     void setWantedSampleRate(double sampleRate) override;
     bool reactivateAndWait(double sampleRate, int timeoutMsec) override;
     async::Notification restarted() const override;
+    async::Notification flushWanted() const override;
     void reportAudioFault(int fault) override;
 
 private:
@@ -78,7 +80,7 @@ private:
     bool doReactivate();
     //! True if the configuration carried no state or the plug-in took it.
     bool applyConfig(const muse::audio::AudioUnitConfig& config);
-    void sendState();
+    void sendState(const std::string& base64);
 
     muse::audio::AudioResourceId m_resourceId;
     std::string m_name;
@@ -86,6 +88,8 @@ private:
     std::thread::id m_mainThreadId;
 
     std::shared_ptr<ClapHostedPlugin> m_hosted;
+    //! When the plug-in's state is read and reported; main thread.
+    std::unique_ptr<ClapStateWatch> m_stateWatch;
 
     std::mutex m_configMutex;
     std::optional<muse::audio::AudioUnitConfig> m_pendingConfig;
@@ -94,10 +98,6 @@ private:
     std::atomic<bool> m_isLoaded { false };
     std::atomic<bool> m_loadFinished { false };
     std::atomic<double> m_wantedRate { 0.0 };
-    //! The plug-in refused the state saved in the score. That state is kept:
-    //! nothing replaces it until the musician has had the editor open.
-    bool m_stateRejected = false;
-    int m_stateCountdown = 0;
     bool m_restartWanted = false;
 
     std::atomic<int> m_fault { 0 };
@@ -106,6 +106,7 @@ private:
     async::Notification m_stateRestored;
     async::Notification m_settled;
     async::Notification m_restarted;
+    async::Notification m_flushWanted;
     async::Channel<muse::audio::AudioUnitConfig> m_pluginSettingsChanges;
 };
 }
