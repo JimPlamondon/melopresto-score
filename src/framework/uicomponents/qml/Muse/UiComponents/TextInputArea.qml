@@ -37,7 +37,10 @@ FocusScope {
 
     property bool resizeVerticallyWithText: false
 
+    property alias verticalScrollBarPolicy: verticalScrollBar.policy
+
     property real textSidePadding: 12
+    property bool contextMenuEnabled: false
 
     readonly property alias inputField: valueInput
     readonly property alias background: background
@@ -127,6 +130,8 @@ FocusScope {
         anchors.fill: parent
 
         ScrollBar.vertical: StyledScrollBar {
+            id: verticalScrollBar
+
             anchors.margins: 8
             anchors.top: parent.top
             anchors.bottom: parent.bottom
@@ -294,11 +299,31 @@ FocusScope {
         propagateComposedEvents: true
         hoverEnabled: true
         cursorShape: Qt.IBeamCursor
+        acceptedButtons: root.contextMenuEnabled ? Qt.LeftButton | Qt.RightButton : Qt.LeftButton
 
         onPressed: function(mouse) {
             root.ensureActiveFocus()
             navCtrl.requestActiveByInteraction()
+
+            if (mouse.button === Qt.RightButton) {
+                editMenuLoader.active = true
+                editMenuLoader.item.open(Qt.point(mouse.x, mouse.y))
+                return
+            }
+
             mouse.accepted = false
+        }
+
+        Loader {
+            id: editMenuLoader
+
+            active: false
+            // Absolute, as this file is also copied to MuseApi.Controls without internal/
+            source: "qrc:/qt/qml/Muse/UiComponents/internal/TextInputContextMenu.qml"
+
+            onLoaded: {
+                editMenuLoader.item.textInput = valueInput
+            }
         }
     }
 }

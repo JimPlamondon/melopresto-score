@@ -104,7 +104,8 @@ void OutputResourceItem::handleMenuItem(const QString& menuItemId)
             return;
         }
         const QString url = QString::fromStdString(globalConfiguration()->museHubWebUrl());
-        const QString urlParams("plugins?utm_source=mss-mixer-fx&utm_medium=mh-fx&utm_campaign=mss-mixer-fx-mainpage");
+        const QString urlParams("plugins?utm_medium=Referral&utm_source=mss"
+                                "&utm_campaign=MH_WW_REF_MSS_DESKTOP_ALL_261026_crosslink&utm_content=mixer_fx");
         interactive()->openUrl(url + urlParams);
         return;
     }

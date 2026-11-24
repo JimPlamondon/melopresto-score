@@ -3700,7 +3700,7 @@ void MusicXmlParserDirection::direction(const String& partId,
 
         GradualTempoChangeType gtc = getTempoChangeTypeFromString(simplifiedText);
 
-        GradualTempoChange* tempoLine = Factory::createGradualTempoChange(m_score->dummy()->segment());
+        GradualTempoChange* tempoLine = Factory::createGradualTempoChange(m_score->dummy());
         tempoLine->setTempoChangeType(gtc);
         tempoLine->setBeginText(simplifiedText);
         tempoLine->setContinueText(u"");
@@ -4728,7 +4728,7 @@ void MusicXmlParserDirection::textToCrescLine(String& text)
 
     // Create line
     text.clear();
-    Hairpin* line = Factory::createHairpin(m_score->dummy()->segment());
+    Hairpin* line = Factory::createHairpin(m_score->dummy());
 
     line->setHairpinType(cresc ? HairpinType::CRESC_LINE : HairpinType::DIM_LINE);
     line->setBeginText(simplifiedText);
@@ -5408,7 +5408,7 @@ void MusicXmlParserDirection::dashes(const String& type, const int number,
             // TextLine supports only limited formatting, remove all (compatible with 1.3)
             String simplifiedText = MScoreTextToMusicXml::toPlainText(m_wordsText).simplified();
             if (isLikelyTempoLine(m_track)) {
-                b = Factory::createGradualTempoChange(m_score->dummy()->segment());
+                b = Factory::createGradualTempoChange(m_score->dummy());
                 GradualTempoChangeType gtc = getTempoChangeTypeFromString(simplifiedText);
                 toGradualTempoChange(b)->setTempoChangeType(gtc);
             }
@@ -5646,7 +5646,7 @@ void MusicXmlParserDirection::wedge(const String& type, const int number,
             m_e.skipCurrentElement();
             return;
         }
-        Hairpin* h = spdesc.isStopped ? toHairpin(spdesc.sp) : Factory::createHairpin(m_score->dummy()->segment());
+        Hairpin* h = spdesc.isStopped ? toHairpin(spdesc.sp) : Factory::createHairpin(m_score->dummy());
         h->setHairpinType(type == "crescendo"
                           ? HairpinType::CRESC_HAIRPIN : HairpinType::DIM_HAIRPIN);
         if (niente == "yes") {
@@ -5671,7 +5671,7 @@ void MusicXmlParserDirection::wedge(const String& type, const int number,
             m_e.skipCurrentElement();
             return;
         }
-        Hairpin* h = spdesc.isStarted ? toHairpin(spdesc.sp) : Factory::createHairpin(m_score->dummy()->segment());
+        Hairpin* h = spdesc.isStarted ? toHairpin(spdesc.sp) : Factory::createHairpin(m_score->dummy());
         if (niente == "yes") {
             h->setHairpinCircledTip(true);
         }
@@ -7126,8 +7126,10 @@ void MusicXmlParserPass2::xmlSetDrumsetPitch(Note* note, const Chord* chord, con
             ds->drum(newPitch) = DrumInstrument();
 
             newPitch = instr.pitch;
-            ds->drum(newPitch) = ds->drum(newPitch) = DrumInstrument(
-                instr.name, headGroup, line, stemDir, static_cast<int>(chord->voice()));
+            if (stemDir == DirectionV::AUTO) {
+                stemDir = chord->voice() & 1 ? DirectionV::DOWN : DirectionV::UP;
+            }
+            ds->drum(newPitch) = DrumInstrument(instr.name, headGroup, line, stemDir, static_cast<int>(chord->voice()));
         }
     }
 
@@ -7144,7 +7146,11 @@ void MusicXmlParserPass2::xmlSetDrumsetPitch(Note* note, const Chord* chord, con
 
         ds->drum(newPitch) = DrumInstrument(u"drum", headGroup, line, stemDir, static_cast<int>(chord->voice()));
     } else if (stemDir == DirectionV::AUTO) {
-        stemDir = ds->stemDirection(newPitch);
+        if (ds->voice(newPitch) != static_cast<int>(chord->voice())) {
+            stemDir = chord->voice() & 1 ? DirectionV::DOWN : DirectionV::UP;
+        } else {
+            stemDir = ds->stemDirection(newPitch);
+        }
     }
 
     note->setPitch(newPitch);
@@ -7489,7 +7495,7 @@ Note* MusicXmlParserPass2::note(const String& partId,
         handleSmallness(cue || isSmall, note, c);
         note->setPlay(!cue);          // cue notes don't play
         note->setHeadGroup(headGroup);
-        if (headScheme != NoteHeadScheme::HEAD_AUTO) {
+        if (headScheme != NoteHeadScheme::HEAD_AUTO && !mnp.unpitched()) {
             note->setHeadScheme(headScheme);
         }
         colorItem(note, noteColor);

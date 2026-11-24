@@ -22,12 +22,19 @@ set(MODULE_TEST project_test)
 
 set(MODULE_TEST_SRC
     ${CMAKE_CURRENT_LIST_DIR}/mocks/projectconfigurationmock.h
+    ${CMAKE_CURRENT_LIST_DIR}/mocks/convertfiletoscoreservicemock.h
+    ${CMAKE_CURRENT_LIST_DIR}/mocks/recentfilescontrollermock.h
+    ${CMAKE_CURRENT_LIST_DIR}/utils/testutils.h
     ${CMAKE_CURRENT_LIST_DIR}/mscmetareadertests.cpp
     ${CMAKE_CURRENT_LIST_DIR}/melostocklosswarning_tests.cpp
     ${CMAKE_CURRENT_LIST_DIR}/meloscorerecovery_tests.cpp
     ${CMAKE_CURRENT_LIST_DIR}/melopromotionpolicy_tests.cpp
     ${CMAKE_CURRENT_LIST_DIR}/validatednotationexport_tests.cpp
     ${CMAKE_CURRENT_LIST_DIR}/templatesrepositorytest.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/convertfiletoscorescenario_tests.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/convertfiletoscoreservice_tests.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/deletecloudscorescenario_tests.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/recentfilescontroller_tests.cpp
 )
 
 set(MODULE_TEST_DATA_ROOT "${CMAKE_CURRENT_LIST_DIR}/data")

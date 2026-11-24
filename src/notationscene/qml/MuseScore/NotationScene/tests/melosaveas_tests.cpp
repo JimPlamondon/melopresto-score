@@ -55,9 +55,10 @@ class SaveTestRecentFiles : public project::IRecentFilesController
 {
 public:
     const project::RecentFilesList& recentFilesList() const override { return files; }
-    async::Notification recentFilesListChanged() const override { return {}; }
+    async::Channel<project::RecentFilesChange> recentFilesListChanged() const override { return {}; }
     void prependRecentFile(const project::RecentFile& file) override { files.insert(files.begin(), file); }
     void moveRecentFile(const io::path_t&, const project::RecentFile&) override {}
+    void removeRecentFile(const io::path_t&) override {}
     void clearRecentFiles() override { files.clear(); }
     async::Promise<QPixmap> thumbnail(const io::path_t&) const override
     {

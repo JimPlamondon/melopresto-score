@@ -43,8 +43,19 @@ enum class Err {
     UnsupportedUrl,
     MalformedOpenScoreUrl,
 
-    ImportValidationFailed,
-    MalformedImportResponse,
+    ConvertValidationFailed,
+    ConvertUnsupportedFormat,
+    ConvertMixedFileTypes,
+    ConvertMultiplePdfFiles,
+    ConvertAudioFileTooLarge,
+    ConvertFileTooLarge,
+    ConvertCombinedImageTooLarge,
+    ConvertTooManyAudioFiles,
+    ConvertTooManyImages,
+    ConvertUnsupportedLink,
+    ConvertProcessingFailed,
+    ConvertUploadFailed,
+    ConvertRateLimited,
 };
 
 inline muse::Ret make_ret(Err e)

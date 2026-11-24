@@ -4501,7 +4501,7 @@ Hairpin* Score::addHairpin(HairpinType type, ChordRest* cr1, ChordRest* cr2)
         return nullptr;
     }
 
-    Hairpin* hairpin = Factory::createHairpin(this->dummy()->segment());
+    Hairpin* hairpin = Factory::createHairpin(this->dummy());
     hairpin->setHairpinType(type);
     if (type == HairpinType::CRESC_LINE) {
         hairpin->setBeginText(u"cresc.");
@@ -4518,7 +4518,7 @@ Hairpin* Score::addHairpin(HairpinType type, ChordRest* cr1, ChordRest* cr2)
 
 Hairpin* Score::addHairpin(HairpinType type, Fraction sTick, Fraction eTick, track_idx_t track)
 {
-    Hairpin* hairpin = Factory::createHairpin(this->dummy()->segment());
+    Hairpin* hairpin = Factory::createHairpin(this->dummy());
     hairpin->setHairpinType(type);
     if (type == HairpinType::CRESC_LINE) {
         hairpin->setBeginText(u"cresc.");
@@ -4631,7 +4631,7 @@ Hairpin* Score::addHairpinToDynamicOnGripDrag(Dynamic* dynamic, bool isLeftGrip,
         return nullptr;
     }
 
-    Hairpin* hairpin = Factory::createHairpin(dummy()->segment());
+    Hairpin* hairpin = Factory::createHairpin(dummy());
     hairpin->setHairpinType(isLeftGrip ? HairpinType::DIM_HAIRPIN : HairpinType::CRESC_HAIRPIN);
 
     hairpin->setTrack(track);
@@ -6720,6 +6720,17 @@ static bool chordHasVisibleNote(const Chord* chord)
     return false;
 }
 
+static bool beamHasVisibleNote(const Beam* beam)
+{
+    for (const EngravingItem* item : beam->elements()) {
+        if (item->isChord() && chordHasVisibleNote(toChord(item))) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 static void undoChangeOrnamentVisibility(Ornament* ornament, bool visible);
 
 static void undoChangeNoteVisibility(Note* note, bool visible)
@@ -6748,20 +6759,10 @@ static void undoChangeNoteVisibility(Note* note, bool visible)
     Beam* beam = noteChord->beam();
     std::vector<Chord*> chords;
 
-    bool chordHasVisibleNote_ = visible || chordHasVisibleNote(noteChord);
-    bool beamHasVisibleNote_ = chordHasVisibleNote_;
-
     if (beam) {
         for (EngravingItem* item : beam->elements()) {
-            if (!item->isChord()) {
-                continue;
-            }
-
-            Chord* chord = toChord(item);
-            chords.push_back(chord);
-
-            if (!beamHasVisibleNote_ && chord != noteChord) {
-                beamHasVisibleNote_ = chordHasVisibleNote(chord);
+            if (item->isChord()) {
+                chords.push_back(toChord(item));
             }
         }
     } else {
@@ -6780,7 +6781,10 @@ static void undoChangeNoteVisibility(Note* note, bool visible)
     for (const Chord* chord : chords) {
         for (const EngravingObject* obj : chord->linkList()) {
             const Chord* linkedChord = toChord(obj);
-            chordHasVisibleNote_ = chordHasVisibleNote(linkedChord);
+            const bool chordHasVisibleNote_ = chordHasVisibleNote(linkedChord);
+            // note visibility can differ between scores, so check this score's own beam
+            const Beam* linkedBeam = linkedChord->beam();
+            const bool beamHasVisibleNote_ = chordHasVisibleNote_ || (linkedBeam && beamHasVisibleNote(linkedBeam));
             for (EngravingObject* child : linkedChord->getChildren()) {
                 const ElementType type = child->type();
 

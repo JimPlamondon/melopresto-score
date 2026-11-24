@@ -96,6 +96,10 @@
 #include "framework/stubs/shortcuts/shortcutsstubmodule.h"
 #endif
 
+#ifdef MUSE_MODULE_TOAST
+#include "framework/toast/toastmodule.h"
+#endif
+
 #ifdef MUSE_MODULE_TOURS
 #include "framework/tours/toursmodule.h"
 #else
@@ -335,6 +339,9 @@ std::shared_ptr<muse::IApplication> AppFactory::newGuiApp(const CmdOptions& opti
 
 #ifdef MUSE_MODULE_DOCKWINDOW
     app->addModule(new muse::dock::DockModule());
+#endif
+#ifdef MUSE_MODULE_TOAST
+    app->addModule(new muse::toast::ToastModule());
 #endif
     app->addModule(new muse::tours::ToursModule());
     app->addModule(new muse::vst::VSTModule());

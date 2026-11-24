@@ -21,8 +21,13 @@
 set(MODULE_TEST muse_audio_tests)
 
 set(MODULE_TEST_SRC
-    ${CMAKE_CURRENT_LIST_DIR}/rpcpacker_tests.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/mocks/audioconfigurationmock.h
+    ${CMAKE_CURRENT_LIST_DIR}/mocks/audiodriverfactorymock.h
+    ${CMAKE_CURRENT_LIST_DIR}/mocks/audiodrivermock.h
+    ${CMAKE_CURRENT_LIST_DIR}/mocks/rpcchannelmock.h
+
     ${CMAKE_CURRENT_LIST_DIR}/alignbuffer_tests.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/audiodrivercontroller_tests.cpp
     ${CMAKE_CURRENT_LIST_DIR}/sequenceio_tests.cpp
     ${CMAKE_CURRENT_LIST_DIR}/fluidprecision_tests.cpp
     ${CMAKE_CURRENT_LIST_DIR}/audiotypes_tests.cpp
@@ -32,3 +37,5 @@ set(MODULE_TEST_SRC
 set(MODULE_TEST_LINK muse_audio muse_audio_engine)
 
 include(SetupGTest)
+
+add_subdirectory(rpcpacker)

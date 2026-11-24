@@ -106,10 +106,11 @@ public:
     NotationViewInputController(IControlledView* view, const muse::modularity::ContextPtr& iocCtx);
 
     void init();
-    bool canReceiveAction(const muse::actions::ActionCode& action) const override;
 
     bool focusMeloHeaderPitch(bool forward);
     muse::RectF focusedMeloHeaderPitchInk() const;
+
+    bool canReceiveAction(const muse::actions::ActionCode& code) const override;
 
     void initZoom();
     void initCanvasPos();

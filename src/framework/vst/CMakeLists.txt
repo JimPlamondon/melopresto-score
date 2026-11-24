@@ -78,6 +78,21 @@ target_sources(muse_vst PRIVATE
     widgets/vstviewdialog_qwidget.h
 )
 
+if (OS_IS_MAC)
+    target_sources(muse_vst PRIVATE
+        internal/platform/macos/macosvstmodulepaths.mm
+        internal/platform/macos/macosvstmodulepaths.h
+    )
+    set_source_files_properties(
+        internal/platform/macos/macosvstmodulepaths.mm
+        PROPERTIES
+        SKIP_UNITY_BUILD_INCLUSION ON
+        SKIP_PRECOMPILE_HEADERS ON
+    )
+    find_library(Foundation NAMES Foundation)
+    target_link_libraries(muse_vst PRIVATE ${Foundation})
+endif()
+
 # The per-note pitch adapter takes its decisions from the MeloPresto shared
 # projector, which the bridge static library carries.
 target_link_libraries(muse_vst PRIVATE vst3sdk melo_musescore_bridge)

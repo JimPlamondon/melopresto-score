@@ -5041,11 +5041,11 @@ void NotationInteraction::doEndEditElement()
 
 void NotationInteraction::onElementDestroyed(EngravingItem* element)
 {
-    if (m_editData.element == element) {
+    if (Score::isLostWith(m_editData.element, element)) {
         m_editData.element = nullptr;
     }
 
-    if (m_hitElementContext.element == element) {
+    if (Score::isLostWith(m_hitElementContext.element, element)) {
         m_hitElementContext.element = nullptr;
         m_hitElementContext.staff = nullptr;
     }
@@ -5632,7 +5632,7 @@ void NotationInteraction::addHairpinsToSelection(HairpinType type)
     std::vector<mu::engraving::Hairpin*> hairpins = score()->addHairpins(type);
     apply();
 
-    if (!noteInput()->isNoteInputMode() && hairpins.size() == 1) {
+    if (!noteInput()->isNoteInputMode() && hairpins.size() == 1 && !hairpins.front()->segmentsEmpty()) {
         mu::engraving::LineSegment* segment = hairpins.front()->frontSegment();
         select({ segment });
         startEditGrip(segment, mu::engraving::Grip::END);
@@ -7106,10 +7106,14 @@ void NotationInteraction::navigateToNextSyllable()
         }
     }
 
-    bool newLyrics = (toLyrics == 0);
-    if (!toLyrics || hasPrecedingRepeat) {
-        // Don't advance cursor if we are after a repeat, there is no partial dash present and we are inputting a dash
-        ChordRest* toLyricsChord = hasPrecedingRepeat && !prevPartialLyricsLine && lyrics->xmlText().empty() ? initialCR : cr;
+    const bool startIncomingPartialDash = hasPrecedingRepeat && !fromLyrics
+                                          && !prevPartialLyricsLine && lyrics->xmlText().empty();
+
+    const bool newLyrics = !toLyrics || startIncomingPartialDash;
+    if (newLyrics) {
+        /* Don't advance the cursor when starting an incoming partial dash after a repeat,
+         * i.e. when there is no adjacent preceding syllable to dash from: */
+        ChordRest* toLyricsChord = startIncomingPartialDash ? initialCR : cr;
 
         toLyrics = Factory::createLyrics(toLyricsChord);
         toLyrics->setTrack(track);
