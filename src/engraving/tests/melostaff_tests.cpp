@@ -1764,7 +1764,7 @@ TEST(MeloStaffTests, presetIdentitySurvivesTheStaffTypeLookup)
     EXPECT_EQ(melo->type(), StaffTypes::MELO_12TET);
     EXPECT_NE(melo->type(), StaffType::preset(StaffTypes::STANDARD)->type());
     EXPECT_EQ(StaffType::preset(melo->type())->name(), melo->name());
-    EXPECT_EQ(melo->name(), u"MeloPresto Staff 12-TET");
+    EXPECT_EQ(melo->name(), u"MeloPresto Staff 12-edo");
     EXPECT_EQ(melo->xmlName(), u"melo12tet");
     EXPECT_EQ(StaffType::presetFromXmlName(u"melo12tet"), melo);
 }

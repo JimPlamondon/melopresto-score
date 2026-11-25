@@ -57,7 +57,7 @@ inline constexpr char systemFrameUnionFailed[] = "MeloPresto per-system frame un
 inline muse::TranslatableString changeActionName() { return muse::TranslatableString("action", "MeloPresto change…"); }
 inline muse::String featureName() { return muse::mtrc("engraving", "MeloPresto Staff"); }
 inline muse::String staffUserName() { return muse::mtrc("engraving", "MeloPresto Staff"); }
-inline muse::String presetName() { return muse::mtrc("engraving", "MeloPresto Staff 12-TET"); }
+inline muse::String presetName() { return muse::mtrc("engraving", "MeloPresto Staff 12-edo"); }
 inline muse::String crescentClefName() { return muse::mtrc("engraving", "crescent clef"); }
 inline muse::String scaleDotsName() { return muse::mtrc("engraving", "scale dots"); }
 inline muse::String tonicIndicatorName() { return muse::mtrc("engraving", "tonic indicator"); }
