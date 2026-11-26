@@ -47,6 +47,7 @@
 #include "engraving/melo/melochangecontroller.h"
 #include "engraving/melo/melotuningcontroller.h"
 #include "engraving/playback/playbackmodel.h"
+#include "engraving/playback/utils/arrangementutils.h"
 #include "engraving/playback/utils/pitchutils.h"
 #include "mpe/tests/mocks/articulationprofilesrepositorymock.h"
 #include "mpe/tests/utils/articulationutils.h"
@@ -499,6 +500,87 @@ TEST_F(Engraving_MeloStaffM7PlaybackTests, fullTieAcrossStateChangeHasOneAttackA
     EXPECT_EQ(events.size(), notes.size() - 1) << "the tied continuation must not create a second attack";
     EXPECT_EQ(std::count(events.begin(), events.end(), meloPitchLevelFromMidi(startProjection.midiKey,
                                                                               startProjection.centsOffset)), 1);
+    delete score;
+}
+
+// The tie rule (owner decision 2026-11-26): a tie joins two noteheads of one
+// note, and the note's pitch may change under the tie when the tuning
+// changes. Four bars of Do, Mi, So, each note tied to the same note of the
+// next bar, at 700, 685.714, 720 and 696.774 cents: three sounding notes, each
+// struck once and held through all four bars, each with a pitch curve that
+// steps at every bar line to that note's pitch in the bar's tuning. A key
+// change, where the pitch does not change, carries no curve (the test above).
+TEST_F(Engraving_MeloStaffM7PlaybackTests, tieAcrossAChangeOfTuningIsOneAttackWhosePitchStepsAtTheChange)
+{
+    Score* score = ScoreRW::readScore(u"melostaff_data/tie-across-tuning-change.mscx");
+    ASSERT_TRUE(score);
+    std::vector<Note*> notes = notesOf(score);
+    ASSERT_EQ(notes.size(), 12u);
+
+    PlaybackModel model(modularity::globalCtx());
+    model.profilesRepository.set(m_repositoryMock);
+    model.load(score);
+    const Part* part = score->parts().at(0);
+    const PlaybackEventsMap& events = model.resolveTrackPlaybackData(part->id(), part->instrumentId()).originEvents;
+    std::vector<muse::mpe::NoteEvent> sounding;
+    for (const auto& pair : events) {
+        for (const PlaybackEvent& ev : pair.second) {
+            if (std::holds_alternative<muse::mpe::NoteEvent>(ev)) {
+                sounding.push_back(std::get<muse::mpe::NoteEvent>(ev));
+            }
+        }
+    }
+    ASSERT_EQ(sounding.size(), 3u) << "each tied note is struck once; no notehead under a tie strikes it again";
+
+    for (size_t i = 0; i < 3; ++i) {
+        const muse::mpe::NoteEvent& event = sounding[i];
+        const melo::SoundingPitch first = kernelSoundingPitch(notes[i]);
+        ASSERT_TRUE(event.pitchCtx().exactPitch.has_value());
+        EXPECT_NEAR(event.pitchCtx().exactPitch->frequencyHz, first.frequencyHz, 1e-9);
+        EXPECT_EQ(event.arrangementCtx().actualTimestamp, 0);
+        EXPECT_TRUE(event.expressionCtx().articulations.contains(ArticulationType::Multibend))
+            << "the curve rides the articulation every sequencer bends a sounding note for";
+
+        // The curve, read as a step function of the note's duration: in each
+        // bar it holds that bar's pitch of the same note, to the 2-cent
+        // pitch-level grid a pitch curve is written in.
+        const PitchCurve& curve = event.pitchCtx().pitchCurve;
+        ASSERT_FALSE(curve.empty());
+        // The nominal duration: this fixture's empty articulation profile
+        // gives every event an actual duration of zero.
+        const double duration = double(event.arrangementCtx().nominalDuration);
+        ASSERT_GT(duration, 0.0);
+        auto offsetAt = [&](double factor) {
+            pitch_level_t value = 0;
+            for (const auto& point : curve) {
+                if (point.first <= static_cast<percentage_t>(std::lround(factor * HUNDRED_PERCENT))) {
+                    value = point.second;
+                }
+            }
+            return value;
+        };
+        // Three bars of 3/4 and a fourth held under a fermata: the bar lines
+        // fall where the tied noteheads start.
+        std::vector<double> starts;
+        for (size_t bar = 0; bar < 4; ++bar) {
+            starts.push_back(double(timestampFromTicks(score, notes[bar * 3 + i]->tick().ticks())) / duration);
+        }
+        starts.push_back(1.0);
+        for (size_t bar = 0; bar < 4; ++bar) {
+            const melo::SoundingPitch here = kernelSoundingPitch(notes[bar * 3 + i]);
+            const double cents = (here.midiKey - first.midiKey) * 100.0 + here.centsOffset - first.centsOffset;
+            const double middle = (starts[bar] + starts[bar + 1]) / 2.0;
+            EXPECT_NEAR(offsetAt(middle) * 100.0 / PITCH_LEVEL_STEP, cents, 1.0 + 1e-9) << "note " << i << " bar " << bar + 1;
+            EXPECT_EQ(offsetAt(middle), static_cast<pitch_level_t>(std::lround(cents / 100.0 * PITCH_LEVEL_STEP)));
+            if (bar > 0) {
+                EXPECT_GT(std::abs(cents), 1.0) << "the note's pitch changes under the tie";
+                // A step, not a glide: just before the bar line the note still has the earlier bar's pitch.
+                const melo::SoundingPitch before = kernelSoundingPitch(notes[(bar - 1) * 3 + i]);
+                const double centsBefore = (before.midiKey - first.midiKey) * 100.0 + before.centsOffset - first.centsOffset;
+                EXPECT_EQ(offsetAt(starts[bar] - 0.0005), static_cast<pitch_level_t>(std::lround(centsBefore / 100.0 * PITCH_LEVEL_STEP)));
+            }
+        }
+    }
     delete score;
 }
 

@@ -67,6 +67,16 @@ inline muse::String linkedNoteMissingState()
     return muse::mtrc("engraving", "a linked MeloPresto note has no effective MeloPresto state");
 }
 
+inline muse::String tieCrossesPeriodChange()
+{
+    return muse::mtrc("engraving", "A tie cannot cross a change of the period. Its coordinates were not changed.");
+}
+
+inline muse::String tieCrossesUnreachableTuning()
+{
+    return muse::mtrc("engraving", "A tie crosses a change of tuning that the tied note cannot follow. Its coordinates were not changed.");
+}
+
 inline muse::String partialTieCrossesState()
 {
     return muse::mtrc("engraving", "a path-dependent partial tie crosses the MeloPresto state span; the edit was not applied");

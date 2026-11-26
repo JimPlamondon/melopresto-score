@@ -680,12 +680,6 @@ Note* Score::addNoteToTiedChord(Chord* chord, const NoteVal& noteVal, bool force
         if (!Note::prepareNval(anchor, chord->staff(), chord->tick())) {
             return nullptr;
         }
-        melo::SoundingPitch established;
-        if (!melo::noteSoundingPitch(chord->staff()->staffType(chord->tick())->meloStateJson(),
-                                     anchor.meloNPer, anchor.meloNGen, established)) {
-            MScore::setError(MsError::CANNOT_RESOLVE_LATTICE_NOTE);
-            return nullptr;
-        }
         std::vector<std::pair<Chord*, NoteVal> > prepared;
         for (Note* reference : chord->notes().front()->tiedNotes()) {
             if (reference->incomingPartialTie() || reference->outgoingPartialTie()) {
@@ -693,23 +687,11 @@ Note* Score::addNoteToTiedChord(Chord* chord, const NoteVal& noteVal, bool force
                 return nullptr;
             }
             Chord* target = reference->chord();
-            const StaffType* type = target->staff()->staffType(target->tick());
-            melo::SoundingPitch projection;
-            if (!type->isMelo()) {
-                MScore::setError(MsError::CANNOT_RESOLVE_LATTICE_NOTE);
-                return nullptr;
-            }
-            if (!melo::noteSoundingPitch(type->meloStateJson(), anchor.meloNPer, anchor.meloNGen, projection)
-                || std::abs(projection.frequencyHz - established.frequencyHz) >= 1e-9) {
-                if (!melo::noteContinuation(type->meloStateJson(), established.frequencyHz, projection)) {
-                    MScore::setError(MsError::CANNOT_RESOLVE_LATTICE_NOTE);
-                    return nullptr;
-                }
-            }
-            NoteVal value = anchor;
-            value.meloNPer = projection.nPer;
-            value.meloNGen = projection.nGen;
-            if (!melo::prepareLinkedNoteValue(value, target)) {
+            // The tie rule: the added note continues through the chain as one
+            // note through a change of tuning, one pitch through a change of key.
+            NoteVal value;
+            if (!melo::prepareContinuationValue(anchor, chord->staff(), chord->tick(), target->tick(), value)
+                || !melo::prepareLinkedNoteValue(value, target)) {
                 return nullptr;
             }
             for (EngravingObject* object : target->linkList()) {

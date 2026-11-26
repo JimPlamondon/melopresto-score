@@ -75,6 +75,174 @@ const StateEdit* stateEditFor(const std::vector<StateEdit>& edits, const Note* n
     return nullptr;
 }
 
+// The frequencies of one sound agree to this many hertz.
+constexpr double SAME_SOUND_HZ = 1e-9;
+
+// THE TIE RULE (owner decision 2026-11-26): "A tie joins two noteheads of one
+// note. The note's pitch may change under the tie when the tuning changes."
+// One note through a change of tuning; one pitch through a change of key.
+//
+// tiedContinuation answers which note of state `to` continues the note
+// (nPer, nGen) of state `from` under a full tie. The destination state is
+// first taken at the source's tuning (the width of the M5). There the
+// continuation is the note that sounds the source's frequency: the same note
+// whenever it does so, otherwise the Kernel's continuation of that frequency.
+// That note is then accepted in the destination state as it stands, whatever
+// it sounds in the destination's tuning. So a change of tuning alone keeps
+// the note and lets its pitch change; a change of key alone keeps the pitch
+// and may change the note, as before; a change of both composes the two.
+//
+// `held`, when given, is the note already written at the destination. It is
+// kept when it sounds the source's frequency at the source's tuning, with one
+// limit: where the tuning changes and the source's own note continues, only
+// that same note is a continuation. Two different notes that sound alike in
+// the old tuning are not one note, and their pitches part in the new tuning.
+//
+// The period (the octave) has no retuning call in the bridge, so a tie across
+// a change of the period is refused.
+bool tiedContinuation(const String& from, int nPer, int nGen, const String& to, const std::pair<int, int>* held,
+                      SoundingPitch& out, String* error = nullptr)
+{
+    SoundingPitch established;
+    if (!noteSoundingPitch(from, nPer, nGen, established, error)) {
+        return false;
+    }
+    String toAtSourceTuning = to;
+    bool tuningChanges = false;
+    if (from != to) {
+        double fromGenerator = 0.0;
+        double fromPeriod = 0.0;
+        double toGenerator = 0.0;
+        double toPeriod = 0.0;
+        if (!staffMetrics(from, fromGenerator, fromPeriod) || !staffMetrics(to, toGenerator, toPeriod)) {
+            if (error) {
+                *error = linkedNoteMissingState();
+            }
+            return false;
+        }
+        if (fromPeriod != toPeriod) {
+            if (error) {
+                *error = tieCrossesPeriodChange();
+            }
+            return false;
+        }
+        tuningChanges = fromGenerator != toGenerator;
+        if (tuningChanges && !retuneGenerator(to, fromGenerator, toAtSourceTuning)) {
+            if (error) {
+                *error = tieCrossesUnreachableTuning();
+            }
+            return false;
+        }
+    }
+    auto sustains = [&](int otherNPer, int otherNGen) {
+        SoundingPitch other;
+        return noteSoundingPitch(toAtSourceTuning, otherNPer, otherNGen, other)
+               && std::abs(other.frequencyHz - established.frequencyHz) < SAME_SOUND_HZ;
+    };
+    const bool sameNoteContinues = sustains(nPer, nGen);
+    int continuedNPer = nPer;
+    int continuedNGen = nGen;
+    if (held && sustains(held->first, held->second)
+        && (!tuningChanges || !sameNoteContinues || (held->first == nPer && held->second == nGen))) {
+        continuedNPer = held->first;
+        continuedNGen = held->second;
+    } else if (!sameNoteContinues) {
+        SoundingPitch continuation;
+        if (!noteContinuation(toAtSourceTuning, established.frequencyHz, continuation, error)) {
+            return false;
+        }
+        continuedNPer = continuation.nPer;
+        continuedNGen = continuation.nGen;
+    }
+    return noteSoundingPitch(to, continuedNPer, continuedNGen, out, error);
+}
+
+// The states a held note meets on its staff from one tick to another, in the
+// order it meets them: the state at `from`, every section between, the state
+// at `to`. Consecutive equal states are given once. Empty when a section on
+// the way is not a MeloPresto Staff.
+std::vector<String> statesBetween(const Staff* staff, const String& fromState, const Fraction& from, const String& toState,
+                                  const Fraction& to)
+{
+    std::vector<String> states { fromState };
+    auto add = [&](const String& state) {
+        if (states.back() != state) {
+            states.push_back(state);
+        }
+    };
+    const Fraction low = std::min(from, to);
+    const Fraction high = std::max(from, to);
+    std::vector<String> between;
+    for (int next = staff->staffTypeRange(low).second; next >= 0 && Fraction::fromTicks(next) < high;
+         next = staff->staffTypeRange(Fraction::fromTicks(next)).second) {
+        const Fraction at = Fraction::fromTicks(next);
+        if (staff->staffTypeRange(at) == staff->staffTypeRange(high)) {
+            break;      // the destination's own section: its state is given by the caller
+        }
+        const StaffType* type = staff->staffType(at);
+        if (!type || !type->isMelo()) {
+            return {};
+        }
+        between.push_back(type->meloStateJson());
+    }
+    if (to < from) {
+        std::reverse(between.begin(), between.end());
+    }
+    for (const String& state : between) {
+        add(state);
+    }
+    add(toState);
+    return states;
+}
+
+// tiedContinuation along the states a held note meets on its staff.
+bool tiedContinuationOnStaff(const Staff* staff, const String& fromState, const Fraction& from, int nPer, int nGen,
+                             const String& toState, const Fraction& to, const std::pair<int, int>* held, SoundingPitch& out,
+                             String* error = nullptr)
+{
+    const std::vector<String> states = statesBetween(staff, fromState, from, toState, to);
+    if (states.empty() || fromState.isEmpty() || toState.isEmpty()) {
+        if (error) {
+            *error = linkedNoteMissingState();
+        }
+        return false;
+    }
+    if (states.size() == 1) {
+        return tiedContinuation(fromState, nPer, nGen, toState, held, out, error);
+    }
+    for (size_t i = 1; i < states.size(); ++i) {
+        if (!tiedContinuation(states[i - 1], nPer, nGen, states[i], i + 1 == states.size() ? held : nullptr, out, error)) {
+            return false;
+        }
+        nPer = out.nPer;
+        nGen = out.nGen;
+    }
+    return true;
+}
+
+// Whether a full tie may join the two noteheads: the destination is a
+// continuation of the source under the tie rule.
+bool tieJoins(const Note* source, const Note* destination, String* error = nullptr)
+{
+    if (!source || !destination || !source->hasMeloPitch() || !destination->hasMeloPitch()) {
+        return false;
+    }
+    const StaffType* a = source->staff() ? source->staff()->staffTypeForElement(source) : nullptr;
+    const StaffType* b = destination->staff() ? destination->staff()->staffTypeForElement(destination) : nullptr;
+    if (!a || !b || !a->isMelo() || !b->isMelo()) {
+        return false;
+    }
+    const std::pair<int, int> held { destination->meloNPer(), destination->meloNGen() };
+    SoundingPitch continued;
+    const bool found = source->staff() == destination->staff()
+                       ? tiedContinuationOnStaff(source->staff(), a->meloStateJson(), source->tick(), source->meloNPer(),
+                                                 source->meloNGen(), b->meloStateJson(), destination->tick(), &held, continued,
+                                                 error)
+                       : tiedContinuation(a->meloStateJson(), source->meloNPer(), source->meloNGen(), b->meloStateJson(), &held,
+                                          continued, error);
+    return found && continued.nPer == held.first && continued.nGen == held.second;
+}
+
 bool projectionFor(const std::vector<StateEdit>& edits, Note* note, SoundingPitch& projection, String& error)
 {
     const StateEdit* edit = stateEditFor(edits, note);
@@ -85,26 +253,39 @@ bool projectionFor(const std::vector<StateEdit>& edits, Note* note, SoundingPitc
         return false;
     }
 
-    Note* first = note;
-    while (first->tieBackNonPartial() && first->tieBackNonPartial()->startNote()) {
-        first = first->tieBackNonPartial()->startNote();
+    std::vector<Note*> chain { note };
+    while (chain.back()->tieBackNonPartial() && chain.back()->tieBackNonPartial()->startNote()) {
+        chain.push_back(chain.back()->tieBackNonPartial()->startNote());
     }
+    Note* first = chain.back();
     if (edit && first->tick() < edit->tick) {
-        SoundingPitch established;
-        const StateEdit* firstEdit = stateEditFor(edits, first);
-        const StaffType* firstCurrent = first->staff() ? first->staff()->staffTypeForElement(first) : nullptr;
-        const String firstState = firstEdit ? firstEdit->state : (firstCurrent ? firstCurrent->meloStateJson() : String());
-        if (firstState.isEmpty()
-            || !noteSoundingPitch(firstState, first->meloNPer(), first->meloNGen(), established, &error)) {
+        // The tie began before the edited state. Follow it notehead by
+        // notehead under the tie rule, each state being the edited one where
+        // an edit covers the notehead. A notehead keeps the note it already
+        // has wherever that note is a continuation (a mode edit, or a change
+        // of tuning, leaves the known lattice note in place).
+        auto stateOf = [&](const Note* link) {
+            const StateEdit* linkEdit = stateEditFor(edits, link);
+            const StaffType* linkCurrent = link->staff() ? link->staff()->staffTypeForElement(link) : nullptr;
+            return linkEdit ? linkEdit->state : (linkCurrent ? linkCurrent->meloStateJson() : String());
+        };
+        String linkState = stateOf(first);
+        if (linkState.isEmpty() || !noteSoundingPitch(linkState, first->meloNPer(), first->meloNGen(), projection, &error)) {
             return false;
         }
-        // A mode edit can leave the known lattice note sounding unchanged.
-        // Preserve that identity before considering a different continuation.
-        if (noteSoundingPitch(state, note->meloNPer(), note->meloNGen(), projection, &error)
-            && std::abs(projection.frequencyHz - established.frequencyHz) < 1e-9) {
-            return true;
+        for (size_t i = chain.size() - 1; i-- > 0;) {
+            const Note* link = chain[i];
+            const String nextState = stateOf(link);
+            const std::pair<int, int> held { link->meloNPer(), link->meloNGen() };
+            SoundingPitch continued;
+            if (nextState.isEmpty()
+                || !tiedContinuation(linkState, projection.nPer, projection.nGen, nextState, &held, continued, &error)) {
+                return false;
+            }
+            projection = continued;
+            linkState = nextState;
         }
-        return noteContinuation(state, established.frequencyHz, projection, &error);
+        return true;
     }
     return noteSoundingPitch(state, note->meloNPer(), note->meloNGen(), projection, &error);
 }
@@ -218,12 +399,13 @@ bool prepareStoredProjections(const Score* score, std::vector<NoteEdit>& project
                     if (Tie* tie = note->tieBackNonPartial()) {
                         Note* start = tie->startNote();
                         const StaffType* startType = start && start->staff() ? start->staff()->staffTypeForElement(start) : nullptr;
-                        SoundingPitch startProjection;
-                        if (!startType || !startType->isMelo() || !start->hasMeloPitch()
-                            || !noteSoundingPitch(startType->meloStateJson(), start->meloNPer(), start->meloNGen(), startProjection, &error)
-                            || std::abs(startProjection.frequencyHz - projection.frequencyHz) >= 1e-9) {
-                            error = mtrc("engraving",
-                                         "A full tie connects contradictory lattice sounds. Its coordinates were not changed.");
+                        // The tie rule: one note through a change of tuning,
+                        // one pitch through a change of key.
+                        String why;
+                        if (!startType || !startType->isMelo() || !start->hasMeloPitch() || !tieJoins(start, note, &why)) {
+                            error = why == tieCrossesPeriodChange() || why == tieCrossesUnreachableTuning() ? why
+                                    : mtrc("engraving",
+                                           "A full tie connects contradictory lattice sounds. Its coordinates were not changed.");
                             return false;
                         }
                     }
@@ -991,16 +1173,7 @@ bool prepareLinkedNoteValue(NoteVal& value, const Chord* chord)
 
 bool validateTieEndpoints(const Note* source, const Note* destination)
 {
-    if (!source || !destination || !source->hasMeloPitch() || !destination->hasMeloPitch()) {
-        return false;
-    }
-    const StaffType* a = source->staff() ? source->staff()->staffTypeForElement(source) : nullptr;
-    const StaffType* b = destination->staff() ? destination->staff()->staffTypeForElement(destination) : nullptr;
-    SoundingPitch from, to;
-    return a && b && a->isMelo() && b->isMelo()
-           && noteSoundingPitch(a->meloStateJson(), source->meloNPer(), source->meloNGen(), from)
-           && noteSoundingPitch(b->meloStateJson(), destination->meloNPer(), destination->meloNGen(), to)
-           && std::abs(from.frequencyHz - to.frequencyHz) < 1e-9;
+    return tieJoins(source, destination);
 }
 
 Note* continuationNote(const Note* source, Chord* destination)
@@ -1010,16 +1183,17 @@ Note* continuationNote(const Note* source, Chord* destination)
     }
     const StaffType* a = source->staff() ? source->staff()->staffTypeForElement(source) : nullptr;
     const StaffType* b = destination->staff() ? destination->staff()->staffType(destination->tick()) : nullptr;
-    SoundingPitch from, target;
-    if (!a || !b || !a->isMelo() || !b->isMelo()
-        || !noteSoundingPitch(a->meloStateJson(), source->meloNPer(), source->meloNGen(), from)) {
+    SoundingPitch target;
+    if (!a || !b || !a->isMelo() || !b->isMelo()) {
         return nullptr;
     }
-    if (!noteSoundingPitch(b->meloStateJson(), source->meloNPer(), source->meloNGen(), target)
-        || std::abs(from.frequencyHz - target.frequencyHz) >= 1e-9) {
-        if (!noteContinuation(b->meloStateJson(), from.frequencyHz, target)) {
-            return nullptr;
-        }
+    const bool found = source->staff() == destination->staff()
+                       ? tiedContinuationOnStaff(source->staff(), a->meloStateJson(), source->tick(), source->meloNPer(),
+                                                 source->meloNGen(), b->meloStateJson(), destination->tick(), nullptr, target)
+                       : tiedContinuation(a->meloStateJson(), source->meloNPer(), source->meloNGen(), b->meloStateJson(), nullptr,
+                                          target);
+    if (!found) {
+        return nullptr;
     }
     // Ordinals distinguish repeated occurrences of the SAME position only.
     int ordinal = 0;
@@ -1048,18 +1222,12 @@ bool prepareContinuationValue(const NoteVal& source, const Staff* staff, const F
     if (!from || !to || (!from->isMelo() && !to->isMelo()) || source.isRest()) {
         return Note::prepareNval(result, staff, targetTick);
     }
-    SoundingPitch established, continuation;
+    SoundingPitch continuation;
     if (!from->isMelo() || !to->isMelo() || !source.hasMeloPitch
-        || !noteSoundingPitch(from->meloStateJson(), source.meloNPer, source.meloNGen, established)) {
+        || !tiedContinuationOnStaff(staff, from->meloStateJson(), sourceTick, source.meloNPer, source.meloNGen,
+                                    to->meloStateJson(), targetTick, nullptr, continuation)) {
         MScore::setError(MsError::CANNOT_RESOLVE_LATTICE_NOTE);
         return false;
-    }
-    if (!noteSoundingPitch(to->meloStateJson(), source.meloNPer, source.meloNGen, continuation)
-        || std::abs(continuation.frequencyHz - established.frequencyHz) >= 1e-9) {
-        if (!noteContinuation(to->meloStateJson(), established.frequencyHz, continuation)) {
-            MScore::setError(MsError::CANNOT_RESOLVE_LATTICE_NOTE);
-            return false;
-        }
     }
     result.meloNPer = continuation.nPer;
     result.meloNGen = continuation.nGen;
@@ -1110,13 +1278,16 @@ bool preparePitchEdit(Note* anchor, int nPer, int nGen, std::vector<NoteEdit>& e
             error = linkedNoteMissingState();
             return false;
         }
-        // Retain the requested exact position whenever it sustains the target
-        // sound. Different settings may require the Kernel's continuation.
-        if (!noteSoundingPitch(type->meloStateJson(), nPer, nGen, projection, &error)
-            || std::abs(projection.frequencyHz - requested.frequencyHz) >= 1e-9) {
-            if (!noteContinuation(type->meloStateJson(), requested.frequencyHz, projection, &error)) {
-                return false;
-            }
+        // The requested note at the anchor, continued to this notehead under
+        // the tie rule: the same note wherever it continues, the Kernel's
+        // continuation where a change of key requires another note.
+        const bool continued = note->staff() == anchor->staff()
+                               ? tiedContinuationOnStaff(anchor->staff(), anchorType->meloStateJson(), anchor->tick(), nPer, nGen,
+                                                         type->meloStateJson(), note->tick(), nullptr, projection, &error)
+                               : tiedContinuation(anchorType->meloStateJson(), nPer, nGen, type->meloStateJson(), nullptr,
+                                                  projection, &error);
+        if (!continued) {
+            return false;
         }
         for (EngravingObject* linkedObject : note->linkList()) {
             Note* linked = toNote(linkedObject);

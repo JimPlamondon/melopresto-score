@@ -1472,3 +1472,175 @@ TEST(MeloLatticeConformanceTests, ExactEqualTemperamentSatbTuningPreservesWritte
         }
     }
 }
+
+// THE TIE RULE (owner decision 2026-11-26): "A tie joins two noteheads of one
+// note. The note's pitch may change under the tie when the tuning changes."
+// One note through a change of tuning; one pitch through a change of key.
+//
+// The fixture is four bars of Do, Mi, So, each note tied to the same note of
+// the next bar, with the M5 at 700, 685.714, 720 and 696.774 cents and the
+// Reference Pitch D4 at Re0 throughout.
+static const double TIE_FIXTURE_GENERATORS[] = { 700.0, 1200.0 * 4.0 / 7.0, 720.0, 1200.0 * 18.0 / 31.0 };
+
+static void expectOneNoteUnderEveryTie(Score* s, bool pitchChanges)
+{
+    auto ns = notes(s);
+    ASSERT_EQ(ns.size(), 12u);
+    for (size_t bar = 1; bar < 4; ++bar) {
+        for (size_t i = 0; i < 3; ++i) {
+            Note* before = ns[(bar - 1) * 3 + i];
+            Note* after = ns[bar * 3 + i];
+            ASSERT_TRUE(after->tieBack()) << "bar " << bar + 1 << " note " << i;
+            EXPECT_EQ(after->tieBack()->startNote(), before);
+            EXPECT_EQ(after->meloNPer(), before->meloNPer());
+            EXPECT_EQ(after->meloNGen(), before->meloNGen());
+            EXPECT_TRUE(melo::validateTieEndpoints(before, after));
+            EXPECT_EQ(melo::continuationNote(before, after->chord()), after);
+            if (pitchChanges) {
+                EXPECT_GT(std::abs(hz(after) - hz(before)), 0.1) << "the note's pitch changes under the tie";
+            } else {
+                EXPECT_NEAR(hz(after), hz(before), 1e-8);
+            }
+        }
+    }
+}
+
+TEST(MeloLatticeConformanceTests, TieJoinsOneNoteAcrossAChangeOfTuning)
+{
+    auto* s = ScoreRW::readScore(u"melostaff_data/tie-across-tuning-change.mscx");
+    ASSERT_TRUE(s) << "a score whose ties cross changes of tuning opens";
+    auto ns = notes(s);
+    ASSERT_EQ(ns.size(), 12u);
+    const double re0 = 440.0 * std::pow(2.0, -7.0 / 12.0);      // D4
+    for (size_t bar = 0; bar < 4; ++bar) {
+        for (size_t i = 0; i < 3; ++i) {
+            Note* n = ns[bar * 3 + i];
+            const double cents = 1200.0 * n->meloNPer() + TIE_FIXTURE_GENERATORS[bar] * n->meloNGen();
+            EXPECT_NEAR(hz(n), re0 * std::pow(2.0, cents / 1200.0), 1e-6) << "bar " << bar + 1 << " note " << i;
+        }
+    }
+    EXPECT_NEAR(hz(ns[0]), 261.6256, 1e-3);     // Do at 700 cents
+    EXPECT_NEAR(hz(ns[3]), 265.9788, 1e-3);     // the same Do at 685.714 cents
+    EXPECT_NEAR(hz(ns[6]), 255.6502, 1e-3);     // at 720 cents
+    EXPECT_NEAR(hz(ns[9]), 262.6025, 1e-3);     // at 696.774 cents
+    expectOneNoteUnderEveryTie(s, true);
+    // Two different notes of different pitch are not one note: no tie joins them.
+    EXPECT_FALSE(melo::validateTieEndpoints(ns[0], ns[4]));     // Do to Mi
+    EXPECT_FALSE(melo::validateTieEndpoints(ns[0], ns[5]));     // Do to So
+    EXPECT_FALSE(melo::validateTieEndpoints(ns[1], ns[5]));     // Mi to So
+    delete s;
+}
+
+TEST(MeloLatticeConformanceTests, TieAcrossAChangeOfTuningRoundTripsThroughWriteAndRead)
+{
+    auto* s = ScoreRW::readScore(u"melostaff_data/tie-across-tuning-change.mscx");
+    ASSERT_TRUE(s);
+    QTemporaryDir dir;
+    ASSERT_TRUE(dir.isValid());
+    const String path = String::fromQString(dir.filePath("tie-across-tuning-change-written.mscx"));
+    ASSERT_TRUE(ScoreRW::saveScore(s, path));
+    QFile file(path.toQString());
+    ASSERT_TRUE(file.open(QIODevice::ReadOnly));
+    const QString text = QString::fromUtf8(file.readAll());
+    EXPECT_EQ(text.count("<Spanner type=\"Tie\">"), 18) << "nine ties, each written at both of its noteheads";
+    auto* again = ScoreRW::readScore(path, true);
+    ASSERT_TRUE(again) << "the written score opens again";
+    expectOneNoteUnderEveryTie(again, true);
+    auto first = notes(s);
+    auto second = notes(again);
+    ASSERT_EQ(first.size(), second.size());
+    for (size_t i = 0; i < first.size(); ++i) {
+        EXPECT_NEAR(hz(first[i]), hz(second[i]), 1e-9);
+    }
+    delete again;
+    delete s;
+}
+
+TEST(MeloLatticeConformanceTests, TieBetweenDifferentNotesOfDifferentPitchIsStillRefusedOnOpening)
+{
+    QFile source(String(ScoreRW::rootPath() + u"/melostaff_data/tie-across-tuning-change.mscx").toQString());
+    ASSERT_TRUE(source.open(QIODevice::ReadOnly));
+    QString text = QString::fromUtf8(source.readAll());
+    // The second bar's Do becomes Re: the tie from the first bar's Do would
+    // join two different notes that differ in pitch.
+    const QString doNote = "<meloNPer>1</meloNPer>\n              <meloNGen>-2</meloNGen>";
+    const QString reNote = "<meloNPer>0</meloNPer>\n              <meloNGen>0</meloNGen>";
+    const qsizetype firstDo = text.indexOf(doNote);
+    ASSERT_GE(firstDo, 0);
+    const qsizetype secondDo = text.indexOf(doNote, firstDo + doNote.size());
+    ASSERT_GE(secondDo, 0);
+    text.replace(secondDo, doNote.size(), reNote);
+    QTemporaryDir dir;
+    ASSERT_TRUE(dir.isValid());
+    QFile changed(dir.filePath("tie-between-different-notes.mscx"));
+    ASSERT_TRUE(changed.open(QIODevice::WriteOnly));
+    changed.write(text.toUtf8());
+    changed.close();
+    auto* s = ScoreRW::readScore(String::fromQString(changed.fileName()), true);
+    EXPECT_FALSE(s) << "a tie from Do to Re must not open";
+    delete s;
+}
+
+TEST(MeloLatticeConformanceTests, TieAcrossAChangeOfKeyStillJoinsTheNoteOfEqualPitch)
+{
+    auto* s = ScoreRW::readScore(u"melostaff_data/m5-key-up.mscx");
+    ASSERT_TRUE(s);
+    auto ns = notes(s);
+    ASSERT_GE(ns.size(), 5u);
+    Note* a = ns[3];
+    Note* b = ns[4];
+    ASSERT_TRUE(place(a, 0, 0));
+    double generatorA = 0.0, generatorB = 0.0, period = 0.0;
+    ASSERT_TRUE(melo::staffMetrics(a->staff()->staffTypeForElement(a)->meloStateJson(), generatorA, period));
+    ASSERT_TRUE(melo::staffMetrics(b->staff()->staffTypeForElement(b)->meloStateJson(), generatorB, period));
+    ASSERT_EQ(generatorA, generatorB) << "a change of key alone";
+    NoteVal continued;
+    ASSERT_TRUE(melo::prepareContinuationValue(a->noteVal(), a->staff(), a->tick(), b->tick(), continued));
+    melo::SoundingPitch sounding;
+    ASSERT_TRUE(melo::noteSoundingPitch(b->staff()->staffTypeForElement(b)->meloStateJson(), continued.meloNPer, continued.meloNGen,
+                                        sounding));
+    EXPECT_NEAR(sounding.frequencyHz, hz(a), 1e-8) << "one pitch through a change of key";
+    EXPECT_FALSE(continued.meloNPer == 0 && continued.meloNGen == 0) << "the note of equal pitch is another note";
+    ASSERT_TRUE(place(b, continued.meloNPer, continued.meloNGen));
+    EXPECT_TRUE(melo::validateTieEndpoints(a, b));
+    // The same note across the change of key sounds another pitch: no tie.
+    ASSERT_TRUE(place(b, 0, 0));
+    EXPECT_GT(std::abs(hz(b) - hz(a)), 0.1);
+    EXPECT_FALSE(melo::validateTieEndpoints(a, b));
+    delete s;
+}
+
+TEST(MeloLatticeConformanceTests, ChangingAStateUnderATieThatCrossesATuningChangeKeepsTheTieAndItsNote)
+{
+    auto* s = ScoreRW::readScore(u"melostaff_data/tie-across-tuning-change.mscx");
+    ASSERT_TRUE(s);
+    // The third bar's change (of tuning, to 720 cents) is edited: its mode
+    // changes as well. The ties into and out of that bar stay, each on its note.
+    Measure* third = s->firstMeasure()->nextMeasure()->nextMeasure();
+    ASSERT_TRUE(third);
+    const String before = s->staff(0)->staffType(third->tick())->meloStateJson();
+    String error;
+    ASSERT_TRUE(melo::applyChange(s, 0, third, u"mode:1", error)) << error.toStdString();
+    const String after = s->staff(0)->staffType(third->tick())->meloStateJson();
+    EXPECT_NE(before, after);
+    double generator = 0.0, period = 0.0;
+    ASSERT_TRUE(melo::staffMetrics(after, generator, period));
+    EXPECT_DOUBLE_EQ(generator, 720.0);
+    expectOneNoteUnderEveryTie(s, true);
+    s->undoRedo(true, nullptr);
+    expectOneNoteUnderEveryTie(s, true);
+    delete s;
+}
+
+TEST(MeloLatticeConformanceTests, RetuningTheWholeScoreKeepsEveryTieOnItsNote)
+{
+    auto* s = ScoreRW::readScore(u"melostaff_data/tie-across-tuning-change.mscx");
+    ASSERT_TRUE(s);
+    melo::TuningController tuning(s, 0);
+    ASSERT_TRUE(tuning.beginPreview());
+    ASSERT_TRUE(tuning.commit(700.0));
+    expectOneNoteUnderEveryTie(s, false);
+    s->undoRedo(true, nullptr);
+    expectOneNoteUnderEveryTie(s, true);
+    delete s;
+}
