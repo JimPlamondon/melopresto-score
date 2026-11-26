@@ -15,6 +15,7 @@
 
 #include <cstdlib>
 #include <fstream>
+#include <functional>
 
 #include "engraving/dom/masterscore.h"
 #include "engraving/editing/undo.h"
@@ -27,8 +28,16 @@
 #include "engraving/dom/shadownote.h"
 #include "engraving/dom/ledgerline.h"
 #include "engraving/dom/staff.h"
+#include "engraving/dom/stafflines.h"
 #include "engraving/dom/system.h"
 #include "engraving/dom/stafftype.h"
+#include "engraving/dom/bracket.h"
+#include "engraving/dom/instrumentname.h"
+#include "engraving/dom/timesig.h"
+#include "engraving/rendering/iscorerenderer.h"
+#include "draw/bufferedpaintprovider.h"
+#include "draw/fontmetrics.h"
+#include "draw/painter.h"
 #include "engraving/melo/melobridge.h"
 #include "engraving/melo/melochange.h"
 #include "engraving/melo/melopitchlabel.h"
@@ -63,7 +72,101 @@ muse::String meloState(double generatorCents, int modeRotation = 0)
 constexpr double G12 = 700.0;
 constexpr double G17 = 1200.0 * 10.0 / 17.0; // 705.882352...
 constexpr double G19 = 1200.0 * 11.0 / 19.0; // 694.736842...
+constexpr double G31 = 1200.0 * 18.0 / 31.0; // 696.774193...
+constexpr double G7 = 1200.0 * 4.0 / 7.0;    // 685.714285...
+constexpr double G5 = 720.0;
 constexpr double EPS = 1e-6;
+
+// What the system head of one staff paints, read back from the recorded
+// paint and not recomputed: the crescent clef's box (the whole clef, before
+// the staff's frame clips it), the scale dots, and every text beside them
+// with the box of its ink. Abscissas are the measure's own.
+struct HeadPaint {
+    muse::RectF clef;
+    double dotColumnLeft = 0.0;       // the leftmost scale-dot glyph origin
+    double dotColumnRight = 0.0;      // the rightmost scale-dot glyph origin
+    int dots = 0;
+    struct Text {
+        muse::String text;
+        muse::RectF ink;
+    };
+    std::vector<Text> texts;          // names and pitch names; never the "M5=" label
+
+    // Texts written on the right of the scale-dot column.
+    std::vector<Text> rightHand() const
+    {
+        std::vector<Text> out;
+        for (const Text& t : texts) {
+            if (t.ink.left() > dotColumnRight) {
+                out.push_back(t);
+            }
+        }
+        return out;
+    }
+};
+
+HeadPaint paintHead(const Score* score, const StaffLines* lines)
+{
+    using namespace muse::draw;
+    auto provider = std::make_shared<BufferedPaintProvider>();
+    Painter painter(provider, "scale-dot-label-room");
+    painter.setViewport(muse::RectF(0, 0, 4000, 4000));
+    rendering::PaintOptions options;
+    lines->renderer()->drawItem(lines, &painter, options);
+    painter.endDraw();
+
+    Font labelFont(u"Edwin", Font::Type::Text);
+    labelFont.setPointSizeF(9.0 * lines->spatium() / score->style().defaultSpatium());
+
+    HeadPaint out;
+    bool haveDot = false;
+    const DrawDataPtr data = provider->drawData();
+    std::function<void(const DrawData::Item&)> walk = [&](const DrawData::Item& item) {
+        for (const DrawData::Data& d : item.datas) {
+            for (const DrawPath& path : d.paths) {
+                bool curved = false;
+                for (size_t i = 0; i < path.path.elementCount(); ++i) {
+                    curved = curved || path.path.elementAt(i).type == PainterPath::ElementType::CurveToElement;
+                }
+                if (curved && path.mode != DrawMode::Fill) {
+                    out.clef = out.clef.isNull() ? path.path.boundingRect() : out.clef.united(path.path.boundingRect());
+                }
+            }
+            for (const DrawText& text : d.texts) {
+                if (text.mode != DrawText::Point || text.text.startsWith(u"M5=")) {
+                    continue;
+                }
+                const double x = text.rect.topLeft().x();
+                if (text.text.size() == 1) {           // a music-font glyph: a scale dot
+                    out.dotColumnLeft = haveDot ? std::min(out.dotColumnLeft, x) : x;
+                    out.dotColumnRight = haveDot ? std::max(out.dotColumnRight, x) : x;
+                    haveDot = true;
+                    ++out.dots;
+                } else {
+                    const melo::PitchLabelLayout layout = melo::pitchLabelLayout(text.text, labelFont, score->engravingFont());
+                    out.texts.push_back({ text.text, layout.bounds.translated(text.rect.topLeft()) });
+                }
+            }
+        }
+        for (const DrawData::Item& child : item.chilren) {
+            walk(child);
+        }
+    };
+    walk(data->item);
+    return out;
+}
+
+// The staff-type setting on a staff's base staff type, then a fresh layout.
+void setRightLabelRoom(Score* score, bool on)
+{
+    for (staff_idx_t i = 0; i < score->nstaves(); ++i) {
+        StaffType* type = score->staff(i)->staffType(Fraction(0, 1));
+        if (type && type->isMelo()) {
+            type->setMeloScaleDotRightLabelRoom(on);
+        }
+    }
+    score->doLayout();
+}
 }
 
 // The bridge speaks ABI 2 (MeloStaffStateV2 contract, Milestone 2 Phase 4).
@@ -1781,4 +1884,274 @@ TEST(MeloStaffTests, guideColorDefaultsPreserveTheExistingPaletteAndAreStyleValu
     style.set(Sid::meloDoLineColor, muse::draw::Color(10, 20, 30));
     EXPECT_EQ(style.value(Sid::meloDoLineColor).value<muse::draw::Color>(), muse::draw::Color(10, 20, 30));
     EXPECT_FALSE(style.isDefault(Sid::meloDoLineColor));
+}
+
+// Room for names on the right of the scale dots (owner request 2026-11-26):
+// fork-owned StaffType presentation state like the scale-dot label mode. Off
+// by default, written as its own tag only when on, read back, part of staff
+// type equality, never in the Kernel state.
+TEST(MeloStaffTests, scaleDotRightLabelRoomDefaultsPersistsAndStaysOutOfKernelState)
+{
+    Score* score = ScoreRW::readScore(u"melostaff_data/scale-dot-label-room.mscx");
+    ASSERT_TRUE(score);
+    StaffType* st = score->staff(0)->staffType(Fraction(0, 1));
+    ASSERT_TRUE(st && st->isMelo());
+    EXPECT_FALSE(st->meloScaleDotRightLabelRoom());
+
+    auto saved = [&](const muse::String& path) {
+        EXPECT_TRUE(ScoreRW::saveScore(score, path));
+        std::ifstream in(path.toStdString());
+        return std::string((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+    };
+    const muse::String offPath = u"melo_right_label_room_off.mscx";
+    EXPECT_EQ(saved(offPath).find("meloScaleDotRightLabelRoom"), std::string::npos);
+
+    st->setMeloScaleDotRightLabelRoom(true);
+    const muse::String onPath = u"melo_right_label_room_on.mscx";
+    EXPECT_NE(saved(onPath).find("<meloScaleDotRightLabelRoom>1</meloScaleDotRightLabelRoom>"), std::string::npos);
+    EXPECT_EQ(st->meloStateJson().toStdString().find("Room"), std::string::npos);
+
+    Score* on = ScoreRW::readScore(onPath, true);
+    ASSERT_TRUE(on);
+    EXPECT_TRUE(on->staff(0)->staffType(Fraction(0, 1))->meloScaleDotRightLabelRoom());
+    EXPECT_EQ(on->staff(0)->staffType(Fraction(0, 1))->meloStateJson(), st->meloStateJson());
+    delete on;
+    Score* off = ScoreRW::readScore(offPath, true);
+    ASSERT_TRUE(off);
+    EXPECT_FALSE(off->staff(0)->staffType(Fraction(0, 1))->meloScaleDotRightLabelRoom());
+    delete off;
+
+    StaffType a(*st), b(*st);
+    b.setMeloScaleDotRightLabelRoom(false);
+    EXPECT_FALSE(a == b);
+    b.setMeloScaleDotRightLabelRoom(true);
+    EXPECT_TRUE(a == b);
+    delete score;
+}
+
+// With the setting off the system head is the one drawn before the setting
+// existed: no band right of the dots strictly inside the label-legibility
+// range, the Split band of the widest right-hand name plus the text-to-dot
+// gap at or outside it, and a header no wider than its parts. Control for
+// the test below: at 720 cents the right-hand names then reach the clef.
+TEST(MeloStaffTests, scaleDotRightLabelRoomOffLeavesTheSystemHeadUnchanged)
+{
+    Score* score = ScoreRW::readScore(u"melostaff_data/scale-dot-label-room.mscx");
+    ASSERT_TRUE(score);
+    score->doLayout();
+    const StaffType* st = score->staff(0)->staffType(Fraction(0, 1));
+    ASSERT_TRUE(st && st->isMelo());
+    ASSERT_FALSE(st->meloScaleDotRightLabelRoom());
+    melo::TuningController controller(score, 0);
+    ASSERT_TRUE(controller.beginPreview());
+    for (double g : { G12, G31, G7, G5 }) {
+        ASSERT_TRUE(controller.preview(g));
+        const Measure* measure = score->firstMeasure();
+        const StaffLines* lines = measure->staffLines(0);
+        const double sp = lines->spatium();
+        const auto& view = st->meloFrameView(score, 0, measure->system());
+        const StaffType::MeloHeaderGeometry geometry = st->meloHeaderGeometry(sp, score->style().defaultSpatium(), &view,
+                                                                              score->staff(0));
+        muse::draw::Font labelFont(u"Edwin", muse::draw::Font::Type::Text);
+        labelFont.setPointSizeF(9.0 * sp / score->style().defaultSpatium());
+        muse::draw::FontMetrics fm(labelFont);
+        double widestRight = 0.0;
+        if (st->meloResolvedScaleDotLabelMode() == MeloScaleDotLabelMode::Split) {
+            std::vector<melo::LabeledDotStack> stacks;
+            ASSERT_TRUE(melo::scaleDotLabels(st->meloStateJson(), stacks));
+            for (const melo::LabeledDotStack& stack : stacks) {
+                for (const melo::LabeledDotMember& member : stack.members) {
+                    if (member.nGen > 0) {
+                        widestRight = std::max(widestRight, fm.horizontalAdvance(member.label));
+                    }
+                }
+            }
+        }
+        const bool legible = g > 690.9 && g < 709.1;
+        EXPECT_EQ(st->meloResolvedScaleDotLabelMode(), legible ? MeloScaleDotLabelMode::Left : MeloScaleDotLabelMode::Split);
+        EXPECT_NEAR(geometry.rightLabelBand, legible ? 0.0 : widestRight + 0.25 * sp, EPS) << "at " << g;
+        EXPECT_NEAR(geometry.headerWidth, 0.3 * sp + geometry.clefRx + 2.0 * geometry.indicatorW + geometry.leftLabelBand
+                    + geometry.rightLabelBand + geometry.braceWidth, EPS) << "at " << g;
+        const HeadPaint head = paintHead(score, lines);
+        EXPECT_NEAR(head.clef.left(), lines->pos().x() - 0.3 * sp - geometry.clefRx, EPS);
+        if (g == G5) {
+            bool reachesClef = false;
+            for (const HeadPaint::Text& text : head.rightHand()) {
+                reachesClef = reachesClef || text.ink.intersects(head.clef);
+            }
+            EXPECT_TRUE(reachesClef) << "control: with the setting off, a right-hand name reaches the crescent clef at 720 cents";
+        }
+    }
+    controller.cancel();
+    delete score;
+}
+
+// With the setting on, on a one-octave Do-bounded staff: at both ends of the
+// valid tuning range (720 cents, where Mi joins Fa and Ti joins Do, and
+// 685.714 cents) no text written on the right of the scale dots reaches the
+// crescent clef's box; the dot column keeps one distance from the clef, and
+// one place on the page, at 700, 696.774, 685.714 and 720 cents; and the
+// staff lines, the clef, the time signature and the first note stand where
+// they stand with the setting off, the whole head moved right by the room.
+TEST(MeloStaffTests, scaleDotRightLabelRoomKeepsRightHandNamesOffTheCrescentClef)
+{
+    Score* score = ScoreRW::readScore(u"melostaff_data/scale-dot-label-room.mscx");
+    ASSERT_TRUE(score);
+    score->doLayout();
+    const StaffType* st = score->staff(0)->staffType(Fraction(0, 1));
+    ASSERT_TRUE(st && st->isMelo());
+    melo::TuningController controller(score, 0);
+    ASSERT_TRUE(controller.beginPreview());
+
+    struct Stand {
+        double room = 0.0;                // the band right of the dots
+        double headerWidth = 0.0;
+        double dotToClef = 0.0;           // dot column to the clef's leftmost extent
+        double dotOnPage = 0.0;           // dot column, page abscissa
+        double measureOnPage = 0.0;
+        double leftMargin = 0.0;
+        double headLeft = 0.0;            // the staff lines' box, left edge, in the measure
+        muse::RectF clef;
+        double timeSigX = 0.0;
+        double firstNoteX = 0.0;
+    };
+    auto stand = [&](double g, bool on, HeadPaint* paint = nullptr) {
+        EXPECT_TRUE(controller.preview(g));
+        setRightLabelRoom(score, on);
+        const Measure* measure = score->firstMeasure();
+        const StaffLines* lines = measure->staffLines(0);
+        const auto& view = st->meloFrameView(score, 0, measure->system());
+        const StaffType::MeloHeaderGeometry geometry
+            = st->meloHeaderGeometry(lines->spatium(), score->style().defaultSpatium(), &view, score->staff(0));
+        const HeadPaint head = paintHead(score, lines);
+        EXPECT_GT(head.dots, 0);
+        EXPECT_FALSE(head.clef.isNull());
+        Stand out;
+        out.room = geometry.rightLabelBand;
+        out.headerWidth = geometry.headerWidth;
+        out.dotToClef = head.clef.left() - head.dotColumnLeft;
+        out.dotOnPage = lines->pagePos().x() + head.dotColumnLeft;
+        out.measureOnPage = lines->pagePos().x();
+        out.leftMargin = measure->system()->leftMargin();
+        out.headLeft = lines->ldata()->bbox().left();
+        out.clef = head.clef;
+        const Segment* timeSig = measure->first(SegmentType::TimeSig);
+        const Segment* chord = measure->first(SegmentType::ChordRest);
+        EXPECT_TRUE(timeSig && chord);
+        out.timeSigX = timeSig ? timeSig->x() : 0.0;
+        out.firstNoteX = chord ? chord->x() : 0.0;
+        if (paint) {
+            *paint = head;
+        }
+        return out;
+    };
+
+    // No right-hand text reaches the clef at either end of the valid tuning range.
+    for (double g : { G5, G7 }) {
+        HeadPaint head;
+        const Stand on = stand(g, true, &head);
+        const std::vector<HeadPaint::Text> right = head.rightHand();
+        bool sawMi = false;
+        bool sawTi = false;
+        bool sawPitchName = false;
+        for (const HeadPaint::Text& text : right) {
+            sawMi = sawMi || text.text.contains(u"Mi");
+            sawTi = sawTi || text.text.contains(u"Ti");
+            sawPitchName = sawPitchName || text.text.contains(u":");
+            EXPECT_FALSE(text.ink.intersects(head.clef)) << text.text.toStdString() << " at " << g;
+            EXPECT_LT(text.ink.right(), head.clef.left()) << text.text.toStdString() << " at " << g;
+        }
+        EXPECT_TRUE(sawMi) << "Mi is written on the right at " << g;
+        EXPECT_TRUE(sawPitchName) << "the Do tonic's pitch name is written on the right at " << g;
+        if (g == G5) {
+            EXPECT_TRUE(sawTi) << "Ti joins Do's row at 720 cents";
+        }
+        EXPECT_GT(on.room, 0.0);
+    }
+
+    // One room, one header width, one dot column, in every tuning.
+    const Stand reference = stand(G12, true);
+    for (double g : { G31, G7, G5 }) {
+        const Stand on = stand(g, true);
+        EXPECT_NEAR(on.room, reference.room, EPS) << "at " << g;
+        EXPECT_NEAR(on.headerWidth, reference.headerWidth, EPS) << "at " << g;
+        EXPECT_NEAR(on.dotToClef, reference.dotToClef, EPS) << "at " << g;
+        EXPECT_NEAR(on.dotOnPage, reference.dotOnPage, EPS) << "at " << g;
+    }
+
+    // The room widens the header and nothing else: the staff lines, the clef,
+    // the time signature and the first note keep their places in the measure,
+    // and the measure starts further right by exactly the added width.
+    for (double g : { G12, G31, G7, G5 }) {
+        const Stand off = stand(g, false);
+        const Stand on = stand(g, true);
+        const double added = on.headerWidth - off.headerWidth;
+        EXPECT_GT(added, 0.0) << "at " << g;
+        EXPECT_NEAR(added, on.room - off.room, EPS) << "at " << g;
+        EXPECT_NEAR(on.leftMargin - off.leftMargin, added, EPS) << "at " << g;
+        EXPECT_NEAR(on.measureOnPage - off.measureOnPage, added, EPS) << "at " << g;
+        EXPECT_NEAR(off.headLeft - on.headLeft, added, EPS) << "at " << g;
+        EXPECT_NEAR(on.dotToClef - off.dotToClef, added, EPS) << "at " << g;
+        EXPECT_NEAR(on.clef.left(), off.clef.left(), EPS) << "at " << g;
+        EXPECT_NEAR(on.clef.right(), off.clef.right(), EPS) << "at " << g;
+        EXPECT_NEAR(on.clef.top(), off.clef.top(), EPS) << "at " << g;
+        EXPECT_NEAR(on.clef.bottom(), off.clef.bottom(), EPS) << "at " << g;
+        EXPECT_NEAR(on.timeSigX, off.timeSigX, EPS) << "at " << g;
+        EXPECT_NEAR(on.firstNoteX, off.firstNoteX, EPS) << "at " << g;
+    }
+    controller.cancel();
+    delete score;
+}
+
+// The room is reserved in the system's left margin, so the wider header
+// stays clear of what stands beside it. With instrument names and a bracket
+// (four voices): each name keeps the distance from the header's left edge
+// that it has with the setting off, and the bracket, which stands at the
+// start of the staff lines, keeps its distance from that start.
+TEST(MeloStaffTests, scaleDotRightLabelRoomKeepsInstrumentNamesAndBracketClear)
+{
+    Score* score = ScoreRW::readScore(u"melostaff_data/m9-satb-hymn.mscx");
+    ASSERT_TRUE(score);
+    struct Gaps {
+        std::vector<double> names;
+        std::vector<double> brackets;
+    };
+    auto gaps = [&](bool on) {
+        setRightLabelRoom(score, on);
+        Gaps out;
+        const System* system = score->firstMeasure()->system();
+        double headLeft = 0.0;
+        double staffStart = 0.0;
+        bool haveHead = false;
+        for (staff_idx_t i = 0; i < score->nstaves(); ++i) {
+            const StaffLines* lines = score->firstMeasure()->staffLines(i);
+            const double left = lines->pagePos().x() + lines->ldata()->bbox().left();
+            headLeft = haveHead ? std::min(headLeft, left) : left;
+            staffStart = lines->pagePos().x();
+            haveHead = true;
+        }
+        for (staff_idx_t i = 0; i < score->nstaves(); ++i) {
+            for (const InstrumentName* name : system->staff(i)->instrumentNames) {
+                out.names.push_back(headLeft - name->pageBoundingRect().right());
+            }
+        }
+        for (const Bracket* bracket : system->brackets()) {
+            out.brackets.push_back(staffStart - bracket->pageBoundingRect().right());
+        }
+        return out;
+    };
+    const Gaps off = gaps(false);
+    const Gaps on = gaps(true);
+    ASSERT_FALSE(off.names.empty());
+    ASSERT_FALSE(off.brackets.empty());
+    ASSERT_EQ(on.names.size(), off.names.size());
+    ASSERT_EQ(on.brackets.size(), off.brackets.size());
+    for (size_t i = 0; i < off.names.size(); ++i) {
+        EXPECT_NEAR(on.names[i], off.names[i], EPS) << "instrument name " << i;
+        EXPECT_GE(on.names[i], -EPS) << "instrument name " << i;
+    }
+    for (size_t i = 0; i < off.brackets.size(); ++i) {
+        EXPECT_NEAR(on.brackets[i], off.brackets[i], EPS) << "bracket " << i;
+    }
+    delete score;
 }

@@ -123,5 +123,14 @@ InspectorSectionView {
             navigation.accessible.name: qsTrc("inspector", "Scale-dot labels")
             onActivated: function(index, value) { root.model.setStaffOption("labels", value) }
         }
+        CheckBox {
+            width: parent.width
+            visible: more.expanded
+            text: root.model.settings.rightLabelRoomTitle ?? ""
+            checked: root.model.settings.rightLabelRoom ?? false
+            navigation.panel: root.navigationPanel
+            navigation.row: root.navigationRow(10)
+            onClicked: root.model.setStaffOption("rightLabelRoom", checked ? 0 : 1)
+        }
     }
 }

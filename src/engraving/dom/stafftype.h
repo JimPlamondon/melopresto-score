@@ -274,7 +274,10 @@ public:
         double clefRx = 0.0;
         double indicatorW = 0.0;
         double leftLabelBand = 0.0;    // label column left of the dots
-        double rightLabelBand = 0.0;   // Split-mode band right of the dots
+        // Band right of the dots, between the dot column and the clef: the
+        // Split-mode names, or the constant room when the staff asks for
+        // meloScaleDotRightLabelRoom (then the same in every tuning).
+        double rightLabelBand = 0.0;
         double headerWidth = 0.0;      // total reserve left of the first measure
         // Milestone 5 change-indicator terrain (mid-system, after the
         // barline): label band (always present in the terrain, labels sit
@@ -293,7 +296,12 @@ public:
     // `view` (Milestone 8, optional): for a banded view the current-key
     // label advance is the WIDEST band label, so every band's "[PitchN]:"
     // fits the reserved header; null or a one-band view is today's.
-    MeloHeaderGeometry meloHeaderGeometry(double spatium, double defaultSpatium, const MeloFrameView* view = nullptr) const;
+    // `staff` (optional): the staff this type draws on. The room for names on
+    // the right of the scale dots is a per-staff fact read from that staff's
+    // base staff type (tick 0), as the octave-band elision override is; null
+    // reads this type's own setting.
+    MeloHeaderGeometry meloHeaderGeometry(double spatium, double defaultSpatium, const MeloFrameView* view = nullptr,
+                                          const Staff* staff = nullptr) const;
     void setMeloScaleDotLabelMode(MeloScaleDotLabelMode mode) { m_meloScaleDotLabelMode = mode; }
     MeloElideOctaves meloElideOctaves() const { return m_meloElideOctaves; }
     void setMeloElideOctaves(MeloElideOctaves mode) { m_meloElideOctaves = mode; }
@@ -303,6 +311,16 @@ public:
     bool meloExtentIsEmptyDefault() const { return m_meloExtentIsEmptyDefault; }
     void setMeloExtentIsEmptyDefault(bool value) { m_meloExtentIsEmptyDefault = value; }
     void setMeloJiLines(bool val) { m_meloJiLines = val; }
+    // Room for names on the right of the scale dots (owner request
+    // 2026-11-26): presentation-only, fork-owned, never part of the Kernel
+    // state, off unless asked for. On, the dot column and everything
+    // anchored to it stand left of the crescent clef by the width of the
+    // widest text the staff can write on the right of the dots, in every
+    // tuning, so that no such text reaches the clef and the dots keep their
+    // distance from the clef when the tuning changes. Persisted in .mscx
+    // beside meloScaleDotLabels; absent reads as off.
+    bool meloScaleDotRightLabelRoom() const { return m_meloScaleDotRightLabelRoom; }
+    void setMeloScaleDotRightLabelRoom(bool val) { m_meloScaleDotRightLabelRoom = val; }
     // Derived frame cache (Kernel frame_for_melody result; keyed by the
     // state + melody it was computed from; NEVER serialized). Top cents
     // drives the seam's affine map; empty cache means the degenerate
@@ -537,12 +555,17 @@ private:
     String m_meloStateJson;
     String m_meloTonicAmbit;
     bool m_meloJiLines = false;
+    bool m_meloScaleDotRightLabelRoom = false;
     // Derived on load; copied with a span and swapped by extent undo commands.
     // The first note replaces its empty centre anchor, rather than widening it.
     bool m_meloExtentIsEmptyDefault = true;
     MeloScaleDotLabelMode m_meloScaleDotLabelMode = MeloScaleDotLabelMode::Auto;
     MeloElideOctaves m_meloElideOctaves = MeloElideOctaves::Auto;
     String m_meloRatioLineExtentJson;
+    // Derived cache of the room right of the scale dots, keyed by everything
+    // it is measured from; NEVER serialized and no part of equality.
+    mutable muse::String m_meloRightLabelRoomKey;
+    mutable double m_meloRightLabelRoom = 0.0;
     mutable muse::String m_meloFrameKey;
     mutable muse::String m_meloSectionFrameKey;
     mutable std::vector<MeloSegment> m_meloSectionFrameSegments;

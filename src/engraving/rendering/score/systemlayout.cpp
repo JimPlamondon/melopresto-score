@@ -2351,7 +2351,8 @@ void SystemLayout::layoutSystem(System* system, LayoutContext& ctx, double xo1, 
                 const double sp = jstaff->spatium(Fraction(0, 1));
                 meloHeader = std::max(meloHeader,
                                       jst->meloHeaderGeometry(sp, jstaff->score()->style().defaultSpatium(),
-                                                              &jst->meloFrameView(jstaff->score(), jstaff->idx(), system)).headerWidth);
+                                                              &jst->meloFrameView(jstaff->score(), jstaff->idx(), system),
+                                                              jstaff).headerWidth);
             }
         }
         if (meloHeader > 0.0) {

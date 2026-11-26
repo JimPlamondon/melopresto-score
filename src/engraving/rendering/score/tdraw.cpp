@@ -3107,13 +3107,14 @@ void TDraw::draw(const StaffLines* item, Painter* painter, const PaintOptions& o
             const double periodH = (periodCents / StaffType::MELO_CENTS_PER_LINE_DISTANCE) * dist;
             const double clefRy = periodH / 2.0;
             const StaffType::MeloHeaderGeometry headerGeom
-                = meloSt->meloHeaderGeometry(_spatium, item->score()->style().defaultSpatium(), &view);
+                = meloSt->meloHeaderGeometry(_spatium, item->score()->style().defaultSpatium(), &view, meloStaff);
             const double clefRx = headerGeom.clefRx;
             const double indicatorW = headerGeom.indicatorW;
             const double clefRight = item->pos().x() - 0.3 * _spatium;
             const double clefLeft = clefRight - clefRx;
-            // The Split-mode right label band sits between the dot
-            // column and the clef; the dot column shifts left by it.
+            // The right label band (the Split-mode names, or the room the
+            // staff asks for) sits between the dot column and the clef; the
+            // dot column shifts left by it.
             const double dotCenterX = clefLeft - headerGeom.rightLabelBand
                                       - 2.0 * indicatorW + indicatorW;
             const IEngravingFontPtr font = item->score()->engravingFont();
