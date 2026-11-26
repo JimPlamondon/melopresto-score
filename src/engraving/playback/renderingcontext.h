@@ -124,6 +124,14 @@ struct NominalNoteCtx {
 
     muse::mpe::pitch_level_t pitchLevel = 0;
 
+    /// The tie rule (owner decision 2026-11-26): a tie joins two noteheads of
+    /// one note, and the note's pitch may change under the tie when the tuning
+    /// changes. A chain of tied noteheads is one sounding note; where a later
+    /// notehead of the chain sounds another pitch, this holds the time of that
+    /// notehead and its pitch in cents from the first notehead's. The note is
+    /// not struck again: its event carries a pitch curve that steps there.
+    std::vector<std::pair<muse::mpe::timestamp_t, double> > tiedRetunings;
+
     RenderingContext chordCtx;
     muse::mpe::ArticulationMap articulations;
 

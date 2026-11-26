@@ -1,0 +1,401 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<museScore version="4.70">
+  <programVersion>4.7.7</programVersion>
+  <programRevision>abc123456</programRevision>
+  <Score>
+    <eid>5eeeDOQOfEJ_YEiqGde+fxO</eid>
+    <Division>480</Division>
+    <showInvisible>1</showInvisible>
+    <showUnprintable>1</showUnprintable>
+    <showFrames>1</showFrames>
+    <showMargins>0</showMargins>
+    <open>1</open>
+    <metaTag name="arranger"></metaTag>
+    <metaTag name="audioComUrl"></metaTag>
+    <metaTag name="composer"></metaTag>
+    <metaTag name="copyright"></metaTag>
+    <metaTag name="creationDate">2026-11-26</metaTag>
+    <metaTag name="lyricist"></metaTag>
+    <metaTag name="meloReferenceTimelineV1">{&quot;schema&quot;:&quot;melostaff-reference-v1&quot;,&quot;initial&quot;:{&quot;step&quot;:&quot;D&quot;,&quot;alter&quot;:0,&quot;octave&quot;:4},&quot;events&quot;:[]}</metaTag>
+    <metaTag name="movementNumber"></metaTag>
+    <metaTag name="movementTitle"></metaTag>
+    <metaTag name="platform">Apple Macintosh</metaTag>
+    <metaTag name="source"></metaTag>
+    <metaTag name="sourceRevisionId"></metaTag>
+    <metaTag name="translator"></metaTag>
+    <metaTag name="workNumber"></metaTag>
+    <metaTag name="workTitle">One fingering</metaTag>
+    <Part id="1">
+      <Staff>
+        <eid>qK96ZBpCdfC_8hWfVYsQcUG</eid>
+        <StaffType group="pitched">
+          <name>melo12tet</name>
+          <lines>13</lines>
+          <clef>0</clef>
+          <melo>1</melo>
+          <meloStateJson>{&quot;schema&quot;:&quot;melostaff-v3&quot;,&quot;scale&quot;:[&quot;M2&quot;,&quot;m2&quot;,&quot;M2&quot;,&quot;M2&quot;,&quot;M2&quot;,&quot;m2&quot;,&quot;M2&quot;],&quot;collection_rotation&quot;:0,&quot;mode_rotation&quot;:0,&quot;generator_cents&quot;:700.0,&quot;period_cents&quot;:1200.0,&quot;embedding&quot;:{&quot;large_steps&quot;:5,&quot;small_steps&quot;:2},&quot;extent&quot;:{&quot;lower&quot;:{&quot;nPer&quot;:1,&quot;nGen&quot;:-2},&quot;upper&quot;:{&quot;nPer&quot;:1,&quot;nGen&quot;:-1}},&quot;tonic_ambit&quot;:&quot;tonic-bounded&quot;}</meloStateJson>
+          <meloJiLines>1</meloJiLines>
+          <keysig>0</keysig>
+          <ledgerlines>0</ledgerlines>
+          </StaffType>
+        </Staff>
+      <trackName>Lead</trackName>
+      <Instrument id="voice">
+        <trackName>Lead</trackName>
+        <minPitchP>36</minPitchP>
+        <maxPitchP>96</maxPitchP>
+        <minPitchA>36</minPitchA>
+        <maxPitchA>96</maxPitchA>
+        <instrumentId>voice.vocals</instrumentId>
+        <Channel>
+          <program value="52"/>
+          <synti>Fluid</synti>
+          </Channel>
+        </Instrument>
+      </Part>
+    <Staff id="1">
+      <Measure>
+        <eid>EiuAsExwwrD_CzCLPUQBPKO</eid>
+        <voice>
+          <TimeSig>
+            <eid>EtA7onvN7XD_0hFAdU7NPAB</eid>
+            <sigN>3</sigN>
+            <sigD>4</sigD>
+            </TimeSig>
+          <Tempo>
+            <tempo>1.2</tempo>
+            <followText>1</followText>
+            <eid>jEOw275mu4B_f5bhlgad3DC</eid>
+            <visible>0</visible>
+            <text><sym>metNoteQuarterUp</sym> = 72</text>
+            </Tempo>
+          <Chord>
+            <eid>Ri0u7NEMb2E_g4KWuYtzfHH</eid>
+            <dots>1</dots>
+            <durationType>half</durationType>
+            <Note>
+              <eid>pr1IL7O4TnI_Jn+cCwzBkNO</eid>
+              <Spanner type="Tie">
+                <Tie>
+                  <eid>uv16Cevm5uH_yCtRhY3/W8G</eid>
+                  </Tie>
+                <next>
+                  <location>
+                    <measures>1</measures>
+                    </location>
+                  </next>
+                </Spanner>
+              <pitch>60</pitch>
+              <tpc>14</tpc>
+              <meloNPer>1</meloNPer>
+              <meloNGen>-2</meloNGen>
+              </Note>
+            <Note>
+              <eid>sy4jFqYyrfM_Mipiqp91eLJ</eid>
+              <Spanner type="Tie">
+                <Tie>
+                  <eid>84wEEtqZsVF_6v3DKRj5TnF</eid>
+                  </Tie>
+                <next>
+                  <location>
+                    <measures>1</measures>
+                    </location>
+                  </next>
+                </Spanner>
+              <pitch>64</pitch>
+              <tpc>18</tpc>
+              <meloNPer>-1</meloNPer>
+              <meloNGen>2</meloNGen>
+              </Note>
+            <Note>
+              <eid>6Z6SPahYM9_KoXxsm5pRkL</eid>
+              <Spanner type="Tie">
+                <Tie>
+                  <eid>ADoiEQTdvoG_MqWoJ4ts4BF</eid>
+                  </Tie>
+                <next>
+                  <location>
+                    <measures>1</measures>
+                    </location>
+                  </next>
+                </Spanner>
+              <pitch>67</pitch>
+              <tpc>15</tpc>
+              <meloNPer>1</meloNPer>
+              <meloNGen>-1</meloNGen>
+              </Note>
+            </Chord>
+          </voice>
+        </Measure>
+      <Measure>
+        <eid>cziLxTZTlgN_1hdvDqZOqAJ</eid>
+        <StaffTypeChange>
+          <StaffType group="pitched">
+            <name>melo12tet</name>
+            <lines>13</lines>
+            <clef>0</clef>
+            <melo>1</melo>
+            <meloStateJson>{&quot;schema&quot;:&quot;melostaff-v3&quot;,&quot;scale&quot;:[&quot;M2&quot;,&quot;m2&quot;,&quot;M2&quot;,&quot;M2&quot;,&quot;M2&quot;,&quot;m2&quot;,&quot;M2&quot;],&quot;collection_rotation&quot;:0,&quot;mode_rotation&quot;:0,&quot;generator_cents&quot;:685.7142857142857,&quot;period_cents&quot;:1200.0,&quot;embedding&quot;:{&quot;large_steps&quot;:5,&quot;small_steps&quot;:2},&quot;extent&quot;:{&quot;lower&quot;:{&quot;nPer&quot;:1,&quot;nGen&quot;:-2},&quot;upper&quot;:{&quot;nPer&quot;:1,&quot;nGen&quot;:-1}},&quot;tonic_ambit&quot;:&quot;tonic-bounded&quot;}</meloStateJson>
+            <meloJiLines>1</meloJiLines>
+            <keysig>0</keysig>
+            <ledgerlines>0</ledgerlines>
+            </StaffType>
+          <eid>aPYAVGn+TaE_Gw5Q02dR2RH</eid>
+          </StaffTypeChange>
+        <voice>
+          <Chord>
+            <eid>nptwFp/v20K_VNfPR4H5XtE</eid>
+            <dots>1</dots>
+            <durationType>half</durationType>
+            <Note>
+              <eid>eSWo3J7dlYP_G8iahmEZqxJ</eid>
+              <Spanner type="Tie">
+                <Tie>
+                  <eid>dNYIO6hGU/O_nQYOXxX/XDL</eid>
+                  </Tie>
+                <next>
+                  <location>
+                    <measures>1</measures>
+                    </location>
+                  </next>
+                </Spanner>
+              <Spanner type="Tie">
+                <prev>
+                  <location>
+                    <measures>-1</measures>
+                    </location>
+                  </prev>
+                </Spanner>
+              <pitch>60</pitch>
+              <tpc>14</tpc>
+              <tuning>28.5714</tuning>
+              <meloNPer>1</meloNPer>
+              <meloNGen>-2</meloNGen>
+              </Note>
+            <Note>
+              <eid>SXFwKXCIWeC_IW2XENE99PG</eid>
+              <Spanner type="Tie">
+                <Tie>
+                  <eid>5PhrlLXqdd_FLZrJn9kiXG</eid>
+                  </Tie>
+                <next>
+                  <location>
+                    <measures>1</measures>
+                    </location>
+                  </next>
+                </Spanner>
+              <Spanner type="Tie">
+                <prev>
+                  <location>
+                    <measures>-1</measures>
+                    </location>
+                  </prev>
+                </Spanner>
+              <pitch>64</pitch>
+              <tpc>18</tpc>
+              <tuning>-28.5714</tuning>
+              <meloNPer>-1</meloNPer>
+              <meloNGen>2</meloNGen>
+              </Note>
+            <Note>
+              <eid>Lv/uIqPRbuK_LugOzx6VZJJ</eid>
+              <Spanner type="Tie">
+                <Tie>
+                  <eid>QaT0lbJoVfJ_2Fa3jT7X2zD</eid>
+                  </Tie>
+                <next>
+                  <location>
+                    <measures>1</measures>
+                    </location>
+                  </next>
+                </Spanner>
+              <Spanner type="Tie">
+                <prev>
+                  <location>
+                    <measures>-1</measures>
+                    </location>
+                  </prev>
+                </Spanner>
+              <pitch>67</pitch>
+              <tpc>15</tpc>
+              <tuning>14.2857</tuning>
+              <meloNPer>1</meloNPer>
+              <meloNGen>-1</meloNGen>
+              </Note>
+            </Chord>
+          </voice>
+        </Measure>
+      <Measure>
+        <eid>LLk/jPjUgAO_jv3OKYnqidH</eid>
+        <StaffTypeChange>
+          <StaffType group="pitched">
+            <name>melo12tet</name>
+            <lines>13</lines>
+            <clef>0</clef>
+            <melo>1</melo>
+            <meloStateJson>{&quot;schema&quot;:&quot;melostaff-v3&quot;,&quot;scale&quot;:[&quot;M2&quot;,&quot;m2&quot;,&quot;M2&quot;,&quot;M2&quot;,&quot;M2&quot;,&quot;m2&quot;,&quot;M2&quot;],&quot;collection_rotation&quot;:0,&quot;mode_rotation&quot;:0,&quot;generator_cents&quot;:720.0,&quot;period_cents&quot;:1200.0,&quot;embedding&quot;:{&quot;large_steps&quot;:5,&quot;small_steps&quot;:2},&quot;extent&quot;:{&quot;lower&quot;:{&quot;nPer&quot;:1,&quot;nGen&quot;:-2},&quot;upper&quot;:{&quot;nPer&quot;:1,&quot;nGen&quot;:-1}},&quot;tonic_ambit&quot;:&quot;tonic-bounded&quot;}</meloStateJson>
+            <meloJiLines>1</meloJiLines>
+            <keysig>0</keysig>
+            <ledgerlines>0</ledgerlines>
+            </StaffType>
+          <eid>YTLGDlnz9SE_ndkwFNk9aFO</eid>
+          </StaffTypeChange>
+        <voice>
+          <Chord>
+            <eid>V1t5PjDIOv_Iqd6U0tvMuM</eid>
+            <dots>1</dots>
+            <durationType>half</durationType>
+            <Note>
+              <eid>lDRwd+Zs9OK_dj9+dV/+kvK</eid>
+              <Spanner type="Tie">
+                <Tie>
+                  <eid>r2Oz0361zCF_1ts8w79nUuG</eid>
+                  </Tie>
+                <next>
+                  <location>
+                    <measures>1</measures>
+                    </location>
+                  </next>
+                </Spanner>
+              <Spanner type="Tie">
+                <prev>
+                  <location>
+                    <measures>-1</measures>
+                    </location>
+                  </prev>
+                </Spanner>
+              <pitch>60</pitch>
+              <tpc>14</tpc>
+              <tuning>-40</tuning>
+              <meloNPer>1</meloNPer>
+              <meloNGen>-2</meloNGen>
+              </Note>
+            <Note>
+              <eid>igpsxPPAw5I_Ou6u/pnhGY</eid>
+              <Spanner type="Tie">
+                <Tie>
+                  <eid>vyO5uezGKKB_LKANpQdgb2H</eid>
+                  </Tie>
+                <next>
+                  <location>
+                    <measures>1</measures>
+                    </location>
+                  </next>
+                </Spanner>
+              <Spanner type="Tie">
+                <prev>
+                  <location>
+                    <measures>-1</measures>
+                    </location>
+                  </prev>
+                </Spanner>
+              <pitch>64</pitch>
+              <tpc>18</tpc>
+              <tuning>40</tuning>
+              <meloNPer>-1</meloNPer>
+              <meloNGen>2</meloNGen>
+              </Note>
+            <Note>
+              <eid>QzAQQobip0D_QZQdo/v2nFO</eid>
+              <Spanner type="Tie">
+                <Tie>
+                  <eid>38wQoJ7pdvC_Q5+2zh2hRJM</eid>
+                  </Tie>
+                <next>
+                  <location>
+                    <measures>1</measures>
+                    </location>
+                  </next>
+                </Spanner>
+              <Spanner type="Tie">
+                <prev>
+                  <location>
+                    <measures>-1</measures>
+                    </location>
+                  </prev>
+                </Spanner>
+              <pitch>67</pitch>
+              <tpc>15</tpc>
+              <tuning>-20</tuning>
+              <meloNPer>1</meloNPer>
+              <meloNGen>-1</meloNGen>
+              </Note>
+            </Chord>
+          </voice>
+        </Measure>
+      <Measure>
+        <eid>kVAv4jqfY7H_nEgqA2mmWvK</eid>
+        <StaffTypeChange>
+          <StaffType group="pitched">
+            <name>melo12tet</name>
+            <lines>13</lines>
+            <clef>0</clef>
+            <melo>1</melo>
+            <meloStateJson>{&quot;schema&quot;:&quot;melostaff-v3&quot;,&quot;scale&quot;:[&quot;M2&quot;,&quot;m2&quot;,&quot;M2&quot;,&quot;M2&quot;,&quot;M2&quot;,&quot;m2&quot;,&quot;M2&quot;],&quot;collection_rotation&quot;:0,&quot;mode_rotation&quot;:0,&quot;generator_cents&quot;:696.7741935483871,&quot;period_cents&quot;:1200.0,&quot;embedding&quot;:{&quot;large_steps&quot;:5,&quot;small_steps&quot;:2},&quot;extent&quot;:{&quot;lower&quot;:{&quot;nPer&quot;:1,&quot;nGen&quot;:-2},&quot;upper&quot;:{&quot;nPer&quot;:1,&quot;nGen&quot;:-1}},&quot;tonic_ambit&quot;:&quot;tonic-bounded&quot;}</meloStateJson>
+            <meloJiLines>1</meloJiLines>
+            <keysig>0</keysig>
+            <ledgerlines>0</ledgerlines>
+            </StaffType>
+          <eid>oTk4fbag1vB_Ig1hcVudRQI</eid>
+          </StaffTypeChange>
+        <voice>
+          <Fermata>
+            <subtype>fermataAbove</subtype>
+            <timeStretch>2.2</timeStretch>
+            <eid>DB0KmILlzzB_f6EshJvU3BB</eid>
+            </Fermata>
+          <Chord>
+            <eid>7ZN5O/IAeKE_BRHxQS7nTvL</eid>
+            <dots>1</dots>
+            <durationType>half</durationType>
+            <Note>
+              <eid>ZH0ZUjADtpP_zstRWm8cwDI</eid>
+              <Spanner type="Tie">
+                <prev>
+                  <location>
+                    <measures>-1</measures>
+                    </location>
+                  </prev>
+                </Spanner>
+              <pitch>60</pitch>
+              <tpc>14</tpc>
+              <tuning>6.45161</tuning>
+              <meloNPer>1</meloNPer>
+              <meloNGen>-2</meloNGen>
+              </Note>
+            <Note>
+              <eid>vqn8xdH/oQC_xqzYmkv2JgP</eid>
+              <Spanner type="Tie">
+                <prev>
+                  <location>
+                    <measures>-1</measures>
+                    </location>
+                  </prev>
+                </Spanner>
+              <pitch>64</pitch>
+              <tpc>18</tpc>
+              <tuning>-6.45161</tuning>
+              <meloNPer>-1</meloNPer>
+              <meloNGen>2</meloNGen>
+              </Note>
+            <Note>
+              <eid>5acP0o2sTJE_4uCDHDLS9RD</eid>
+              <Spanner type="Tie">
+                <prev>
+                  <location>
+                    <measures>-1</measures>
+                    </location>
+                  </prev>
+                </Spanner>
+              <pitch>67</pitch>
+              <tpc>15</tpc>
+              <tuning>3.22581</tuning>
+              <meloNPer>1</meloNPer>
+              <meloNGen>-1</meloNGen>
+              </Note>
+            </Chord>
+          </voice>
+        </Measure>
+      </Staff>
+    </Score>
+  </museScore>

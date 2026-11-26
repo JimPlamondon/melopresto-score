@@ -22,6 +22,9 @@
 
 #include "noterenderer.h"
 
+#include <algorithm>
+#include <cmath>
+
 #include "dom/arpeggio.h"
 #include "dom/note.h"
 #include "dom/staff.h"
@@ -149,7 +152,7 @@ void NoteRenderer::render(const Note* note, const RenderingContext& ctx, mpe::Pl
         return;
     }
 
-    mpe::NoteEvent ev = buildNoteEvent(noteCtx);
+    mpe::NoteEvent ev = buildNoteEvent(noteCtx, tiedRetuningCurve(noteCtx));
 
     if (ev.arrangementCtx().actualTimestamp >= 0) {
         result.emplace_back(std::move(ev));
@@ -163,6 +166,44 @@ void NoteRenderer::render(const Note* note, const RenderingContext& ctx, mpe::Pl
 
         result.emplace_back(mpe::NoteEvent(std::move(arrCtx), std::move(pitchCtx), std::move(expCtx)));
     }
+}
+
+//! The pitch curve of one sounding note whose tied noteheads sound different
+//! pitches (the tie rule: one note through a change of tuning). The curve
+//! holds each pitch until the next notehead's time and steps there, because
+//! the score states no glide. It rides the Multibend articulation, the route
+//! every sequencer already takes to change the pitch of a sounding note.
+mpe::PitchCurve NoteRenderer::tiedRetuningCurve(NominalNoteCtx& noteCtx)
+{
+    mpe::PitchCurve curve;
+    if (noteCtx.tiedRetunings.empty() || noteCtx.duration <= 0) {
+        return curve;
+    }
+    curve.emplace(0, 0);
+    mpe::pitch_level_t held = 0;
+    for (const auto& [time, cents] : noteCtx.tiedRetunings) {
+        const double ratio = static_cast<double>(time - noteCtx.timestamp) / static_cast<double>(noteCtx.duration);
+        const mpe::percentage_t at = std::clamp(static_cast<mpe::percentage_t>(std::lround(ratio * mpe::HUNDRED_PERCENT)),
+                                                mpe::percentage_t(1), mpe::HUNDRED_PERCENT);
+        const mpe::pitch_level_t offset = static_cast<mpe::pitch_level_t>(std::lround(cents / 100.0 * mpe::PITCH_LEVEL_STEP));
+        curve.insert_or_assign(at - 1, held);
+        curve.insert_or_assign(at, offset);
+        held = offset;
+    }
+    curve.insert_or_assign(mpe::HUNDRED_PERCENT, held);
+
+    if (!noteCtx.articulations.contains(ArticulationType::Multibend)) {
+        // An instrument family without a bend pattern of its own plays the
+        // note with its standard pattern; only the pitch changes.
+        mpe::ArticulationMeta meta(ArticulationType::Multibend,
+                                   noteCtx.chordCtx.profile->pattern(ArticulationType::Multibend, ArticulationType::Standard),
+                                   noteCtx.timestamp, noteCtx.duration, 0, 0);
+        noteCtx.articulations.emplace(ArticulationType::Multibend,
+                                      mpe::ArticulationAppliedData(std::move(meta), 0, mpe::HUNDRED_PERCENT));
+        noteCtx.articulations.erase(ArticulationType::Standard);
+        noteCtx.articulations.preCalculateAverageData();
+    }
+    return curve;
 }
 
 void NoteRenderer::renderPartialTie(const Note* outgoingNote, NominalNoteCtx& outgoingNoteCtx)
@@ -236,6 +277,17 @@ void NoteRenderer::renderNormalTie(const Note* firstNote, NominalNoteCtx& firstN
             }
 
             break;
+        }
+
+        // The tie rule: the same note in another tuning sounds another pitch.
+        // Both pitches are the Kernel's exact answers for their noteheads.
+        if (firstNoteCtx.exactPitch.has_value() && currNoteCtx.exactPitch.has_value()) {
+            const double cents = (currNoteCtx.exactPitch->midiKey - firstNoteCtx.exactPitch->midiKey) * 100.0
+                                 + (currNoteCtx.exactPitch->centsOffset - firstNoteCtx.exactPitch->centsOffset);
+            const double before = firstNoteCtx.tiedRetunings.empty() ? 0.0 : firstNoteCtx.tiedRetunings.back().second;
+            if (std::abs(cents - before) > 1e-9) {
+                firstNoteCtx.tiedRetunings.emplace_back(currNoteCtx.timestamp, cents);
+            }
         }
 
         addTiedNote(currNoteCtx, firstNoteCtx);

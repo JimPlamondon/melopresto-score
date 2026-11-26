@@ -76,6 +76,9 @@ struct NoteEdit {
 bool prepareLinkedNoteValue(NoteVal& value, const Chord* chord);
 Note* continuationNote(const Note* source, Chord* destination);
 bool validateTieEndpoints(const Note* source, const Note* destination);
+/// The tie rule (owner decision 2026-11-26): one note through a change of
+/// tuning, one pitch through a change of key. The note that continues
+/// `source`, sounding at `sourceTick`, under a full tie at `targetTick`.
 bool prepareContinuationValue(const NoteVal& source, const Staff* staff, const Fraction& sourceTick, const Fraction& targetTick,
                               NoteVal& result);
 bool preparePitchEdit(Note* anchor, int nPer, int nGen, std::vector<NoteEdit>& edits, muse::String& error);
