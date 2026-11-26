@@ -71,6 +71,7 @@ void MeloStaffSettingsModel::loadProperties()
         emit statusChanged();
     }
     m_settings["available"] = valid;
+    m_settings["rightLabelRoomTitle"] = melo::scaleDotRightLabelRoomName().toQString();
     if (valid) {
         m_settings["target"] = muse::qtrc("inspector",
                                           "Measure %1 · position %2 ticks · staff %3").arg(measure->no()
@@ -100,6 +101,7 @@ void MeloStaffSettingsModel::loadProperties()
         const StaffType* base = score->staff(staff)->staffType(Fraction(0, 1));
         m_settings["elision"] = int(base->meloElideOctaves());
         m_settings["labels"] = int(base->meloScaleDotLabelMode());
+        m_settings["rightLabelRoom"] = base->meloScaleDotRightLabelRoom();
         auto choices = [this](const char* key, const std::vector<melo::StateChangeOption>& options) {
             QVariantList list;
             int current = -1;
@@ -255,7 +257,8 @@ void MeloStaffSettingsModel::removeChange()
 
 void MeloStaffSettingsModel::setStaffOption(const QString& name, int value)
 {
-    if (value < 0 || (name == "elision" ? value > 2 : name != "labels" || value > 3)) {
+    const int highest = name == "elision" ? 2 : name == "labels" ? 3 : name == "rightLabelRoom" ? 1 : -1;
+    if (value < 0 || value > highest) {
         return;
     }
     Score* score = nullptr;
@@ -272,6 +275,11 @@ void MeloStaffSettingsModel::setStaffOption(const QString& name, int value)
             return;
         }
         edited.setMeloElideOctaves(MeloElideOctaves(value));
+    } else if (name == "rightLabelRoom") {
+        if (edited.meloScaleDotRightLabelRoom() == (value != 0)) {
+            return;
+        }
+        edited.setMeloScaleDotRightLabelRoom(value != 0);
     } else {
         if (int(edited.meloScaleDotLabelMode()) == value) {
             return;

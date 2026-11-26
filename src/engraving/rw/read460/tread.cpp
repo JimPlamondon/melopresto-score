@@ -4036,6 +4036,8 @@ void TRead::read(StaffType* t, XmlReader& e, ReadContext& ctx)
                                         : mode == u"left" ? MeloScaleDotLabelMode::Left
                                         : mode == u"split" ? MeloScaleDotLabelMode::Split
                                         : MeloScaleDotLabelMode::Auto);
+        } else if (tag == "meloScaleDotRightLabelRoom") {
+            t->setMeloScaleDotRightLabelRoom(e.readInt());
         } else if (tag == "meloElideOctaves") {
             // Milestone 8: on/off; anything else (or absent) is Auto.
             const String mode = e.readText();

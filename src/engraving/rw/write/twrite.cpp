@@ -2984,6 +2984,9 @@ void TWrite::write(const StaffType* item, XmlWriter& xml, WriteContext& ctx)
                                : "split";
             xml.tag("meloScaleDotLabels", String::fromUtf8(mode));
         }
+        if (item->meloScaleDotRightLabelRoom()) {
+            xml.tag("meloScaleDotRightLabelRoom", item->meloScaleDotRightLabelRoom());
+        }
         // Milestone 8: the per-staff-type octave-band elision override
         // (presentation only; Auto is the absent default).
         if (item->meloElideOctaves() != MeloElideOctaves::Auto) {

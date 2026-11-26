@@ -60,6 +60,7 @@ inline muse::String staffUserName() { return muse::mtrc("engraving", "MeloPresto
 inline muse::String presetName() { return muse::mtrc("engraving", "MeloPresto Staff 12-edo"); }
 inline muse::String crescentClefName() { return muse::mtrc("engraving", "crescent clef"); }
 inline muse::String scaleDotsName() { return muse::mtrc("engraving", "scale dots"); }
+inline muse::String scaleDotRightLabelRoomName() { return muse::mtrc("engraving", "Room for names on the right of scale dots"); }
 inline muse::String tonicIndicatorName() { return muse::mtrc("engraving", "tonic indicator"); }
 inline muse::String linkedNoteMissingState()
 {

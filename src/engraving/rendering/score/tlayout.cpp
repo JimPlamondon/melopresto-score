@@ -5076,7 +5076,7 @@ void TLayout::layoutForWidth(StaffLines* item, double w, LayoutContext& ctx)
         // FINAL §5.4.4) — label bands included when the resolved mode
         // shows them.
         const StaffType::MeloHeaderGeometry headerGeom
-            = meloSt->meloHeaderGeometry(_spatium, item->score()->style().defaultSpatium(), &view);
+            = meloSt->meloHeaderGeometry(_spatium, item->score()->style().defaultSpatium(), &view, s);
         const double leftEdge = x1 - headerGeom.headerWidth;
         const double lineStartX = systemHead ? leftEdge : x1;
 

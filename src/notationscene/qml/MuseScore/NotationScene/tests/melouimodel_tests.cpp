@@ -39,6 +39,7 @@
 #include "engraving/melo/melochange.h"
 #include "engraving/melo/melotuningcontroller.h"
 #include "engraving/melo/melopitchlabel.h"
+#include "engraving/melo/melostrings.h"
 #include "draw/fontmetrics.h"
 #include "inspector/internal/elementrepositoryservice.h"
 #include "inspector/qml/MuseScore/Inspector/general/playback/internal/noteplaybackmodel.h"
@@ -1632,6 +1633,103 @@ TEST_F(MeloUiModelTests, StaffPresentationIsUndoableAndPreservesMusicalState) {
     score->undoRedo(true, nullptr);
     model.loadProperties();
     EXPECT_EQ(model.settings()["labels"].toInt(), 0);
+}
+TEST_F(MeloUiModelTests, ScaleDotRightLabelRoomIsAnUndoableStaffOption) {
+    selectMeasure(0);
+    MeloStaffSettingsModel model(nullptr, muse::modularity::globalCtx(), &repository);
+    model.context.set(global);
+    model.loadProperties();
+    ASSERT_TRUE(model.settings()["available"].toBool());
+    EXPECT_FALSE(model.settings()["rightLabelRoom"].toBool());
+    // The checkbox is named for what it does, from the central string table.
+    EXPECT_EQ(model.settings()["rightLabelRoomTitle"].toString(), melo::scaleDotRightLabelRoomName().toQString());
+    EXPECT_EQ(model.settings()["rightLabelRoomTitle"].toString(), QString("Room for names on the right of scale dots"));
+    auto base = [&]() { return score->staff(0)->staffType(Fraction(0, 1)); };
+    auto before = base()->meloStateJson();
+    int undo = score->undoStack()->size();
+    model.setStaffOption("rightLabelRoom", 1);
+    EXPECT_EQ(score->undoStack()->size(), undo + 1);
+    EXPECT_TRUE(base()->meloScaleDotRightLabelRoom());
+    EXPECT_TRUE(model.settings()["rightLabelRoom"].toBool());
+    EXPECT_EQ(base()->meloStateJson(), before);
+    // Already on, an out-of-range value and an unknown option change nothing.
+    model.setStaffOption("rightLabelRoom", 1);
+    model.setStaffOption("rightLabelRoom", 2);
+    model.setStaffOption("rightLabelSpace", 1);
+    EXPECT_EQ(score->undoStack()->size(), undo + 1);
+    EXPECT_TRUE(base()->meloScaleDotRightLabelRoom());
+    score->undoRedo(true, nullptr);
+    model.loadProperties();
+    EXPECT_FALSE(base()->meloScaleDotRightLabelRoom());
+    EXPECT_FALSE(model.settings()["rightLabelRoom"].toBool());
+}
+TEST_F(MeloUiModelTests, StaffPanelCheckboxSetsAndClearsScaleDotRightLabelRoom)
+{
+    selectMeasure(0);
+    MeloStaffSettingsModel model(nullptr, muse::modularity::globalCtx(), &repository);
+    model.context.set(global);
+    model.loadProperties();
+    ASSERT_TRUE(model.settings()["available"].toBool());
+
+    QQmlEngine engine;
+    const QVariantMap theme {
+        { "accentColor", QColor(Qt::blue) }, { "accentOpacityNormal", 1.0 }, { "bodyFont", QFont() },
+        { "borderWidth", 1 }, { "buttonColor", QColor(Qt::white) }, { "buttonOpacityHit", 1.0 },
+        { "buttonOpacityHover", 1.0 }, { "buttonOpacityNormal", 1.0 }, { "defaultButtonSize", 24 },
+        { "fontPrimaryColor", QColor(Qt::black) }, { "iconsFont", QFont() }, { "itemOpacityDisabled", 0.5 },
+        { "linkColor", QColor(Qt::blue) }, { "navCtrlBorderWidth", 1 }, { "popupBackgroundColor", QColor(Qt::white) },
+        { "strokeColor", QColor(Qt::black) }, { "textFieldColor", QColor(Qt::white) },
+    };
+    engine.rootContext()->setContextProperty("ui", QVariantMap { { "theme", theme } });
+    engine.globalObject().setProperty("qsTrc", engine.evaluate("(function(context, text) { return text; })"));
+    engine.addImportPath("qrc:/qt/qml");
+    QQmlComponent component(&engine, QUrl("qrc:/qt/qml/MuseScore/Inspector/MeloStaffSettings.qml"));
+    ASSERT_TRUE(component.isReady()) << component.errorString().toStdString();
+
+    muse::ui::NavigationPanel panel;
+    QQuickWindow window;
+    window.resize(400, 1200);
+    auto* section = qobject_cast<QQuickItem*>(component.createWithInitialProperties({
+        { "model", QVariant::fromValue(&model) }, { "navigationPanel", QVariant::fromValue(&panel) },
+        { "parent", QVariant::fromValue(window.contentItem()) },
+    }));
+    ASSERT_TRUE(section) << component.errorString().toStdString();
+    window.show();
+    QCoreApplication::processEvents();
+
+    // The checkbox named for what it does, beside the staff's other settings under "Show more".
+    const QString title = melo::scaleDotRightLabelRoomName().toQString();
+    QQuickItem* checkbox = nullptr;
+    QQuickItem* more = nullptr;
+    for (QQuickItem* item : section->findChildren<QQuickItem*>()) {
+        if (item->property("text").toString() == title && item->property("checked").isValid()) {
+            checkbox = item;
+        }
+        if (item->property("expanded").isValid() && item->property("text").toString() == QString("Show more")) {
+            more = item;
+        }
+    }
+    ASSERT_TRUE(checkbox);
+    ASSERT_TRUE(more);
+    EXPECT_FALSE(checkbox->isVisible());
+    more->setProperty("expanded", true);
+    QCoreApplication::processEvents();
+    EXPECT_TRUE(checkbox->isVisible());
+    EXPECT_FALSE(checkbox->property("checked").toBool());
+
+    auto base = [&]() { return score->staff(0)->staffType(Fraction(0, 1)); };
+    const int undo = score->undoStack()->size();
+    ASSERT_TRUE(QMetaObject::invokeMethod(checkbox, "clicked"));
+    QCoreApplication::processEvents();
+    EXPECT_TRUE(base()->meloScaleDotRightLabelRoom());
+    EXPECT_TRUE(checkbox->property("checked").toBool());
+    EXPECT_EQ(score->undoStack()->size(), undo + 1);
+    ASSERT_TRUE(QMetaObject::invokeMethod(checkbox, "clicked"));
+    QCoreApplication::processEvents();
+    EXPECT_FALSE(base()->meloScaleDotRightLabelRoom());
+    EXPECT_FALSE(checkbox->property("checked").toBool());
+    EXPECT_EQ(score->undoStack()->size(), undo + 2);
+    delete section;
 }
 TEST_F(MeloUiModelTests, SelectionRefreshClearsOldFeedbackAndChangesTheTarget) {
     selectMeasure(0);
