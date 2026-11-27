@@ -61,18 +61,28 @@ String noteLabelPack(const Score* score)
     return (score ? score->style() : DefaultStyle::defaultStyle()).styleSt(Sid::meloNoteLabelPack);
 }
 
-bool noteLabelPackIds(std::vector<String>& ids)
+bool noteLabelPacks(std::vector<NoteLabelPack>& packs)
 {
     JsonValue result;
     if (!okResult(callBridge(u"{\"abi\":2,\"op\":\"note_label_pack_ids\"}"), result)) {
         return false;
     }
-    ids.clear();
+    packs.clear();
     const JsonArray array = result.toArray();
     for (size_t i = 0; i < array.size(); ++i) {
-        ids.push_back(array.at(i).toString());
+        const String id = array.at(i).toString();
+        JsonObject envelope;
+        envelope.set("abi", 2);
+        envelope.set("op", "note_label_pack_display_name");
+        envelope.set("pack_id", id);
+        JsonValue name;
+        if (!okResult(callBridge(String::fromUtf8(JsonDocument(envelope).toJson())), name)) {
+            packs.clear();
+            return false;
+        }
+        packs.push_back({ id, name.toString() });
     }
-    return !ids.empty();
+    return !packs.empty();
 }
 
 bool available()

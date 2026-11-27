@@ -21,8 +21,8 @@
  */
 
 #include "editstyle.h"
-#include "engraving/melo/melobridge.h"
 #include "engraving/melo/melostrings.h"
+#include "melonotelabelpackmodel.h"
 
 #include <QAnyStringView>
 #include <QButtonGroup>
@@ -30,6 +30,7 @@
 #include <QQuickItem>
 #include <QQuickView>
 #include <QSignalMapper>
+#include <QStandardItemModel>
 #include <QStringBuilder>
 #include <QStringLiteral>
 
@@ -341,7 +342,8 @@ EditStyle::EditStyle(QWidget* parent)
     meloFirstSystem->setObjectName("meloFirstSystem");
     meloLayout->addWidget(meloElide);
     meloLayout->addWidget(meloFirstSystem);
-    // The score's note-name set: one of the Kernel's note-label packs, by id.
+    // The score's note-name set: one of the Kernel's note-label packs, shown by
+    // its display name and stored by its id.
     auto* meloNoteLabelPackRow = new QHBoxLayout();
     auto* meloNoteLabelPackLabel = new QLabel(melo::noteLabelPackLabel().toQString(), meloPage);
     meloNoteLabelPackLabel->setObjectName("meloNoteLabelPackLabel");
@@ -349,12 +351,7 @@ EditStyle::EditStyle(QWidget* parent)
     meloNoteLabelPack->setObjectName("meloNoteLabelPack");
     meloNoteLabelPack->setToolTip(melo::noteLabelPackToolTip().toQString());
     meloNoteLabelPackLabel->setBuddy(meloNoteLabelPack);
-    std::vector<muse::String> packIds;
-    if (melo::noteLabelPackIds(packIds)) {
-        for (const muse::String& id : packIds) {
-            meloNoteLabelPack->addItem(id.toQString(), id.toQString());
-        }
-    }
+    fillMeloNoteLabelPackModel(qobject_cast<QStandardItemModel*>(meloNoteLabelPack->model()));
     meloNoteLabelPackRow->addWidget(meloNoteLabelPackLabel);
     meloNoteLabelPackRow->addWidget(meloNoteLabelPack);
     meloNoteLabelPackRow->addStretch();

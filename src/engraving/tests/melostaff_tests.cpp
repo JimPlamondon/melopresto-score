@@ -2221,15 +2221,29 @@ TEST(MeloStaffTests, scaleDotLabelsAreWrittenInTheScoresNoteNameSet)
     delete score;
 }
 
-// The bridge wrappers name the pack; the list of sets comes from the Kernel,
-// and a pack the Kernel does not hold gives no labels.
+// The bridge wrappers name the pack; the list of sets, each with the display
+// name its pack gives itself (owner answer 1a, 2026-11-27), comes from the
+// Kernel, and a pack the Kernel does not hold gives no labels.
 TEST(MeloStaffTests, noteNameSetsAreTheKernelsPacks)
 {
-    std::vector<muse::String> ids;
-    ASSERT_TRUE(melo::noteLabelPackIds(ids));
-    ASSERT_FALSE(ids.empty());
-    EXPECT_EQ(ids.front(), u"melo-canonical-solfa");
-    EXPECT_NE(std::find(ids.begin(), ids.end(), muse::String(u"slendro")), ids.end());
+    std::vector<melo::NoteLabelPack> packs;
+    ASSERT_TRUE(melo::noteLabelPacks(packs));
+    ASSERT_FALSE(packs.empty());
+    EXPECT_EQ(packs.front().id, u"melo-canonical-solfa");
+    EXPECT_EQ(packs.front().displayName, u"MeloPresto canonical solfa");
+    auto displayName = [&](const char16_t* id) {
+        for (const melo::NoteLabelPack& pack : packs) {
+            if (pack.id == id) {
+                return pack.displayName;
+            }
+        }
+        return muse::String();
+    };
+    EXPECT_EQ(displayName(u"slendro"), u"Slendro");
+    EXPECT_EQ(displayName(u"jale-german"), u"German Jale (M\u00FCnnich)");
+    for (const melo::NoteLabelPack& pack : packs) {
+        EXPECT_FALSE(pack.displayName.isEmpty()) << pack.id.toStdString();
+    }
 
     Score* score = ScoreRW::readScore(u"melostaff_data/scale-dot-label-room.mscx");
     ASSERT_TRUE(score);

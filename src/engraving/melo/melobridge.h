@@ -41,11 +41,20 @@ bool relativeKeyEditor(const muse::String& source, const muse::String& destinati
 /// Bridge availability: the linked C ABI answers version 1.
 bool available();
 
-/// The note-name sets a score may use: the Kernel's note-label pack ids
-/// (bridge op `note_label_pack_ids`). The score holds which one is current
-/// (style `meloNoteLabelPack`, owner decision 2026-11-27); every request
-/// whose reply carries note labels names it.
-bool noteLabelPackIds(std::vector<muse::String>& ids);
+/// One note-name set a score may use: a Kernel note-label pack's id and the
+/// display name the pack gives itself (bridge ops `note_label_pack_ids` and
+/// `note_label_pack_display_name`; owner answer 1a, 2026-11-27).
+struct NoteLabelPack {
+    muse::String id;
+    muse::String displayName;
+};
+
+/// The note-name sets a score may use, in the Kernel's order. The score holds
+/// which one is current by id (style `meloNoteLabelPack`, owner decision
+/// 2026-11-27); every request whose reply carries note labels names it. A
+/// user sees each set by its display name. False when the Kernel gives no
+/// pack or refuses a pack's display name.
+bool noteLabelPacks(std::vector<NoteLabelPack>& packs);
 
 // Native MusicXML import (owner decision 1a, 2026-08-16): ask the Kernel
 // whether a transcribed state JSON is a valid MeloStaffStateV2 (bridge op
