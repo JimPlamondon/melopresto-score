@@ -1032,7 +1032,7 @@ bool prepareRelativeKeyEditor(Score* score, staff_idx_t staffIdx, const Fraction
         error = mu::engraving::melo::precedingCanonicalStateUnavailable();
         return false;
     }
-    return relativeKeyEditor(source->meloStateJson(), destination, exactTimeJson(tick), expression, result, error);
+    return relativeKeyEditor(source->meloStateJson(), destination, exactTimeJson(tick), expression, noteLabelPack(score), result, error);
 }
 
 bool validateSharedStateTimeline(const Score* score, String& error)
@@ -1359,7 +1359,7 @@ bool changeOptions(const Score* score, staff_idx_t staffIdx, const Measure* meas
     if (!effectiveState(score, staffIdx, measure, tick, state)) {
         return false;
     }
-    return stateChangeOptions(state, options);
+    return stateChangeOptions(state, noteLabelPack(score), options);
 }
 
 bool canInsertChange(const Score* score, staff_idx_t staffIdx, const Measure* measure, String& reason)

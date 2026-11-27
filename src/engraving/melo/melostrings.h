@@ -56,6 +56,15 @@ inline constexpr char sectionBandAlignmentFailed[] = "MeloPresto section band al
 inline constexpr char systemFrameUnionFailed[] = "MeloPresto per-system frame union failed for staff ";
 inline muse::TranslatableString changeActionName() { return muse::TranslatableString("action", "MeloPresto change…"); }
 inline muse::String featureName() { return muse::mtrc("engraving", "MeloPresto Staff"); }
+/// The Style dialog's choice of the score's note-name set (owner decision
+/// 2026-11-27): its label and its tooltip.
+inline muse::String noteLabelPackLabel() { return muse::mtrc("notation/editstyle", "Note-class names:"); }
+inline muse::String noteLabelPackToolTip()
+{
+    return muse::mtrc("notation/editstyle",
+                      "The naming tradition in which this score's notes, scale dots included, are labelled.");
+}
+
 inline muse::String staffUserName() { return muse::mtrc("engraving", "MeloPresto Staff"); }
 inline muse::String presetName() { return muse::mtrc("engraving", "MeloPresto Staff 12-edo"); }
 inline muse::String crescentClefName() { return muse::mtrc("engraving", "crescent clef"); }

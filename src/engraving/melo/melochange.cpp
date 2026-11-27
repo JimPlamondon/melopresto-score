@@ -127,7 +127,7 @@ static bool indicatorForCarrier(const StaffTypeChange* stc, ChangeIndicator& out
     if (!newSt || !oldSt || !newSt->isMelo() || !oldSt->isMelo() || newSt == oldSt) {
         return false;
     }
-    if (!changeIndicator(oldSt->meloStateJson(), newSt->meloStateJson(), out)) {
+    if (!changeIndicator(oldSt->meloStateJson(), newSt->meloStateJson(), noteLabelPack(stc->score()), out)) {
         return false;
     }
     if (newStaffType) {
@@ -278,7 +278,7 @@ bool courtesyChangeIndicator(const Measure* measure, staff_idx_t staffIdx,
     if (!oldSt || !newSt || !oldSt->isMelo() || !newSt->isMelo() || oldSt == newSt) {
         return false;
     }
-    if (!changeIndicator(oldSt->meloStateJson(), newSt->meloStateJson(), out)) {
+    if (!changeIndicator(oldSt->meloStateJson(), newSt->meloStateJson(), noteLabelPack(measure->score()), out)) {
         return false;
     }
     if (stateStaffType) {
@@ -420,7 +420,7 @@ bool changeIndicatorIntoStaffType(const Score* score, staff_idx_t staffIdx, cons
             if (!oldSt || !oldSt->isMelo() || oldSt == newStaffType) {
                 return false;
             }
-            return changeIndicator(oldSt->meloStateJson(), newStaffType->meloStateJson(), out);
+            return changeIndicator(oldSt->meloStateJson(), newStaffType->meloStateJson(), noteLabelPack(score), out);
         }
     }
     return false;
@@ -461,7 +461,7 @@ bool changeIndicatorsTouchingStaffType(const Score* score, staff_idx_t staffIdx,
                 continue;
             }
             ChangeIndicator model;
-            if (changeIndicator(oldStaffType->meloStateJson(), newStaffType->meloStateJson(), model)
+            if (changeIndicator(oldStaffType->meloStateJson(), newStaffType->meloStateJson(), noteLabelPack(score), model)
                 && !model.empty()) {
                 append(model);
             }

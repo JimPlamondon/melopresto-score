@@ -3283,7 +3283,8 @@ void TDraw::draw(const StaffLines* item, Painter* painter, const PaintOptions& o
             }
 
             // Scale-dot labels (owner epiphany 2026-08-15): each stack
-            // member's canonical-solfa name, Kernel-supplied, centroid-
+            // member's label in the score's note-name set (owner decision
+            // 2026-11-27), Kernel-supplied, centroid-
             // aligned to its dot through the same seam. Left mode: all
             // names left of the dot column; Split: flat side (nGen<=0)
             // left, sharp side right with a semi-transparent white
@@ -3297,10 +3298,10 @@ void TDraw::draw(const StaffLines* item, Painter* painter, const PaintOptions& o
                 melo::TonicPitchLabel keyLabel;
                 const bool haveKeyLabel = haveTonic && melo::tonicPitchLabel(meloSt->meloStateJson(), keyLabel);
                 if ((labelMode != MeloScaleDotLabelMode::None || haveKeyLabel)
-                    && melo::scaleDotLabels(meloSt->meloStateJson(), labelStacks)) {
+                    && melo::scaleDotLabels(meloSt->meloStateJson(), melo::noteLabelPack(item->score()), labelStacks)) {
                     const bool tonicIsDo = std::any_of(labelStacks.begin(), labelStacks.end(), [&](const auto& stack) {
                         return std::any_of(stack.members.begin(), stack.members.end(), [&](const auto& member) {
-                            return member.nGen == keyLabel.nGen && member.label == u"Do";
+                            return member.nGen == keyLabel.nGen && member.name == u"Do";
                         });
                     });
                     Font labelFont(u"Edwin", Font::Type::Text);

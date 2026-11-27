@@ -17,7 +17,15 @@
 #include "types/string.h"
 #include "draw/types/geometry.h"
 
+namespace mu::engraving {
+class Score;
+}
+
 namespace mu::engraving::melo {
+/// The score's current note-name set (style `meloNoteLabelPack`): the pack
+/// every note label this score asks the Kernel for is written in. Without a
+/// score, the style's default.
+muse::String noteLabelPack(const Score* score);
 bool staffRequestAt(const muse::String& source, const muse::String& curves, const muse::String& at, muse::String& request,
                     muse::String& error);
 struct RelativeKeyEditor {
@@ -29,9 +37,15 @@ struct RelativeKeyEditor {
     bool exists = false;
 };
 bool relativeKeyEditor(const muse::String& source, const muse::String& destination, const muse::String& at, const muse::String* expression,
-                       RelativeKeyEditor& result, muse::String& error);
+                       const muse::String& packId, RelativeKeyEditor& result, muse::String& error);
 /// Bridge availability: the linked C ABI answers version 1.
 bool available();
+
+/// The note-name sets a score may use: the Kernel's note-label pack ids
+/// (bridge op `note_label_pack_ids`). The score holds which one is current
+/// (style `meloNoteLabelPack`, owner decision 2026-11-27); every request
+/// whose reply carries note labels names it.
+bool noteLabelPackIds(std::vector<muse::String>& ids);
 
 // Native MusicXML import (owner decision 1a, 2026-08-16): ask the Kernel
 // whether a transcribed state JSON is a valid MeloStaffStateV2 (bridge op
@@ -132,13 +146,15 @@ bool toneDiamondSettings(std::vector<ToneDiamondSetting>& settings, uint32_t& ge
 /// strictly inside, Split at or outside.
 bool labelLegibilityRange(double& minCents, double& maxCents);
 
-/// One labeled member of a scale-dot stack.
+/// One labeled member of a scale-dot stack: its canonical note-class name
+/// (the identity, e.g. "Do") and its label in the requested pack.
 struct LabeledDotMember {
     int nGen = 0;
+    muse::String name;
     muse::String label;
 };
 
-/// One scale-dot stack with its members' canonical-solfa labels,
+/// One scale-dot stack with its members' labels in the requested pack,
 /// ordered as the Kernel derives them (front order, ascending |nGen|).
 struct LabeledDotStack {
     double cents = 0.0;
@@ -148,7 +164,7 @@ struct LabeledDotStack {
 /// The staff's scale-dot stacks with per-member labels — ordered stack
 /// topology preserved; the flat/sharp side split is the caller's
 /// nGen-sign check, never transported.
-bool scaleDotLabels(const muse::String& stateJson, std::vector<LabeledDotStack>& stacks);
+bool scaleDotLabels(const muse::String& stateJson, const muse::String& packId, std::vector<LabeledDotStack>& stacks);
 
 /// One Kernel-owned Just Intonation staff line: exact just cents, prime
 /// limit, and VTR-gated visibility for the state's current generator.
@@ -252,7 +268,8 @@ struct ChangeIndicator {
 /// `error` (optional) receives the Kernel's reason when no indicator can be
 /// derived (e.g. an unrecoverable reference pair) — the panel shows it so a
 /// change that draws nothing is never silent.
-bool changeIndicator(const muse::String& oldStateJson, const muse::String& newStateJson, ChangeIndicator& out,
+/// Point labels are written in the note-label pack `packId`.
+bool changeIndicator(const muse::String& oldStateJson, const muse::String& newStateJson, const muse::String& packId, ChangeIndicator& out,
                      muse::String* error = nullptr);
 struct ConnectorGlyph {
     double penCents = 0.0;
@@ -318,10 +335,10 @@ bool nearestPitch(const muse::String& stateJson, double targetCents, bool hasCur
 bool stepPitch(const muse::String& stateJson, int currentNPer, int currentNGen, bool up, const char* domain, PitchHit& hit);
 
 /// Milestone 6: one Kernel-issued change-panel choice (opaque id, labels
-/// from the canonical-solfa seam, `current` for the state's own value).
+/// in the requested note-label pack, `current` for the state's own value).
 struct StateChangeOption {
     muse::String id;
-    muse::String label;      // canonical solfa (tonics/key targets) or a catalogue name
+    muse::String label;      // a note label (tonics/key targets) or a catalogue name
     int nGen = 0;
     int nPer = 0;
     bool hasNGen = false;
@@ -336,8 +353,8 @@ struct StateChangeOptions {
     std::vector<StateChangeOption> cycles;      // "scale:cycle:<name>"
 };
 
-/// Kernel op `state_change_options`.
-bool stateChangeOptions(const muse::String& stateJson, StateChangeOptions& options);
+/// Kernel op `state_change_options`, labelled in the note-label pack `packId`.
+bool stateChangeOptions(const muse::String& stateJson, const muse::String& packId, StateChangeOptions& options);
 
 /// Kernel op `apply_state_change`: the complete new state JSON after one
 /// choice, or false with `error` (unusable reference, foreign id, ...).

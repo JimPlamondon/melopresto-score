@@ -1147,7 +1147,7 @@ TEST(MeloStaffTests, edgeCollisionStacksAlwaysStraddleTheReSplit)
         ASSERT_TRUE(controller.preview(g));
         const StaffType* st = score->staff(0)->staffType(Fraction(0, 1));
         std::vector<melo::LabeledDotStack> stacks;
-        ASSERT_TRUE(melo::scaleDotLabels(st->meloStateJson(), stacks));
+        ASSERT_TRUE(melo::scaleDotLabels(st->meloStateJson(), u"melo-canonical-solfa", stacks));
         ASSERT_FALSE(stacks.empty());
         for (const melo::LabeledDotStack& stack : stacks) {
             if (stack.members.size() < 2) {
@@ -1233,7 +1233,7 @@ TEST(MeloStaffTests, labelsEnabledControllerSweepHasNoStaleLabels)
                 }
                 // Labels re-derive from the CURRENT state every tick.
                 std::vector<melo::LabeledDotStack> stacks;
-                ASSERT_TRUE(melo::scaleDotLabels(st->meloStateJson(), stacks));
+                ASSERT_TRUE(melo::scaleDotLabels(st->meloStateJson(), u"melo-canonical-solfa", stacks));
                 ASSERT_FALSE(stacks.empty());
                 for (const melo::LabeledDotStack& stack : stacks) {
                     for (const melo::LabeledDotMember& member : stack.members) {
@@ -1266,7 +1266,7 @@ TEST(MeloStaffTests, labelsEnabledControllerSweepHasNoStaleLabels)
                 ASSERT_TRUE(controller.beginPreview());
                 ASSERT_TRUE(controller.preview(g));
                 std::vector<melo::LabeledDotStack> stacks;
-                ASSERT_TRUE(melo::scaleDotLabels(st->meloStateJson(), stacks));
+                ASSERT_TRUE(melo::scaleDotLabels(st->meloStateJson(), u"melo-canonical-solfa", stacks));
                 sem << "{\"mode\":\"" << modeNames[m] << "\",\"g\":"
                     << muse::String::number(g, 6).toStdString() << ",\"stacks\":[";
                 bool firstStack = true;
@@ -1525,7 +1525,7 @@ TEST(MeloStaffTests, wideMelodyControllerSweepKeepsFrameValidAndFast)
             }
             ASSERT_EQ(ledgerLineCountOnStaff0(score), 0u) << piece.toStdString() << " g=" << g;
             std::vector<melo::LabeledDotStack> stacks;
-            ASSERT_TRUE(melo::scaleDotLabels(st->meloStateJson(), stacks));
+            ASSERT_TRUE(melo::scaleDotLabels(st->meloStateJson(), u"melo-canonical-solfa", stacks));
             ASSERT_FALSE(stacks.empty());
             for (System* sys : score->systems()) {
                 Measure* m = sys->firstMeasure();
@@ -1698,7 +1698,7 @@ TEST(MeloStaffTests, changeIndicatorTransportCarriesTheKernelTerrainVerbatim)
     const muse::String oldS = test::canonicalRequest(test::configuration(meloState(G12)), root);
     const muse::String newS = test::canonicalRequest(test::configuration(meloState(G12, 5)), root, at);
     melo::ChangeIndicator model;
-    ASSERT_TRUE(melo::changeIndicator(oldS, newS, model));
+    ASSERT_TRUE(melo::changeIndicator(oldS, newS, u"melo-canonical-solfa", model));
     ASSERT_EQ(model.kinds.size(), 2u);
     EXPECT_EQ(model.kinds[0], u"key");
     EXPECT_EQ(model.kinds[1], u"mode");
@@ -1714,10 +1714,10 @@ TEST(MeloStaffTests, changeIndicatorTransportCarriesTheKernelTerrainVerbatim)
     EXPECT_EQ(model.dotStacks.size(), 2u);
     // Same state: empty model. Malformed: failure, no partial data.
     melo::ChangeIndicator same;
-    ASSERT_TRUE(melo::changeIndicator(oldS, oldS, same));
+    ASSERT_TRUE(melo::changeIndicator(oldS, oldS, u"melo-canonical-solfa", same));
     EXPECT_TRUE(same.empty());
     melo::ChangeIndicator bad;
-    EXPECT_FALSE(melo::changeIndicator(u"{nope", newS, bad));
+    EXPECT_FALSE(melo::changeIndicator(u"{nope", newS, u"melo-canonical-solfa", bad));
     melo::ConnectorGlyph head;
     ASSERT_TRUE(melo::connectorGlyph(head));
     // Owner ruling at the gate (2026-08-16): heavier than the tonic
@@ -1958,7 +1958,7 @@ TEST(MeloStaffTests, scaleDotRightLabelRoomOffLeavesTheSystemHeadUnchanged)
         double widestRight = 0.0;
         if (st->meloResolvedScaleDotLabelMode() == MeloScaleDotLabelMode::Split) {
             std::vector<melo::LabeledDotStack> stacks;
-            ASSERT_TRUE(melo::scaleDotLabels(st->meloStateJson(), stacks));
+            ASSERT_TRUE(melo::scaleDotLabels(st->meloStateJson(), u"melo-canonical-solfa", stacks));
             for (const melo::LabeledDotStack& stack : stacks) {
                 for (const melo::LabeledDotMember& member : stack.members) {
                     if (member.nGen > 0) {
@@ -2153,5 +2153,97 @@ TEST(MeloStaffTests, scaleDotRightLabelRoomKeepsInstrumentNamesAndBracketClear)
     for (size_t i = 0; i < off.brackets.size(); ++i) {
         EXPECT_NEAR(on.brackets[i], off.brackets[i], EPS) << "bracket " << i;
     }
+    delete score;
+}
+
+// Owner decision 2026-11-27: a score's current note-name set, saved with the
+// score, names its notes. The Kernel supplies the labels in that set; the
+// scale dots are drawn with them, and the Do tonic's pitch name keeps its
+// place inside the crescent whatever Do is called.
+TEST(MeloStaffTests, scaleDotLabelsAreWrittenInTheScoresNoteNameSet)
+{
+    Score* score = ScoreRW::readScore(u"melostaff_data/scale-dot-label-room.mscx");
+    ASSERT_TRUE(score);
+    EXPECT_EQ(score->style().styleSt(Sid::meloNoteLabelPack), u"melo-canonical-solfa");
+    StaffType* type = score->staff(0)->staffType(Fraction(0, 1));
+    ASSERT_TRUE(type && type->isMelo());
+    type->setMeloScaleDotLabelMode(MeloScaleDotLabelMode::Left);
+
+    struct Names {
+        std::vector<muse::String> left;
+        std::vector<muse::String> right;
+    };
+    auto names = [&](const muse::String& pack) {
+        score->style().set(Sid::meloNoteLabelPack, pack);
+        score->doLayout();
+        const HeadPaint head = paintHead(score, score->firstMeasure()->staffLines(0));
+        Names out;
+        for (const HeadPaint::Text& text : head.texts) {
+            (text.ink.left() > head.dotColumnRight ? out.right : out.left).push_back(text.text);
+        }
+        return out;
+    };
+    auto has = [](const std::vector<muse::String>& texts, const char16_t* name) {
+        return std::find(texts.begin(), texts.end(), muse::String(name)) != texts.end();
+    };
+    auto pitchNameOnTheRight = [](const Names& names) {
+        return std::any_of(names.right.begin(), names.right.end(), [](const muse::String& t) { return t.endsWith(u":"); });
+    };
+
+    const Names canonical = names(u"melo-canonical-solfa");
+    for (const char16_t* name : { u"Do", u"Re", u"Mi", u"Fa", u"So" }) {
+        EXPECT_TRUE(has(canonical.left, name)) << muse::String(name).toStdString();
+    }
+    EXPECT_TRUE(pitchNameOnTheRight(canonical));
+
+    const Names slendro = names(u"slendro");
+    for (const char16_t* name : { u"Ji", u"Ro", u"Lu", u"Fa", u"Ma" }) {
+        EXPECT_TRUE(has(slendro.left, name)) << muse::String(name).toStdString();
+    }
+    for (const char16_t* name : { u"Do", u"Re", u"Mi", u"So" }) {
+        EXPECT_FALSE(has(slendro.left, name)) << muse::String(name).toStdString();
+    }
+    EXPECT_TRUE(pitchNameOnTheRight(slendro)) << "the Do tonic's pitch name stays inside the crescent";
+
+    const Names jale = names(u"jale-german");
+    for (const char16_t* name : { u"ja", u"le", u"mi", u"ni", u"ro" }) {
+        EXPECT_TRUE(has(jale.left, name)) << muse::String(name).toStdString();
+    }
+
+    // The set is saved with the score.
+    score->style().set(Sid::meloNoteLabelPack, muse::String(u"slendro"));
+    const muse::String path = u"melo_note_label_pack_roundtrip.mscx";
+    ASSERT_TRUE(ScoreRW::saveScore(score, path));
+    Score* reread = ScoreRW::readScore(path, true);
+    ASSERT_TRUE(reread);
+    EXPECT_EQ(reread->style().styleSt(Sid::meloNoteLabelPack), u"slendro");
+    delete reread;
+    delete score;
+}
+
+// The bridge wrappers name the pack; the list of sets comes from the Kernel,
+// and a pack the Kernel does not hold gives no labels.
+TEST(MeloStaffTests, noteNameSetsAreTheKernelsPacks)
+{
+    std::vector<muse::String> ids;
+    ASSERT_TRUE(melo::noteLabelPackIds(ids));
+    ASSERT_FALSE(ids.empty());
+    EXPECT_EQ(ids.front(), u"melo-canonical-solfa");
+    EXPECT_NE(std::find(ids.begin(), ids.end(), muse::String(u"slendro")), ids.end());
+
+    Score* score = ScoreRW::readScore(u"melostaff_data/scale-dot-label-room.mscx");
+    ASSERT_TRUE(score);
+    const StaffType* st = score->staff(0)->staffType(Fraction(0, 1));
+    std::vector<melo::LabeledDotStack> stacks;
+    ASSERT_TRUE(melo::scaleDotLabels(st->meloStateJson(), u"slendro", stacks));
+    ASSERT_FALSE(stacks.empty());
+    EXPECT_EQ(stacks.front().members.front().name, u"Do");
+    EXPECT_EQ(stacks.front().members.front().label, u"Ji");
+    EXPECT_FALSE(melo::scaleDotLabels(st->meloStateJson(), u"no-such-pack", stacks));
+    melo::StateChangeOptions options;
+    ASSERT_TRUE(melo::stateChangeOptions(st->meloStateJson(), u"slendro", options));
+    ASSERT_FALSE(options.tonics.empty());
+    EXPECT_EQ(options.tonics.front().label.isEmpty(), false);
+    EXPECT_FALSE(melo::stateChangeOptions(st->meloStateJson(), u"no-such-pack", options));
     delete score;
 }

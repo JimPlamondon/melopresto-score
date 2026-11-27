@@ -178,7 +178,8 @@ void MeloKeyChangeModel::paintPreview(QPainter* qp, qreal width, qreal height) c
     StaffLines* lines = measure ? measure->staffLines(m_previewStaff) : nullptr;
     const StaffType* type = m_preview->staff(m_previewStaff)->staffType(m_tick);
     melo::ChangeIndicator indicator;
-    if (!lines || !type || !melo::changeIndicator(m_editor.sourceState, m_editor.destinationState, indicator)) {
+    if (!lines || !type || !melo::changeIndicator(m_editor.sourceState, m_editor.destinationState, melo::noteLabelPack(m_preview.get()),
+                                                  indicator)) {
         return;
     }
     const auto& view = type->meloFrameView(m_preview.get(), m_previewStaff, measure->system());
