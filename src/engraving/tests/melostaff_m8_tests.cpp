@@ -919,7 +919,7 @@ TEST_F(Engraving_MeloStaffM8BandElisionTests, m8DoRowsCarryRedLinesCrescentHorns
     // dot-stack views.
     auto doGlyph = [&](Score* score, const StaffType* jst, SymId& sym, double& centroidDy) {
         std::vector<melo::LabeledDotStack> labelStacks;
-        ASSERT_TRUE(melo::scaleDotLabels(jst->meloStateJson(), labelStacks));
+        ASSERT_TRUE(melo::scaleDotLabels(jst->meloStateJson(), u"melo-canonical-solfa", labelStacks));
         int doMembers = 0;
         int doNGen = 0;
         for (const melo::LabeledDotStack& s : labelStacks) {

@@ -831,18 +831,19 @@ MeloScaleDotLabelMode StaffType::meloResolvedScaleDotLabelMode() const
 //    may carry (one for each band of a banded view).
 //---------------------------------------------------------
 
-static double meloWidestRightHeaderText(const String& stateJson, bool splitNames, const std::vector<String>& rowPitchNames,
-                                        const Font& labelFont, const IEngravingFontPtr& engravingFont)
+static double meloWidestRightHeaderText(const String& stateJson, const String& packId, bool splitNames,
+                                        const std::vector<String>& rowPitchNames, const Font& labelFont,
+                                        const IEngravingFontPtr& engravingFont)
 {
     std::vector<melo::LabeledDotStack> stacks;
-    if (!melo::scaleDotLabels(stateJson, stacks)) {
+    if (!melo::scaleDotLabels(stateJson, packId, stacks)) {
         return 0.0;
     }
     melo::TonicPitchLabel key;
     const bool haveKey = melo::tonicPitchLabel(stateJson, key);
     const bool tonicIsDo = haveKey && std::any_of(stacks.begin(), stacks.end(), [&](const auto& stack) {
         return std::any_of(stack.members.begin(), stack.members.end(), [&](const auto& member) {
-            return member.nGen == key.nGen && member.label == u"Do";
+            return member.nGen == key.nGen && member.name == u"Do";
         });
     });
     auto width = [&](const String& text) {
@@ -907,15 +908,16 @@ StaffType::MeloHeaderGeometry StaffType::meloHeaderGeometry(double spatium, doub
     FontMetrics fm(labelFont);
     const IEngravingFontPtr engravingFont = m_score ? m_score->engravingFont() : nullptr;
     const double gap = 0.25 * spatium;
+    const String packId = melo::noteLabelPack(m_score);
     std::vector<melo::LabeledDotStack> stacks;
-    const bool haveLabels = melo::scaleDotLabels(m_meloStateJson, stacks);
+    const bool haveLabels = melo::scaleDotLabels(m_meloStateJson, packId, stacks);
     // Only Do's tonic pitch label nests inside the crescent; other tonic
     // labels reserve space to the left of their scale dot.
     melo::TonicPitchLabel key;
     const bool haveKey = melo::tonicPitchLabel(m_meloStateJson, key);
     const bool tonicIsDo = haveKey && std::any_of(stacks.begin(), stacks.end(), [&](const auto& stack) {
         return std::any_of(stack.members.begin(), stack.members.end(), [&](const auto& member) {
-            return member.nGen == key.nGen && member.label == u"Do";
+            return member.nGen == key.nGen && member.name == u"Do";
         });
     });
     double keyAdvance = haveKey
@@ -982,7 +984,7 @@ StaffType::MeloHeaderGeometry StaffType::meloHeaderGeometry(double spatium, doub
         // asked for by every system head's layout, margin and drawing.
         String roomKey = m_meloStateJson + u"|" + String::number(int(m_meloScaleDotLabelMode)) + u"|"
                          + String::number(spatium, 9) + u"|" + String::number(defaultSpatium, 9) + u"|"
-                         + (engravingFont ? String::fromStdString(engravingFont->name()) : String());
+                         + (engravingFont ? String::fromStdString(engravingFont->name()) : String()) + u"|" + packId;
         if (view) {
             for (const MeloFrameBand& band : view->bands) {
                 if (!band.tonicLabel.isEmpty()) {
@@ -992,8 +994,8 @@ StaffType::MeloHeaderGeometry StaffType::meloHeaderGeometry(double spatium, doub
             }
         }
         if (roomKey != m_meloRightLabelRoomKey) {
-            double widest = meloWidestRightHeaderText(m_meloStateJson, mode == MeloScaleDotLabelMode::Split, rowPitchNames,
-                                                      labelFont, engravingFont);
+            double widest = meloWidestRightHeaderText(m_meloStateJson, packId, mode == MeloScaleDotLabelMode::Split,
+                                                      rowPitchNames, labelFont, engravingFont);
             double rangeMin = 0.0;
             double rangeMax = 0.0;
             double legibleMin = 0.0;
@@ -1009,7 +1011,7 @@ StaffType::MeloHeaderGeometry StaffType::meloHeaderGeometry(double spatium, doub
                                             || (m_meloScaleDotLabelMode == MeloScaleDotLabelMode::Auto
                                                 && !(generatorCents > legibleMin && generatorCents < legibleMax));
                     widest = std::max(widest,
-                                      meloWidestRightHeaderText(retuned, splitNames, rowPitchNames, labelFont, engravingFont));
+                                      meloWidestRightHeaderText(retuned, packId, splitNames, rowPitchNames, labelFont, engravingFont));
                 }
             }
             m_meloRightLabelRoomKey = roomKey;

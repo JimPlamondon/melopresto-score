@@ -559,6 +559,9 @@ enum class Sid : short {
     meloMidBarFlankColor,
     meloElideEmptyOctaves,
     meloShowAllOctavesInFirstSystem,
+    // The score's current note-name set: the id of the Kernel note-label
+    // pack its note labels are written in (owner decision 2026-11-27).
+    meloNoteLabelPack,
     enableIndentationOnFirstSystem,
     firstSystemIndentationValue,
     alwaysShowBracketsWhenEmptyStavesAreHidden,

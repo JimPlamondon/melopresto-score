@@ -21,6 +21,7 @@
  */
 
 #include "editstyle.h"
+#include "engraving/melo/melobridge.h"
 #include "engraving/melo/melostrings.h"
 
 #include <QAnyStringView>
@@ -340,6 +341,24 @@ EditStyle::EditStyle(QWidget* parent)
     meloFirstSystem->setObjectName("meloFirstSystem");
     meloLayout->addWidget(meloElide);
     meloLayout->addWidget(meloFirstSystem);
+    // The score's note-name set: one of the Kernel's note-label packs, by id.
+    auto* meloNoteLabelPackRow = new QHBoxLayout();
+    auto* meloNoteLabelPackLabel = new QLabel(melo::noteLabelPackLabel().toQString(), meloPage);
+    meloNoteLabelPackLabel->setObjectName("meloNoteLabelPackLabel");
+    auto* meloNoteLabelPack = new QComboBox(meloPage);
+    meloNoteLabelPack->setObjectName("meloNoteLabelPack");
+    meloNoteLabelPack->setToolTip(melo::noteLabelPackToolTip().toQString());
+    meloNoteLabelPackLabel->setBuddy(meloNoteLabelPack);
+    std::vector<muse::String> packIds;
+    if (melo::noteLabelPackIds(packIds)) {
+        for (const muse::String& id : packIds) {
+            meloNoteLabelPack->addItem(id.toQString(), id.toQString());
+        }
+    }
+    meloNoteLabelPackRow->addWidget(meloNoteLabelPackLabel);
+    meloNoteLabelPackRow->addWidget(meloNoteLabelPack);
+    meloNoteLabelPackRow->addStretch();
+    meloLayout->addLayout(meloNoteLabelPackRow);
     meloLayout->addStretch();
     pageStack->addWidget(meloPage);
     pageList->addItem(melo::featureName().toQString());
@@ -347,6 +366,7 @@ EditStyle::EditStyle(QWidget* parent)
     styleWidgets = {
         { StyleId::meloElideEmptyOctaves, false, meloElide, 0 },
         { StyleId::meloShowAllOctavesInFirstSystem, false, meloFirstSystem, 0 },
+        { StyleId::meloNoteLabelPack, false, meloNoteLabelPack, 0 },
         //   idx                --- showPercent      --- widget          --- resetButton
         { StyleId::figuredBassAlignment,    false, fbAlign,                 0 },
         { StyleId::figuredBassStyle,        false, fbStyle,                 0 },
@@ -1331,6 +1351,8 @@ void EditStyle::retranslate()
         elide->setToolTip(muse::qtrc("notation/editstyle",
                                      "Hollow stacks leave a plain gap where an interior octave has no notes, like hiding empty staves."));
         page->findChild<QCheckBox*>("meloFirstSystem")->setText(muse::qtrc("notation/editstyle", "Show all octaves in the first system"));
+        page->findChild<QLabel*>("meloNoteLabelPackLabel")->setText(melo::noteLabelPackLabel().toQString());
+        page->findChild<QComboBox*>("meloNoteLabelPack")->setToolTip(melo::noteLabelPackToolTip().toQString());
     }
 
     buttonApplyToAllParts->setText(muse::qtrc("notation/editstyle", "Apply to all parts"));

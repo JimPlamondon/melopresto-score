@@ -87,7 +87,8 @@ void MeloStaffSettingsModel::loadProperties()
                 const StaffType* here = score->staff(staff)->staffType(tick);
                 melo::ChangeIndicator indicator;
                 muse::String why;
-                if (before && here && melo::changeIndicator(before->meloStateJson(), here->meloStateJson(), indicator, &why)) {
+                if (before && here && melo::changeIndicator(before->meloStateJson(), here->meloStateJson(), melo::noteLabelPack(score),
+                                                            indicator, &why)) {
                     description = indicator.empty() ? muse::qtrc("inspector",
                                                                  "This position carries a metadata-only change, so no indicator is drawn.")
                                   : muse::qtrc("inspector", "A tonal change indicator is drawn at this position.");

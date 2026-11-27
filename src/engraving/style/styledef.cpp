@@ -546,6 +546,7 @@ const std::array<StyleDef::StyleValue, size_t(Sid::STYLES)> StyleDef::styleValue
     { Sid::meloMidBarFlankColor, "meloMidBarFlankColor", Color("#808080") },
     { Sid::meloElideEmptyOctaves, "meloElideEmptyOctaves", false },
     { Sid::meloShowAllOctavesInFirstSystem, "meloShowAllOctavesInFirstSystem", true },
+    { Sid::meloNoteLabelPack, "meloNoteLabelPack", String(u"melo-canonical-solfa") },
     styleDef(enableIndentationOnFirstSystem,             true),
     styleDef(firstSystemIndentationValue,                5.0_sp),
     styleDef(alwaysShowBracketsWhenEmptyStavesAreHidden, false),

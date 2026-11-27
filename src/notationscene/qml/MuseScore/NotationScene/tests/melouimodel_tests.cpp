@@ -870,7 +870,7 @@ TEST_F(MeloUiModelTests, SpelledPitchGlyphsAlignWithTextAndMergedChangeLabelsFit
     melo::RelativeKeyEditor editor;
     ASSERT_TRUE(melo::prepareRelativeKeyEditor(score.get(), 0, tick, nullptr, editor, error));
     melo::ChangeIndicator indicator;
-    ASSERT_TRUE(melo::changeIndicator(editor.sourceState, editor.destinationState, indicator));
+    ASSERT_TRUE(melo::changeIndicator(editor.sourceState, editor.destinationState, u"melo-canonical-solfa", indicator));
     ASSERT_EQ(indicator.dotStacks.size(), 1u);
     const StaffType* type = score->staff(0)->staffType(tick);
     const auto geometry = melo::changeTerrainGeometry(type, score->firstMeasure()->spatium(), score->style().defaultSpatium(), indicator);

@@ -14,6 +14,9 @@
 
 #include "melo_musescore_bridge.h"
 
+#include "dom/score.h"
+#include "style/defaultstyle.h"
+
 using namespace muse;
 
 namespace mu::engraving::melo {
@@ -42,6 +45,34 @@ static bool okResult(const String& response, JsonValue& result)
     }
     result = root.value("result");
     return true;
+}
+
+/// `,"pack_id":"<id>"`, the field that names the note-label pack.
+static String packField(const String& packId)
+{
+    JsonObject field;
+    field.set("pack_id", packId);
+    const String text = String::fromUtf8(JsonDocument(field).toJson(JsonDocument::Format::Compact));
+    return u"," + text.mid(1, text.size() - 2);
+}
+
+String noteLabelPack(const Score* score)
+{
+    return (score ? score->style() : DefaultStyle::defaultStyle()).styleSt(Sid::meloNoteLabelPack);
+}
+
+bool noteLabelPackIds(std::vector<String>& ids)
+{
+    JsonValue result;
+    if (!okResult(callBridge(u"{\"abi\":2,\"op\":\"note_label_pack_ids\"}"), result)) {
+        return false;
+    }
+    ids.clear();
+    const JsonArray array = result.toArray();
+    for (size_t i = 0; i < array.size(); ++i) {
+        ids.push_back(array.at(i).toString());
+    }
+    return !ids.empty();
 }
 
 bool available()
@@ -235,7 +266,7 @@ bool editRelativeKey(const String& request, const String& at, const String& inte
 }
 
 bool relativeKeyEditor(const String& source, const String& destination, const String& at,
-                       const String* expression, RelativeKeyEditor& result, String& error)
+                       const String* expression, const String& packId, RelativeKeyEditor& result, String& error)
 {
     JsonObject envelope;
     envelope.set("abi", 2);
@@ -246,7 +277,7 @@ bool relativeKeyEditor(const String& source, const String& destination, const St
     const String fields = String::fromUtf8(JsonDocument(envelope).toJson(JsonDocument::Format::Compact));
     String response;
     if (!canonicalResult(fields.left(fields.size() - 1) + u",\"source_state\":" + source
-                         + u",\"state\":" + destination + u",\"at\":" + at + u"}", response, error)) {
+                         + u",\"state\":" + destination + u",\"at\":" + at + packField(packId) + u"}", response, error)) {
         return false;
     }
     const JsonObject root = JsonDocument::fromJson(response.toUtf8()).rootObject();
@@ -443,9 +474,9 @@ bool labelLegibilityRange(double& minCents, double& maxCents)
     return true;
 }
 
-bool scaleDotLabels(const String& stateJson, std::vector<LabeledDotStack>& stacks)
+bool scaleDotLabels(const String& stateJson, const String& packId, std::vector<LabeledDotStack>& stacks)
 {
-    String envelope = String(u"{\"abi\":2,\"op\":\"scale_dot_labels\",\"state\":%1}").arg(stateJson);
+    String envelope = String(u"{\"abi\":2,\"op\":\"scale_dot_labels\",\"state\":%1%2}").arg(stateJson).arg(packField(packId));
     JsonValue result;
     if (!okResult(callBridge(envelope), result)) {
         return false;
@@ -465,6 +496,7 @@ bool scaleDotLabels(const String& stateJson, std::vector<LabeledDotStack>& stack
         for (size_t j = 0; j < members.size(); ++j) {
             JsonObject member = members.at(j).toObject();
             out.members.push_back({ member.value("nGen").toInt(),
+                                    member.value("name").toString(),
                                     member.value("label").toString() });
         }
         stacks.push_back(out);
@@ -688,10 +720,11 @@ static void readTonicPitchLabel(const JsonObject& o, TonicPitchLabel& out)
     out.nGen = o.value("nGen").toInt();
 }
 
-bool changeIndicator(const String& oldStateJson, const String& newStateJson, ChangeIndicator& out, String* error)
+bool changeIndicator(const String& oldStateJson, const String& newStateJson, const String& packId, ChangeIndicator& out,
+                     String* error)
 {
-    String envelope = String(u"{\"abi\":2,\"op\":\"change_indicator\",\"old_state\":%1,\"new_state\":%2}")
-                      .arg(oldStateJson).arg(newStateJson);
+    String envelope = String(u"{\"abi\":2,\"op\":\"change_indicator\",\"old_state\":%1,\"new_state\":%2%3}")
+                      .arg(oldStateJson).arg(newStateJson).arg(packField(packId));
     const String response = callBridge(envelope);
     JsonValue result;
     if (!okResult(response, result)) {
@@ -957,9 +990,9 @@ static StateChangeOption readOption(const JsonObject& o)
     return opt;
 }
 
-bool stateChangeOptions(const String& stateJson, StateChangeOptions& options)
+bool stateChangeOptions(const String& stateJson, const String& packId, StateChangeOptions& options)
 {
-    String envelope = String(u"{\"abi\":2,\"op\":\"state_change_options\",\"state\":%1}").arg(stateJson);
+    String envelope = String(u"{\"abi\":2,\"op\":\"state_change_options\",\"state\":%1%2}").arg(stateJson).arg(packField(packId));
     JsonValue result;
     if (!okResult(callBridge(envelope), result)) {
         return false;
