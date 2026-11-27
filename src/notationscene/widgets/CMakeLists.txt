@@ -43,6 +43,8 @@ target_sources(notationscene PRIVATE
     fontStyleSelect.h
     measureproperties.cpp
     measureproperties.h
+    melonotelabelpackmodel.cpp
+    melonotelabelpackmodel.h
     offsetSelect.cpp
     offsetSelect.h
     pagesettings.cpp

@@ -69,6 +69,8 @@
 #include "draw/painter.h"
 #include "ui/qml/Muse/Ui/navigationpanel.h"
 #include <QPainter>
+#include <QStandardItemModel>
+#include "notationscene/widgets/melonotelabelpackmodel.h"
 using namespace mu;
 using namespace mu::engraving;
 using namespace mu::inspector;
@@ -2416,4 +2418,35 @@ TEST_F(MeloUiModelTests, VocalDragCancellationRestoresEveryStaffAmbit)
             EXPECT_FALSE(types[i]->meloFrameFrozen());
         }
     }
+}
+
+// Owner answer 1a (2026-11-27): the Style dialog's "Note-class names:" box
+// shows each note-name set by the display name its pack gives itself, and
+// choosing one stores the pack's id in the style value meloNoteLabelPack. The
+// test reads the box's own model: a QComboBox shows Qt::DisplayRole and
+// EditStyle stores and selects a string style value by Qt::UserRole
+// (currentData() and itemData()).
+TEST(MeloStyleDialogTests, NoteClassNamesBoxShowsDisplayNamesAndStoresTheId)
+{
+    QStandardItemModel model;
+    mu::notation::fillMeloNoteLabelPackModel(&model);
+    ASSERT_GT(model.rowCount(), 0);
+    QStringList shown;
+    QStringList stored;
+    for (int row = 0; row < model.rowCount(); ++row) {
+        shown << model.item(row)->data(Qt::DisplayRole).toString();
+        stored << model.item(row)->data(Qt::UserRole).toString();
+    }
+    const QString jale = QString::fromUtf8("German Jale (M\xC3\xBCnnich)");
+    EXPECT_EQ(shown.front(), QStringLiteral("MeloPresto canonical solfa"));
+    EXPECT_EQ(stored.front(), QStringLiteral("melo-canonical-solfa"));
+    EXPECT_TRUE(shown.contains(QStringLiteral("Slendro"))) << shown.join(u", ").toStdString();
+    EXPECT_TRUE(shown.contains(jale)) << shown.join(u", ").toStdString();
+    for (const QString& id : stored) {
+        EXPECT_FALSE(shown.contains(id)) << "the box shows the id " << id.toStdString();
+    }
+    // Choosing Slendro stores its id; a score whose value is jale-german
+    // opens on German Jale (Münnich).
+    EXPECT_EQ(stored.value(shown.indexOf(QStringLiteral("Slendro"))), QStringLiteral("slendro"));
+    EXPECT_EQ(shown.value(stored.indexOf(QStringLiteral("jale-german"))), jale);
 }
